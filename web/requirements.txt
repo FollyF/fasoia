@@ -1,3 +1,15 @@
 asgiref==3.11.1
+beautifulsoup4==4.14.3
+certifi==2026.1.4
+charset-normalizer==3.4.4
 Django==6.0.2
+django-phonenumber-field==8.4.0
+idna==3.11
+phonenumbers==9.0.24
+psycopg2-binary==2.9.11
+python-decouple==3.8
+requests==2.32.5
+soupsieve==2.8.3
 sqlparse==0.5.5
+typing_extensions==4.15.0
+urllib3==2.6.3
