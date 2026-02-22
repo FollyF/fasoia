@@ -125,3 +125,11 @@ class OffreEmploi(Opportunite):
     experienceMinimale = models.IntegerField()
     localisation = models.CharField()
     salaire = models.DecimalField(max_digits=15, decimal_places=2)
+
+class Citation(models.Model):
+    text =models.TextField()
+    author =models.CharField(max_length=100)
+    tags =models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.text
