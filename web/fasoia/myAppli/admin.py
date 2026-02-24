@@ -1,4 +1,5 @@
 from django.contrib import admin
-from .models import Citation
+from .models import Offre_uemoa, Ami_uemoa   
 
-admin.site.register(Citation)
+admin.site.register(Offre_uemoa)
+admin.site.register(Ami_uemoa)

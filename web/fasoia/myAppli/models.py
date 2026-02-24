@@ -126,10 +126,26 @@ class OffreEmploi(Opportunite):
     localisation = models.CharField()
     salaire = models.DecimalField(max_digits=15, decimal_places=2)
 
-class Citation(models.Model):
+class Offre_uemoa(models.Model):
     description =models.TextField()
-    date_limite =models.CharField(max_length=100)
-    download_url =models.URLField()
+    date_limite =models.TextField()
+    download_url =models.URLField(max_length=500)
+    date_scraping = models.DateTimeField(auto_now_add=True)
+    traite_par_ia = models.BooleanField(default=False)
 
     def __str__(self):
         return self.description
+    
+    
+class Ami_uemoa(models.Model):
+    description =models.TextField()
+    date_limite =models.TextField()
+    download_url =models.URLField(max_length=500)
+    date_scraping = models.DateTimeField(auto_now_add=True)
+    traite_par_ia = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.description
+    
+    
+    

@@ -38,9 +38,9 @@ def scraper(base_url):
         soup =BeautifulSoup(page.text, 'html.parser')
         dom_objects =soup.find_all('div', class_ ="news-box mb-2 px-1")
         all_data.extend(scraping(dom_objects))
-        next_li_element =soup.find('a', class_ ="next")
+        next_li_element =soup.find('a', attrs={"rel":"next"})
         if next_li_element:
-            next_page_relative_url = next_li_element.find('li', href=True)['href']
+            next_page_relative_url = next_li_element['href']
             current_url =urljoin(current_url, next_page_relative_url)
         else:
             current_url =None
