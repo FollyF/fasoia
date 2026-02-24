@@ -127,9 +127,9 @@ class OffreEmploi(Opportunite):
     salaire = models.DecimalField(max_digits=15, decimal_places=2)
 
 class Citation(models.Model):
-    text =models.TextField()
-    author =models.CharField(max_length=100)
-    tags =models.CharField(max_length=100)
+    description =models.TextField()
+    date_limite =models.CharField(max_length=100)
+    download_url =models.URLField()
 
     def __str__(self):
-        return self.text
+        return self.description
