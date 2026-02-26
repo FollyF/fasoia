@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %} Gestion des Appels d'Offres {% endblock %}
+
+{% block extra_css %}
+<style>
+    /* --- VARIABLES ET RESET --- */
+    :root {
+        --blue-main: #0056a2;
+        --gray-bg: #f5f5f5;
+        --gray-border: #dddddd;
+        --text-dark: #333;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #fafafa;
+        margin: 40px;
+        color: var(--text-dark);
+    }
+
+    /* --- CONTENEUR DES ONGLETS --- */
+    .tabs-wrapper {
+        display: flex;
+        width: 100%;
+        border-top: 5px solid var(--blue-main); /* La ligne bleue du haut */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .tab-btn {
+        flex: 1;
+        padding: 18px 25px;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 14px;
+        background-color: var(--gray-bg);
+        color: var(--text-dark);
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    /* État au survol */
+    .tab-btn:hover:not(.active) {
+        background-color: #e8e8e8;
+        color: var(--blue-main);
+    }
+
+    /* État Actif */
+    .tab-btn.active {
+        background-color: var(--blue-main);
+        color: white;
+    }
+
+    /* --- ZONE DE CONTENU --- */
+    .content-container {
+        background: white;
+        padding: 30px;
+        border: 1px solid var(--gray-border);
+        border-top: none;
+        min-height: 200px;
+    }
+
+    .tab-panel {
+        display: none; /* Caché par défaut */
+        animation: fadeIn 0.4s ease-out;
+    }
+
+    .tab-panel.active {
+        display: block; /* Affiché si actif */
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* --- STYLE DU TABLEAU --- */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    th, td {
+        text-align: left;
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+    }
+
+    th {
+        background-color: #f9f9f9;
+        color: var(--blue-main);
+        font-size: 13px;
+    }
+
+    .status {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .open { background: #e6fffa; color: #2d6a4f; }
+    .closed { background: #fff5f5; color: #c53030; }
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+<h2>Plateforme des Marchés Publics</h2>
+
+<div class="tabs-wrapper">
+    <button class="tab-btn active" onclick="openTab(event, 'offres')">appels d'offres</button>
+    <button class="tab-btn" onclick="openTab(event, 'ami')">avis de manifestation</button>
+    <button class="tab-btn" onclick="openTab(event, 'resultats')">offres d'emploi</button>
+</div>
+
+<div class="content-container">
+    
+    <div id="offres" class="tab-panel active">
+        <h3>Appels d'offres en cours</h3>
+        <p>Liste des consultations :</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Référence</th>
+                    <th>Objet du marché</th>
+                    <th>Date limite</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in offre %}
+                <tr>
+                    <td>AO-2026-00{{ forloop.counter }}</td>
+                    <td>{{i.description}}</td>
+                    <td>{{i.date_limite}}</td>
+                    <td><span class="status open">OUVERT</span></td>
+                </tr>
+               {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div id="ami" class="tab-panel">
+        <h3>Avis de manifestation en cours</h3>
+        <p>Historique des derniers marchés :</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Référence</th>
+                    <th>Objet du marché</th>
+                    <th>Date limite</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in ami %}
+                <tr>
+                    <td>AO-2025-098{{ forloop.counter}}</td>
+                    <td>{{ i.description }}</td>
+                    <td>{{ i.date_limite }}</td>
+                    <td><span class="status open">OUVERT</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    function openTab(event, tabId) {
+                // 1. Cacher tous les panneaux de contenu
+                const panels = document.querySelectorAll('.tab-panel');
+                panels.forEach(panel => panel.classList.remove('active'));
+
+                // 2. Désactiver tous les boutons
+                const buttons = document.querySelectorAll('.tab-btn');
+                buttons.forEach(btn => btn.classList.remove('active'));
+
+                // 3. Afficher le panneau actuel et activer le bouton cliqué
+                document.getElementById(tabId).classList.add('active');
+                event.currentTarget.classList.add('active');
+            }
+</script>            
+{% endblock %}
+
+
+    
