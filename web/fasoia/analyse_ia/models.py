@@ -72,3 +72,93 @@ class DocumentSource(models.Model):
             models.Index(fields=['offre_scrapee']),
             models.Index(fields=['ami_scrapee']),
         ]
+
+# analyse_ia/models.py (nouveau modèle)
+
+class ElementsExtraits(models.Model):
+    """
+    Éléments structurés extraits d'une analyse
+    """
+    analyse = models.OneToOneField(
+        AnalyseDocument, 
+        on_delete=models.CASCADE,
+        related_name='elements'
+    )
+    
+    # Éléments extraits
+    reference = models.CharField(max_length=200, blank=True)
+    montant_estime = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    date_limite = models.DateField(null=True, blank=True)
+    lieu = models.CharField(max_length=200, blank=True)
+    autorite = models.CharField(max_length=300, blank=True)
+    emails = models.JSONField(default=list)
+    telephones = models.JSONField(default=list)
+    
+    # Métadonnées d'extraction
+    date_extraction = models.DateTimeField(auto_now_add=True)
+    version_extraction = models.CharField(max_length=20, default="1.0")
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['date_limite']),
+            models.Index(fields=['lieu']),
+        ]
+    
+    def __str__(self):
+        return f"Éléments de l'analyse #{self.analyse_id}"
+    
+
+# analyse_ia/models.py (ajoutez ce modèle)
+
+class Recommandation(models.Model):
+    """
+    Stocke les recommandations faites aux entreprises
+    """
+    entreprise = models.ForeignKey(
+        'myAppli.Entreprise',
+        on_delete=models.CASCADE,
+        related_name='recommandations'
+    )
+    opportunite_type = models.CharField(max_length=50)  # 'Offre_uemoa' ou 'Ami_uemoa'
+    opportunite_id = models.PositiveIntegerField()
+    
+    # Pour accéder facilement à l'objet
+    @property
+    def opportunite(self):
+        from myAppli.models import Offre_uemoa, Ami_uemoa
+        if self.opportunite_type == 'Offre_uemoa':
+            return Offre_uemoa.objects.get(id=self.opportunite_id)
+        else:
+            return Ami_uemoa.objects.get(id=self.opportunite_id)
+    
+    # Scores
+    score_competences = models.FloatField(default=0.0)
+    score_geographique = models.FloatField(default=0.0)
+    score_financier = models.FloatField(default=0.0)
+    score_global = models.FloatField(default=0.0)
+    
+    # Détails du matching
+    competences_match = models.JSONField(default=list)  # Compétences communes
+    analyse = models.ForeignKey(
+        'AnalyseDocument',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    
+    # Métadonnées
+    date_recommandation = models.DateTimeField(auto_now_add=True)
+    vue = models.BooleanField(default=False)
+    cliquee = models.BooleanField(default=False)
+    candidatee = models.BooleanField(default=False)
+    
+    class Meta:
+        unique_together = ['entreprise', 'opportunite_type', 'opportunite_id']
+        indexes = [
+            models.Index(fields=['entreprise', 'score_global']),
+            models.Index(fields=['date_recommandation']),
+        ]
+        ordering = ['-score_global']
+    
+    def __str__(self):
+        return f"Recommandation {self.entreprise.raisonSociale} - {self.opportunite_type} #{self.opportunite_id} ({self.score_global:.2f})"

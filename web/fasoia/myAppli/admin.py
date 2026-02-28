@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Offre_uemoa, Ami_uemoa   
+from .models import Offre_uemoa, Ami_uemoa, Entreprise   
 
 admin.site.register(Offre_uemoa)
 admin.site.register(Ami_uemoa)
+admin.site.register(Entreprise)
