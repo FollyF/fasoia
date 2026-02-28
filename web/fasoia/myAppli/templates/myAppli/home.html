@@ -1,8 +1,166 @@
  {% extends "base.html" %}
 
  {% load static %}
- 
+
+ {% block extra_css %}
+
+ <style>
+        :root {
+            --blue-main: #0056a2;
+            --blue-light: #e3f2fd;
+            --bg-gray: #f0f2f5;
+            --text-dark: #222;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg-gray);
+            margin: 0;
+            padding: 100px 20px 20px 20px;
+        }
+
+        .page-layout {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            gap: 25px;
+        }
+
+        /* BARRE DE RECHERCHE */
+        .search-container {
+            max-width: 1200px;
+            margin: 0 auto 25px auto;
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        #searchInput:focus { border-color: var(--blue-main); }
+
+        /* COLONNES */
+        .main-content { flex: 3; width: 100%; }
+        .sidebar { flex: 1; min-width: 300px; }
+
+        /* CARTES D'OPPORTUNITÉ */
+        .opportunity-card, .sidebar-widget {
+            background: #ffffff;
+            margin-bottom: 30px;
+            border-top: 6px solid var(--blue-main);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-radius: 0 0 8px 8px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 15px 20px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #eee;
+        }
+
+        .card-header h2 {
+            margin: 0;
+            color: var(--blue-main);
+            font-size: 1.1rem;
+            text-transform: uppercase;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 15px 20px; border-bottom: 1px solid #f0f0f0; font-size: 14px; cursor: pointer; }
+        tr:hover td { background-color: #fcfcfc; }
+
+        .title-link { color: var(--text-dark); text-decoration: none; font-weight: 600; display: block; margin-bottom: 4px; }
+        .date-label { color: #888; font-size: 12px; }
+
+        .card-footer { padding: 15px; text-align: center; border-top: 1px dashed #ddd; }
+        .btn-more { color: var(--blue-main); text-decoration: none; font-weight: bold; font-size: 13px; cursor: pointer; }
+
+        /* SIDEBAR STYLES */
+        .sidebar-widget { padding: 20px; }
+        .sidebar-widget h3 { margin-top: 0; font-size: 1rem; }
+        .stat-box {
+            background: var(--blue-main);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .page-layout { flex-direction: column; }
+            .sidebar { order: 2; }
+        }
+    </style>
+
+ {% endblock %}
+
  {% block content %}
+
+<!-- opportunities section -->
+<div class="search-container">
+    <input type="text" id="searchInput" onkeyup="filterResults()" placeholder="Rechercher un appel d'offre, un avis ou un poste...">
+</div>
+
+<div class="page-layout">
+
+    <main class="main-content">
+        <div class="opportunity-card">
+            <div class="card-header"><h2>Appels d'Offres</h2></div>
+            <table id="tableAO">
+                <tr><td><a href="#" class="title-link">Construction de 10 forages solaires</a><span class="date-label">Échéance : 15/03/2026</span></td></tr>
+                <tr><td><a href="#" class="title-link">Achat de matériel biomédical</a><span class="date-label">Échéance : 20/03/2026</span></td></tr>
+            </table>
+            <div class="card-footer"><a href="#" class="btn-more">VOIR TOUT →</a></div>
+        </div>
+
+        <div class="opportunity-card">
+            <div class="card-header"><h2>Manifestations d'intérêt</h2></div>
+            <table id="tableAMI">
+                <tr><td><a href="#" class="title-link">Consultant en gestion de projets agricoles</a><span class="date-label">Publié le : 25/02/2026</span></td></tr>
+                <tr><td><a href="#" class="title-link">Cabinet d'audit financier certifié</a><span class="date-label">Publié le : 22/02/2026</span></td></tr>
+            </table>
+            <div class="card-footer"><a href="#" class="btn-more">VOIR TOUT →</a></div>
+        </div>
+
+        <div class="opportunity-card">
+            <div class="card-header"><h2>Offres d'Emploi</h2></div>
+            <table id="tableEmploi">
+                <tr><td><a href="#" class="title-link">Spécialiste en Passation des Marchés</a><span class="date-label">Limite : 10/03/2026 | Ouagadougou</span></td></tr>
+                <tr><td><a href="#" class="title-link">Comptable Senior (H/F)</a><span class="date-label">Limite : 12/03/2026 | Bobo-Dioulasso</span></td></tr>
+                <tr><td><a href="#" class="title-link">Assistant de Direction</a><span class="date-label">Limite : 14/03/2026 | Koudougou</span></td></tr>
+            </table>
+            <div class="card-footer"><a href="#" class="btn-more">VOIR TOUTES LES OFFRES →</a></div>
+        </div>
+    </main>
+
+    <aside class="sidebar">
+        <div class="stat-box">
+            <span style="font-size: 2rem; font-weight: bold;">24</span><br>
+            <span>Nouvelles Opportunités</span>
+        </div>
+        <div class="sidebar-widget">
+            <h3>Assistance</h3>
+            <p style="font-size: 14px;">📞 +226 25 30 00 00<br>📧 contact@portail.gov.bf</p>
+        </div>
+        <div class="sidebar-widget">
+            <h3>Fichiers récents</h3>
+            <ul style="font-size: 13px; padding-left: 20px;">
+                <li><a href="#" style="color:var(--blue-main)">Code des Marchés 2026.pdf</a></li>
+                <li><a href="#" style="color:var(--blue-main)">Modèle d'offre technique.docx</a></li>
+            </ul>
+        </div>
+    </aside>
+</div>
+
 
 <!-- home section -->
 <div id="home">
@@ -313,4 +471,24 @@
 	</div>
 </div>
 
+{% endblock %}
+
+{% block extra_js  %}
+<script>
+    function filterResults() {
+        let input = document.getElementById('searchInput').value.toUpperCase();
+        let tables = document.querySelectorAll('table');
+        
+        tables.forEach(table => {
+            let tr = table.getElementsByTagName('tr');
+            for (let i = 0; i < tr.length; i++) {
+                let td = tr[i].getElementsByTagName('td')[0];
+                if (td) {
+                    let txtValue = td.textContent || td.innerText;
+                    tr[i].style.display = txtValue.toUpperCase().indexOf(input) > -1 ? "" : "none";
+                }
+            }
+        });
+    }
+</script>
 {% endblock %}

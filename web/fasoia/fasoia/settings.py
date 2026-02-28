@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'phonenumber_field',
     'myAppli', 
+    'analyse_ia'
 ]
 
 MIDDLEWARE = [
