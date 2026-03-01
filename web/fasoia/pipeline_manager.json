@@ -1,0 +1,48 @@
+{
+    "scripts": {
+        "scraping": [
+            {
+                "name": "Scraping AMI",
+                "path": "myAppli/management/commands/uemoa_ami_to_db.py",
+                "required": true,
+                "description": "Scraping des avis à manifestation d'intérêt"
+            },
+            {
+                "name": "Scraping Offres",
+                "path": "myAppli/management/commands/uemoa_offre_to_db.py",
+                "required": true,
+                "description": "Scraping des appels d'offres"
+            }
+        ],
+        "analyse": [
+            {
+                "name": "Analyse PDFs",
+                "path": "analyse_ia/analyser_pdfs.py",
+                "required": true,
+                "description": "Analyse des PDFs avec IA"
+            }
+        ],
+        "extraction": [
+            {
+                "name": "Extraction éléments",
+                "path": "analyse_ia/extraire_elements.py",
+                "required": true,
+                "description": "Extraction des données structurées"
+            }
+        ],
+        "recommandations": [
+            {
+                "name": "Génération recommandations",
+                "path": "analyse_ia/moteur_recommandation.py",
+                "required": true,
+                "description": "Matching entreprises/opportunités"
+            }
+        ]
+    },
+    "settings": {
+        "base_dir": "/media/folly/28DC9DDE2CA969AD/DOCS/SEA/UJKZ/COURS/MEMOIRE/fasoia/web/fasoia",
+        "python": "/media/folly/28DC9DDE2CA969AD/DOCS/SEA/UJKZ/COURS/MEMOIRE/fasoia/web/.env/bin/python",
+        "log_dir": "/var/log/fasoia",
+        "timeout": 7200
+    }
+}

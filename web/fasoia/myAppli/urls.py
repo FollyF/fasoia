@@ -19,5 +19,7 @@ from .views import *
 
 urlpatterns = [
     path('', home,  name='home'),
-    path('opportunites/', opportunites, name='opportunites')
+    path('opportunites/', opportunites, name='opportunites'),
+    path('connexion/', connexion, name='connexion'),
+    path('inscription/', inscription, name='inscription')
 ]

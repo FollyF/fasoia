@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{% block title %}Inscription - FasoIA{% endblock %}
+
+{% block extra_css %}
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Page d'inscription isolée */
+        .inscription-page {
+            background-color: #031525;
+            min-height: calc(100vh - 200px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 440px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 30px;
+            color: #ffffff;
+        }
+
+        /* Sélecteur de Profil */
+        .profile-selection {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            justify-content: center;
+        }
+
+        .profile-card {
+            flex: 1;
+            padding: 15px 10px;
+            border: 1px solid #3d5467;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .profile-card:hover {
+            border-color: #1ed760;
+            background: rgba(30, 215, 96, 0.05);
+        }
+
+        .profile-card.active {
+            border-color: #1ed760;
+            background: rgba(30, 215, 96, 0.1);
+            box-shadow: 0 0 10px rgba(30, 215, 96, 0.2);
+        }
+
+        .profile-card span {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #aebbc5;
+        }
+
+        .profile-card.active span {
+            color: #1ed760;
+        }
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+
+        input[type="email"], input[type="text"] {
+            width: 100%;
+            background-color: #03121f;
+            border: 1px solid #3d5467;
+            border-radius: 4px;
+            padding: 14px;
+            color: white;
+            font-size: 16px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #1ed760;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background-color: #1ed760;
+            color: #000;
+            border: none;
+            border-radius: 50px;
+            padding: 16px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        .divider {
+            margin: 25px 0;
+            color: #aebbc5;
+            font-size: 14px;
+            position: relative;
+        }
+
+        .btn-social {
+            width: 100%;
+            background: transparent;
+            border: 1px solid #3d5467;
+            border-radius: 50px;
+            color: white;
+            padding: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-social:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: #ffffff;
+        }
+
+        .btn-social img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .login-link {
+            display: block;
+            margin-top: 20px;
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .login-link:hover {
+            text-decoration: underline;
+        }
+
+        .legal-footer {
+            margin-top: 40px;
+            font-size: 11px;
+            color: #7f8c98;
+            padding: 0 20px;
+        }
+
+        .legal-footer a {
+            color: #7f8c98;
+            text-decoration: underline;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="inscription-page">
+        <div class="auth-card">
+            <h1>Inscrivez-vous pour<br>commencer</h1>
+
+            <form method="POST" action="{% url 'inscription' %}">
+                {% csrf_token %}
+                
+                <label style="text-align: left; display: block; margin-bottom: 10px;">Je suis un :</label>
+                <div class="profile-selection">
+                    <div class="profile-card {% if selected_profile == 'particulier' %}active{% endif %}" 
+                         onclick="selectProfile(this)" 
+                         data-profile="particulier">
+                        <span>Particulier</span>
+                    </div>
+                    <div class="profile-card {% if selected_profile == 'entreprise' %}active{% endif %}" 
+                         onclick="selectProfile(this)" 
+                         data-profile="entreprise">
+                        <span>Entreprise</span>
+                    </div>
+                    <div class="profile-card {% if selected_profile == 'partenaire' %}active{% endif %}" 
+                         onclick="selectProfile(this)" 
+                         data-profile="partenaire">
+                        <span>Partenaire</span>
+                    </div>
+                </div>
+
+                <!-- Champ caché pour le profil sélectionné -->
+                <input type="hidden" name="profile_type" id="profile_type" value="particulier">
+
+                <div class="form-group">
+                    <label>Adresse e-mail</label>
+                    <input type="email" name="email" placeholder="nom@domaine.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Nom complet</label>
+                    <input type="text" name="fullname" placeholder="Votre nom" required>
+                </div>
+
+                <button type="submit" class="btn-submit">Suivant</button>
+            </form>
+
+            <div class="divider">ou</div>
+
+            <button class="btn-social" onclick="alert('Inscription Google (à implémenter)')">
+                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google">
+                S'inscrire avec Google
+            </button>
+
+            <a href="{% url 'connexion' %}" class="login-link">Se connecter</a>
+
+            <div class="legal-footer">
+                Ce site est protégé par reCAPTCHA. La <a href="#">Politique de confidentialité</a> et les <a href="#">Conditions d'utilisation</a> s'appliquent.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function selectProfile(element) {
+            // Désélectionner tous les profils
+            document.querySelectorAll('.profile-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            // Sélectionner le profil cliqué
+            element.classList.add('active');
+            
+            // Mettre à jour le champ caché
+            const profileType = element.getAttribute('data-profile');
+            document.getElementById('profile_type').value = profileType;
+        }
+
+        // Initialiser le champ caché avec la valeur par défaut
+        document.addEventListener('DOMContentLoaded', function() {
+            const defaultProfile = document.querySelector('.profile-card.active');
+            if (defaultProfile) {
+                const profileType = defaultProfile.getAttribute('data-profile');
+                document.getElementById('profile_type').value = profileType;
+            }
+        });
+    </script>
+{% endblock %}

@@ -1,5 +1,3 @@
-# peupler_elements.py
-
 import django
 import os
 import sys

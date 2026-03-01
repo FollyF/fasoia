@@ -13,3 +13,9 @@ def opportunites(request):
         'ami' : ami    
     }
     return render(request, 'myAppli/opportunites.html', context)
+
+def connexion(request):
+    return render(request, 'myAppli/connexion.html')
+   
+def inscription(request):
+    return render(request, 'myAppli/inscription.html')   

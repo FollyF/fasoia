@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block title %}Réplique Connexion{% endblock %}
+
+{% block extra_css %}
+    <style>
+        /* Styles de base et remise à zéro */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Conteneur principal pour la page de connexion */
+        .connexion-page {
+            background-color: #05192b;
+            min-height: calc(100vh - 200px); /* Ajuste selon la hauteur du footer */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Conteneur principal */
+        .login-card {
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+            text-align: center;
+            background-color: transparent;
+        }
+
+        /* Logo stylisé (Hexagone) */
+        .logo {
+            margin-bottom: 30px;
+        }
+
+        /* Titre principal */
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+        }
+
+        /* Formulaire */
+        .form-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            background-color: #03121f;
+            border: 1px solid #3e4f5f;
+            border-radius: 4px;
+            padding: 14px;
+            color: white;
+            font-size: 16px;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: #1ed760;
+        }
+
+        /* Bouton Continuer (Vert) */
+        .btn-continue {
+            width: 100%;
+            background-color: #1ed760;
+            color: #000000;
+            border: none;
+            border-radius: 50px;
+            padding: 16px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.1s;
+        }
+
+        .btn-continue:active {
+            transform: scale(0.98);
+        }
+
+        /* Séparateur "ou" */
+        .divider {
+            margin: 30px 0;
+            color: #aebbc5;
+            font-size: 14px;
+            position: relative;
+        }
+
+        /* Boutons Sociaux */
+        .social-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-social {
+            width: 100%;
+            background: transparent;
+            border: 1px solid #3e4f5f;
+            border-radius: 50px;
+            color: white;
+            padding: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-social:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: #ffffff;
+        }
+
+        .btn-social img {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Section Inscription */
+        .no-account {
+            margin-top: 35px;
+            color: #aebbc5;
+            font-size: 14px;
+        }
+
+        .signup-link {
+            display: block;
+            margin-top: 15px;
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .signup-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Footer Légal dans la carte */
+        .legal-footer {
+            margin-top: 50px;
+            font-size: 11px;
+            color: #7f8c98;
+            line-height: 1.5;
+            padding: 0 20px;
+        }
+
+        .legal-footer a {
+            color: #7f8c98;
+            text-decoration: underline;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="connexion-page">
+        <div class="login-card">
+            <div class="logo">
+                <svg width="45" height="45" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 5L85 25V65L50 85L15 65V25L50 5Z" fill="#1ed760" fill-opacity="0.3"/>
+                    <path d="M50 5L85 25V65L50 85L15 65V25L50 5Z" stroke="#4ade80" stroke-width="4"/>
+                    <path d="M50 5V85" stroke="#4ade80" stroke-width="2"/>
+                </svg>
+            </div>
+
+            <h1>Bon retour parmi nous</h1>
+
+            <div class="form-group">
+                <label>Adresse e-mail ou nom utilisateur</label>
+                <input type="text" spellcheck="false">
+            </div>
+
+            <button class="btn-continue">Continuer</button>
+
+            <div class="divider">ou</div>
+
+            <div class="social-container">
+                <button class="btn-social">
+                    <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google">
+                    Continuer avec Google
+                </button>
+                <button class="btn-social">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" alt="Facebook">
+                    Continuer avec Facebook
+                </button>
+                <button class="btn-social">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple" style="filter: invert(1);">
+                    Continuer avec Apple
+                </button>
+            </div>
+
+            <p class="no-account">Vous n'avez pas de compte ?</p>
+            <a href="{% url 'inscription' %}" class="signup-link">S'inscrire</a>
+
+            <div class="legal-footer">
+                Ce site est protégé par reCAPTCHA. La <a href="#">Politique de confidentialité</a> et les <a href="#">Conditions d'utilisation</a> de Google s'appliquent.
+            </div>
+        </div>
+    </div>
+{% endblock %}
