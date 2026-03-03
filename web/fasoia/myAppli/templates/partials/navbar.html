@@ -11,12 +11,20 @@
 		</div>
 		<div class="collapse navbar-collapse">
 			<ul class="nav navbar-nav navbar-right">
-				<li><a href="{% url 'home' %}" class="smoothScroll">ACCUEIL</a></li>
-				<li><a href="{% url 'opportunites' %}" class="moothScroll">OPPORTUNITÉS</a></li>
+				<li><a href="{% url 'myAppli:home' %}" class="smoothScroll">ACCUEIL</a></li>
+				<li><a href="{% url 'myAppli:opportunites' %}" class="moothScroll">OPPORTUNITÉS</a></li>
 				<li><a href="#about" class="smoothScroll">ENTREPRISE</a></li>
 				<li><a href="#portfolio" class="smoothScroll">PARTICULIER</a></li>
 				<li><a href="#pricing" class="smoothScroll">RECRUTEUR</a></li>
-				<li><a href="{% url 'connexion' %}" class="smoothScroll">CONNEXION</a></li>
+				{% if user.is_authenticated %}
+					<!-- Si l'utilisateur est connecté -->
+					<li><a href="{% url 'myAppli:profil' %}">PROFIL ({{ user.username }})</a></li>
+					<li><a href="{% url 'myAppli:deconnexion' %}">DÉCONNEXION</a></li>
+				{% else %}
+					<!-- Si l'utilisateur n'est pas connecté -->
+					<li><a href="{% url 'myAppli:connexion' %}">CONNEXION</a></li>
+					<li><a href="{% url 'myAppli:inscription' %}">INSCRIPTION</a></li>
+				{% endif %}
 			</ul>
 		</div>
 	</div>

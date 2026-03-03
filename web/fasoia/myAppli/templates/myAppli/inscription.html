@@ -190,7 +190,7 @@
         <div class="auth-card">
             <h1>Inscrivez-vous pour<br>commencer</h1>
 
-            <form method="POST" action="{% url 'inscription' %}" id="signup-form">
+            <form method="POST" action="{% url 'myAppli:inscription' %}" id="signup-form">
                 {% csrf_token %}
                 
                 <label style="text-align: left; display: block; margin-bottom: 10px;">Je suis un :</label>
@@ -218,6 +218,16 @@
                     <input type="text" name="fullname" id="fullname-input" placeholder="Votre réponse" required>
                 </div>
 
+                <div class="form-group">
+                    <label>Mot de passe</label>
+                    <input type="password" name="password1" placeholder="Créer un mot de passe" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Confirmation</label>
+                    <input type="password" name="password2" placeholder="Confirmez votre mot de passe" required>
+                </div>
+
                 <button type="submit" class="btn-submit">Suivant</button>
             </form>
 
@@ -239,7 +249,7 @@
             </div>
 
             <p class="no-account" style="margin-top: 25px; color: #aebbc5; font-size: 14px;">Vous avez déjà un compte ?</p>
-            <a href="{% url 'connexion' %}" class="login-link">Se connecter</a>
+            <a href="{% url 'myAppli:connexion' %}" class="login-link">Se connecter</a>
 
             <div class="legal-footer">
                 Ce site est protégé par reCAPTCHA. La <a href="#">Politique de confidentialité</a> et les <a href="#">Conditions d'utilisation</a> de Google s'appliquent.

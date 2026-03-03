@@ -125,3 +125,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# =============================================
+# CONFIGURATION D'AUTHENTIFICATION
+# =============================================
+
+LOGIN_URL = 'myAppli:connexion'  # ← Où rediriger si @login_required échoue
+LOGIN_REDIRECT_URL = 'myAppli:home'  # ← Où rediriger après connexion réussie
+LOGOUT_REDIRECT_URL = 'myAppli:connexion'  # ← Où rediriger après déconnexion

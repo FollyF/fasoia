@@ -1,5 +1,8 @@
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 class CarnevasDocument(models.Model):
     nom = models.CharField(max_length=100)
@@ -30,6 +33,36 @@ class Document(models.Model):
     def __str__(self):
         return self.nom
     
+class ProfilUtilisateur(models.Model):
+    """
+    Extension du modèle User pour stocker des informations supplémentaires
+    """
+    TYPE_PROFIL = [
+        ('particulier', 'Particulier'),
+        ('entreprise', 'Entreprise'),
+        ('partenaire', 'Partenaire'),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profil')
+    type_profil = models.CharField(max_length=20, choices=TYPE_PROFIL, default='particulier')
+    telephone = models.CharField(max_length=20, blank=True)
+    date_inscription = models.DateTimeField(auto_now_add=True)
+    derniere_connexion = models.DateTimeField(null=True, blank=True)
+   
+    def __str__(self):
+        return f"{self.user.email}-{self.get_type_profil_display()}"
+
+    # Signal pour créer automatiquement un profil lors de l'inscription
+    @receiver(post_save, sender=User)
+    def creer_profil_utilisateur(sender, instance, created, **kwargs):
+        if created:
+            ProfilUtilisateur.objects.create(user=instance)
+
+    @receiver(post_save, sender=User)
+    def sauvegarder_profil_utilisateur(sender, instance, **kwargs):
+        if hasattr(instance, 'profil'):
+            instance.profil.save()
+
 class Profil(models.Model):
     role = models.CharField(max_length=100)
     autorisation = models.CharField(max_length=300)
