@@ -15,7 +15,7 @@ def opportunites(request):
     return render(request, 'myAppli/opportunites.html', context)
 
 def connexion(request):
-    return render(request, 'myAppli/connexion.html')
+    return render(request, 'myAppli/connexion.html', {'no_header_footer': True})
    
 def inscription(request):
-    return render(request, 'myAppli/inscription.html')   
+    return render(request, 'myAppli/inscription.html', {'no_header_footer': True})   

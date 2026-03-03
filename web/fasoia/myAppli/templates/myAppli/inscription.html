@@ -11,12 +11,19 @@
 
         /* Page d'inscription isolée */
         .inscription-page {
-            background-color: #031525;
-            min-height: calc(100vh - 200px);
+            background-color: #05192b; /* Unifié avec la page de connexion */
+            min-height: calc(100vh - 100px);
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 40px 20px;
+        }
+
+        .social-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 10px;
         }
 
         .auth-card {
@@ -183,29 +190,22 @@
         <div class="auth-card">
             <h1>Inscrivez-vous pour<br>commencer</h1>
 
-            <form method="POST" action="{% url 'inscription' %}">
+            <form method="POST" action="{% url 'inscription' %}" id="signup-form">
                 {% csrf_token %}
                 
                 <label style="text-align: left; display: block; margin-bottom: 10px;">Je suis un :</label>
                 <div class="profile-selection">
-                    <div class="profile-card {% if selected_profile == 'particulier' %}active{% endif %}" 
-                         onclick="selectProfile(this)" 
-                         data-profile="particulier">
+                    <div class="profile-card active" onclick="updateProfile(this, 'particulier', 'Nom complet')">
                         <span>Particulier</span>
                     </div>
-                    <div class="profile-card {% if selected_profile == 'entreprise' %}active{% endif %}" 
-                         onclick="selectProfile(this)" 
-                         data-profile="entreprise">
+                    <div class="profile-card" onclick="updateProfile(this, 'entreprise', 'Nom de l\'entreprise')">
                         <span>Entreprise</span>
                     </div>
-                    <div class="profile-card {% if selected_profile == 'partenaire' %}active{% endif %}" 
-                         onclick="selectProfile(this)" 
-                         data-profile="partenaire">
+                    <div class="profile-card" onclick="updateProfile(this, 'partenaire', 'Nom complet / Organisation')">
                         <span>Partenaire</span>
                     </div>
                 </div>
 
-                <!-- Champ caché pour le profil sélectionné -->
                 <input type="hidden" name="profile_type" id="profile_type" value="particulier">
 
                 <div class="form-group">
@@ -214,8 +214,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Nom complet</label>
-                    <input type="text" name="fullname" placeholder="Votre nom" required>
+                    <label id="fullname-label">Nom complet</label>
+                    <input type="text" name="fullname" id="fullname-input" placeholder="Votre réponse" required>
                 </div>
 
                 <button type="submit" class="btn-submit">Suivant</button>
@@ -223,41 +223,53 @@
 
             <div class="divider">ou</div>
 
-            <button class="btn-social" onclick="alert('Inscription Google (à implémenter)')">
-                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google">
-                S'inscrire avec Google
-            </button>
+            <div class="social-container">
+                <button class="btn-social">
+                    <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google">
+                    S'inscrire avec Google
+                </button>
+                <button class="btn-social">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" alt="Facebook">
+                    S'inscrire avec Facebook
+                </button>
+                <button class="btn-social">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple" style="filter: invert(1);">
+                    S'inscrire avec Apple
+                </button>
+            </div>
 
+            <p class="no-account" style="margin-top: 25px; color: #aebbc5; font-size: 14px;">Vous avez déjà un compte ?</p>
             <a href="{% url 'connexion' %}" class="login-link">Se connecter</a>
 
             <div class="legal-footer">
-                Ce site est protégé par reCAPTCHA. La <a href="#">Politique de confidentialité</a> et les <a href="#">Conditions d'utilisation</a> s'appliquent.
+                Ce site est protégé par reCAPTCHA. La <a href="#">Politique de confidentialité</a> et les <a href="#">Conditions d'utilisation</a> de Google s'appliquent.
             </div>
         </div>
     </div>
 
     <script>
-        function selectProfile(element) {
-            // Désélectionner tous les profils
+        function updateProfile(element, type, labelText) {
+            // 1. Gérer les classes actives
             document.querySelectorAll('.profile-card').forEach(card => {
                 card.classList.remove('active');
             });
-            
-            // Sélectionner le profil cliqué
             element.classList.add('active');
             
-            // Mettre à jour le champ caché
-            const profileType = element.getAttribute('data-profile');
-            document.getElementById('profile_type').value = profileType;
-        }
-
-        // Initialiser le champ caché avec la valeur par défaut
-        document.addEventListener('DOMContentLoaded', function() {
-            const defaultProfile = document.querySelector('.profile-card.active');
-            if (defaultProfile) {
-                const profileType = defaultProfile.getAttribute('data-profile');
-                document.getElementById('profile_type').value = profileType;
+            // 2. Mettre à jour le champ caché pour Django
+            document.getElementById('profile_type').value = type;
+            
+            // 3. Modifier le label dynamiquement
+            const label = document.getElementById('fullname-label');
+            const input = document.getElementById('fullname-input');
+            
+            label.innerText = labelText;
+            
+            // Optionnel : changer le placeholder selon le type
+            if(type === 'entreprise') {
+                input.placeholder = "Ex: Faso Digital SA";
+            } else {
+                input.placeholder = "Votre nom";
             }
-        });
+        }
     </script>
 {% endblock %}

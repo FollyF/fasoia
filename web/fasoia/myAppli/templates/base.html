@@ -25,14 +25,18 @@
 <body data-spy="scroll" data-target=".navbar-collapse">
 	
 <!-- navbar -->
+{% if not no_header_footer %}
 {% include "partials/navbar.html" %}
+{% endif %}
 
 {% block content %}
 
 {% endblock %}
 
 <!-- footer section -->
+{% if not no_header_footer %}
 {% include "partials/footer.html" %}
+
 
 <!-- divider section -->
 <div class="container">
@@ -50,7 +54,7 @@
 
 <!-- scrolltop section -->
 <a href="#top" class="go-top"><i class="fa fa-angle-up"></i></a>
-
+{% endif %}
 
 <!-- javascript js -->	
 <script src="{% static "js/jquery.js" %}"></script>
