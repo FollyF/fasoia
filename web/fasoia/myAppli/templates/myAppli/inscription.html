@@ -11,7 +11,7 @@
 
         /* Page d'inscription isolée */
         .inscription-page {
-            background-color: #05192b; /* Unifié avec la page de connexion */
+            background-color: #05192b;
             min-height: calc(100vh - 100px);
             display: flex;
             justify-content: center;
@@ -93,7 +93,9 @@
             color: #ffffff;
         }
 
-        input[type="email"], input[type="text"] {
+        input[type="email"], 
+        input[type="text"], 
+        input[type="password"] {
             width: 100%;
             background-color: #03121f;
             border: 1px solid #3d5467;
@@ -182,6 +184,11 @@
             color: #7f8c98;
             text-decoration: underline;
         }
+
+        /* Classes pour afficher/masquer */
+        .hidden {
+            display: none;
+        }
     </style>
 {% endblock %}
 
@@ -195,13 +202,13 @@
                 
                 <label style="text-align: left; display: block; margin-bottom: 10px;">Je suis un :</label>
                 <div class="profile-selection">
-                    <div class="profile-card active" onclick="updateProfile(this, 'particulier', 'Nom complet')">
+                    <div class="profile-card active" onclick="updateProfile(this, 'particulier')">
                         <span>Particulier</span>
                     </div>
-                    <div class="profile-card" onclick="updateProfile(this, 'entreprise', 'Nom de l\'entreprise')">
+                    <div class="profile-card" onclick="updateProfile(this, 'entreprise')">
                         <span>Entreprise</span>
                     </div>
-                    <div class="profile-card" onclick="updateProfile(this, 'partenaire', 'Nom complet / Organisation')">
+                    <div class="profile-card" onclick="updateProfile(this, 'partenaire')">
                         <span>Partenaire</span>
                     </div>
                 </div>
@@ -213,9 +220,16 @@
                     <input type="email" name="email" placeholder="nom@domaine.com" required>
                 </div>
 
-                <div class="form-group">
+                <!-- Champ pour particulier/partenaire (nom complet) -->
+                <div class="form-group" id="fullname-group">
                     <label id="fullname-label">Nom complet</label>
-                    <input type="text" name="fullname" id="fullname-input" placeholder="Votre réponse" required>
+                    <input type="text" name="fullname" id="fullname-input" placeholder="Votre nom complet" required>
+                </div>
+
+                <!-- Champ pour entreprise (raison sociale) - Caché par défaut -->
+                <div class="form-group hidden" id="raison-sociale-group">
+                    <label>Nom de l'entreprise</label>
+                    <input type="text" name="raison_sociale" id="raison-sociale-input" placeholder="Raison sociale" required>
                 </div>
 
                 <div class="form-group">
@@ -258,7 +272,7 @@
     </div>
 
     <script>
-        function updateProfile(element, type, labelText) {
+        function updateProfile(element, type) {
             // 1. Gérer les classes actives
             document.querySelectorAll('.profile-card').forEach(card => {
                 card.classList.remove('active');
@@ -268,17 +282,37 @@
             // 2. Mettre à jour le champ caché pour Django
             document.getElementById('profile_type').value = type;
             
-            // 3. Modifier le label dynamiquement
-            const label = document.getElementById('fullname-label');
-            const input = document.getElementById('fullname-input');
+            // 3. Récupérer les éléments
+            const fullnameGroup = document.getElementById('fullname-group');
+            const raisonSocialeGroup = document.getElementById('raison-sociale-group');
+            const fullnameInput = document.getElementById('fullname-input');
+            const raisonSocialeInput = document.getElementById('raison-sociale-input');
+            const fullnameLabel = document.getElementById('fullname-label');
             
-            label.innerText = labelText;
-            
-            // Optionnel : changer le placeholder selon le type
-            if(type === 'entreprise') {
-                input.placeholder = "Ex: Faso Digital SA";
+            if (type === 'entreprise') {
+                // Mode entreprise
+                fullnameGroup.classList.add('hidden');
+                raisonSocialeGroup.classList.remove('hidden');
+                
+                fullnameInput.required = false;
+                raisonSocialeInput.required = true;
+                
+                raisonSocialeInput.placeholder = "Ex: Faso Digital SA";
             } else {
-                input.placeholder = "Votre nom";
+                // Mode particulier ou partenaire
+                fullnameGroup.classList.remove('hidden');
+                raisonSocialeGroup.classList.add('hidden');
+                
+                fullnameInput.required = true;
+                raisonSocialeInput.required = false;
+                
+                if (type === 'particulier') {
+                    fullnameLabel.innerText = 'Nom complet';
+                    fullnameInput.placeholder = "Votre nom complet";
+                } else if (type === 'partenaire') {
+                    fullnameLabel.innerText = 'Nom / Organisation';
+                    fullnameInput.placeholder = "Votre nom ou organisation";
+                }
             }
         }
     </script>

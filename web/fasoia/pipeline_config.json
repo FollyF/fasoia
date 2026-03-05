@@ -1,0 +1,58 @@
+{
+    "nom_pipeline": "Pipeline UEMOA",
+    "version": "1.0.0",
+    
+    "etapes": {
+        "scraping": {
+            "description": "Scraping des AMI et offres UEMOA",
+            "commandes": [
+                {
+                    "type": "django",
+                    "commande": "uemoa_ami_to_db",
+                    "description": "Import des AMI"
+                },
+                {
+                    "type": "django",
+                    "commande": "uemoa_offre_to_db",
+                    "description": "Import des offres"
+                }
+            ]
+        },
+        
+        "analyse": {
+            "description": "Analyse des PDFs avec l'IA",
+            "commandes": [
+                {
+                    "type": "python",
+                    "chemin": "analyse_ia/analyser_pdfs.py",
+                    "args": [],
+                    "description": "Analyse des PDFs téléchargés"
+                }
+            ]
+        },
+        
+        "extraction": {
+            "description": "Extraction des éléments des PDFs",
+            "commandes": [
+                {
+                    "type": "python",
+                    "chemin": "analyse_ia/extraire_elements.py",
+                    "args": [],
+                    "description": "Extraction des données structurées"
+                }
+            ]
+        }
+    },
+    
+    "pipelines": {
+        "all": {
+            "description": "Exécute tout le pipeline",
+            "etapes": ["scraping", "analyse", "extraction"]
+        }
+    },
+    
+    "options": {
+        "stop_on_error": true,
+        "log_level": "INFO"
+    }
+}

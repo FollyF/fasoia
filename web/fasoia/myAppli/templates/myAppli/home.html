@@ -16,8 +16,12 @@
             font-family: 'Segoe UI', Arial, sans-serif;
             background-color: var(--bg-gray);
             margin: 0;
-            padding: 100px 20px 20px 20px;
+            padding: 0 20px 20px 20px;
         }
+
+		.navbar {
+			top: 0 !important;  /* Force la navbar en haut */
+		}
 
         .page-layout {
             display: flex;
@@ -29,7 +33,8 @@
         /* BARRE DE RECHERCHE */
         .search-container {
             max-width: 1200px;
-            margin: 0 auto 25px auto;
+            margin: 100px auto 25px auto;
+
         }
 
         #searchInput {
@@ -94,6 +99,13 @@
             margin-bottom: 25px;
         }
 
+		.empty-message {
+        padding: 30px;
+        text-align: center;
+        color: #888;
+        font-style: italic;
+    	}
+
         /* RESPONSIVE */
         @media (max-width: 900px) {
             .page-layout { flex-direction: column; }
@@ -105,62 +117,92 @@
 
  {% block content %}
 
-<!-- opportunities section -->
+<!-- ===== SECTION OPPORTUNITÉS DYNAMIQUE ===== -->
 <div class="search-container">
     <input type="text" id="searchInput" onkeyup="filterResults()" placeholder="Rechercher un appel d'offre, un avis ou un poste...">
 </div>
 
 <div class="page-layout">
-
     <main class="main-content">
+        <!-- Appels d'Offres récents -->
         <div class="opportunity-card">
-            <div class="card-header"><h2>Appels d'Offres</h2></div>
+            <div class="card-header">
+                <h2>Derniers Appels d'Offres ({{ dernieres_offres|length }})</h2>
+            </div>
             <table id="tableAO">
-                <tr><td><a href="#" class="title-link">Construction de 10 forages solaires</a><span class="date-label">Échéance : 15/03/2026</span></td></tr>
-                <tr><td><a href="#" class="title-link">Achat de matériel biomédical</a><span class="date-label">Échéance : 20/03/2026</span></td></tr>
+                {% for offre in dernieres_offres %}
+                <tr>
+                    <td>
+                        <a href="{% url 'myAppli:detail_offre' offre.id %}" class="title-link">
+                            {{ offre.description|truncatechars:80 }}
+                        </a>
+                        <span class="ref-label">Réf: OFFRE-{{ offre.id }}</span>
+                        {% if offre.date_limite %}
+                        <span class="date-label">Échéance : {{ offre.date_limite|date:"d/m/Y" }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td class="empty-message">Aucun appel d'offre disponible pour le moment</td>
+                </tr>
+                {% endfor %}
             </table>
-            <div class="card-footer"><a href="#" class="btn-more">VOIR TOUT →</a></div>
+            <div class="card-footer">
+                <a href="{% url 'myAppli:opportunites' %}" class="btn-more">VOIR TOUS LES APPELS D'OFFRES →</a>
+            </div>
         </div>
 
+        <!-- Dernières Manifestations d'intérêt -->
         <div class="opportunity-card">
-            <div class="card-header"><h2>Manifestations d'intérêt</h2></div>
+            <div class="card-header">
+                <h2>Dernières Manifestations d'intérêt ({{ derniers_amis|length }})</h2>
+            </div>
             <table id="tableAMI">
-                <tr><td><a href="#" class="title-link">Consultant en gestion de projets agricoles</a><span class="date-label">Publié le : 25/02/2026</span></td></tr>
-                <tr><td><a href="#" class="title-link">Cabinet d'audit financier certifié</a><span class="date-label">Publié le : 22/02/2026</span></td></tr>
+                {% for ami in derniers_amis %}
+                <tr>
+                    <td>
+                        <a href="{% url 'myAppli:detail_ami' ami.id %}" class="title-link">
+                            {{ ami.description|truncatechars:80 }}
+                        </a>
+                        <span class="ref-label">Réf: AMI-{{ ami.id }}</span>
+                        {% if ami.date_limite %}
+                        <span class="date-label">Échéance : {{ ami.date_limite|date:"d/m/Y" }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td class="empty-message">Aucune manifestation d'intérêt disponible pour le moment</td>
+                </tr>
+                {% endfor %}
             </table>
-            <div class="card-footer"><a href="#" class="btn-more">VOIR TOUT →</a></div>
-        </div>
-
-        <div class="opportunity-card">
-            <div class="card-header"><h2>Offres d'Emploi</h2></div>
-            <table id="tableEmploi">
-                <tr><td><a href="#" class="title-link">Spécialiste en Passation des Marchés</a><span class="date-label">Limite : 10/03/2026 | Ouagadougou</span></td></tr>
-                <tr><td><a href="#" class="title-link">Comptable Senior (H/F)</a><span class="date-label">Limite : 12/03/2026 | Bobo-Dioulasso</span></td></tr>
-                <tr><td><a href="#" class="title-link">Assistant de Direction</a><span class="date-label">Limite : 14/03/2026 | Koudougou</span></td></tr>
-            </table>
-            <div class="card-footer"><a href="#" class="btn-more">VOIR TOUTES LES OFFRES →</a></div>
+            <div class="card-footer">
+                <a href="{% url 'myAppli:opportunites' %}" class="btn-more">VOIR TOUTES LES AMI →</a>
+            </div>
         </div>
     </main>
 
     <aside class="sidebar">
         <div class="stat-box">
-            <span style="font-size: 2rem; font-weight: bold;">24</span><br>
-            <span>Nouvelles Opportunités</span>
+            <span style="font-size: 2rem; font-weight: bold;">{{ total_opportunites }}</span><br>
+            <span>Opportunités disponibles</span>
         </div>
         <div class="sidebar-widget">
             <h3>Assistance</h3>
             <p style="font-size: 14px;">📞 +226 25 30 00 00<br>📧 contact@portail.gov.bf</p>
         </div>
         <div class="sidebar-widget">
-            <h3>Fichiers récents</h3>
+            <h3>Liens utiles</h3>
             <ul style="font-size: 13px; padding-left: 20px;">
-                <li><a href="#" style="color:var(--blue-main)">Code des Marchés 2026.pdf</a></li>
-                <li><a href="#" style="color:var(--blue-main)">Modèle d'offre technique.docx</a></li>
+                <li><a href="#" style="color:var(--blue-main)">Code des Marchés 2026</a></li>
+                <li><a href="#" style="color:var(--blue-main)">Guide du soumissionnaire</a></li>
+                <li><a href="#" style="color:var(--blue-main)">Calendrier des publications</a></li>
             </ul>
         </div>
     </aside>
 </div>
-
+<!-- ===== FIN SECTION OPPORTUNITÉS DYNAMIQUE ===== -->
 
 <!-- home section -->
 <div id="home">
@@ -475,6 +517,7 @@
 
 {% block extra_js  %}
 <script>
+    
     function filterResults() {
         let input = document.getElementById('searchInput').value.toUpperCase();
         let tables = document.querySelectorAll('table');
@@ -490,5 +533,67 @@
             }
         });
     }
+
+    window.onload = function() {
+        // Récupère la hauteur de la navbar
+        var navbar = document.querySelector('.navbar');
+        var navbarHeight = navbar ? navbar.offsetHeight : 0;
+        
+        // Applique la hauteur comme padding-top au body
+        document.body.style.paddingTop = navbarHeight + 'px';
+        
+        // Supprime le margin-top du search-container s'il existe
+        var searchContainer = document.querySelector('.search-container');
+        if (searchContainer) {
+            searchContainer.style.marginTop = '0';
+        }
+        
+        console.log('Body padding-top fixé à:', navbarHeight, 'px');
+    };
+	window.onload = function() {
+        // Récupère la hauteur de la navbar
+        var navbar = document.querySelector('.navbar');
+        var navbarHeight = navbar ? navbar.offsetHeight : 0;
+        
+        // FORCE le padding-top du body
+        document.body.style.paddingTop = navbarHeight + 'px';
+        document.body.style.marginTop = '0';
+        
+        // FORCE aussi le premier élément à avoir un margin-top
+        var firstElement = document.querySelector('.search-container') || 
+                          document.querySelector('.page-layout') || 
+                          document.querySelector('#home');
+        
+        if (firstElement) {
+            firstElement.style.marginTop = '0';
+            firstElement.style.paddingTop = '0';
+        }
+        
+        console.log('Body padding-top fixé à:', navbarHeight, 'px');
+        
+        // Vérification
+        setTimeout(function() {
+            var searchTop = document.querySelector('.search-container')?.getBoundingClientRect().top;
+            console.log('Search top après correction:', searchTop);
+        }, 100);
+    };
+	window.onload = function() {
+        var navbar = document.querySelector('.navbar');
+        navbar.style.height = '90px';
+        navbar.style.minHeight = '90px';
+        
+        var container = navbar.querySelector('.container');
+        container.style.height = '90px';
+        container.style.display = 'flex';
+        container.style.alignItems = 'center';
+        
+        var nav = navbar.querySelector('.navbar-nav');
+        if(nav) {
+            nav.style.height = '90px';
+            nav.style.display = 'flex';
+            nav.style.alignItems = 'center';
+        }
+    };
+
 </script>
 {% endblock %}

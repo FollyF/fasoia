@@ -25,5 +25,8 @@ urlpatterns = [
     path('inscription/', views.inscription, name='inscription'),
     path('deconnexion/', views.deconnexion, name='deconnexion'),
     path('profil/', views.profil, name='profil'),
-
+    path('tableau_bord_entreprise/', views.tableau_bord_entreprise, name='tableau_bord_entreprise'),
+    path('completer-profil-entreprise/', views.completer_profil_entreprise, name='completer_profil_entreprise'),
+    path('offre/<int:pk>/', views.detail_offre, name='detail_offre'),
+    path('ami/<int:pk>/', views.detail_ami, name='detail_ami'),
 ]

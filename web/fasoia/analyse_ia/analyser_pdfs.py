@@ -1,4 +1,4 @@
-# analyse_ia/analyseur_final.py
+# analyse_ia/analyser_pdfs.py
 
 import fitz  # PyMuPDF
 import pytesseract
@@ -6,6 +6,7 @@ from PIL import Image
 import io
 import spacy
 import re
+import time  # AJOUTER CET IMPORT
 from pathlib import Path
 import django
 import os
@@ -51,13 +52,14 @@ class AnalyseurHybride:
             
             for i in range(len(doc)):
                 page = doc[i]
+                debut_page = time.time()  # AJOUT
                 
                 # 1. Essayer d'extraire le texte natif
                 texte_natif = page.get_text()
                 mots_natifs = [w for w in texte_natif.split() if len(w) > 3]
                 
                 if len(mots_natifs) > 10:  # Page textuelle
-                    print(f"   Page {i+1}: 📝 texte ({len(mots_natifs)} mots)")
+                    print(f"   Page {i+1}: 📝 texte ({len(mots_natifs)} mots) - {time.time()-debut_page:.1f}s")
                     texte_complet += f"\n--- Page {i+1} ---\n"
                     texte_complet += texte_natif
                     stats['texte'] += 1
@@ -71,7 +73,8 @@ class AnalyseurHybride:
                     
                     # OCR
                     texte_ocr = pytesseract.image_to_string(img, lang='fra')
-                    print(f" {len(texte_ocr)} caractères")
+                    duree = time.time() - debut_page  # AJOUT
+                    print(f" {len(texte_ocr)} caractères - {duree:.1f}s")
                     
                     texte_complet += f"\n--- Page {i+1} (OCR) ---\n"
                     texte_complet += texte_ocr
@@ -86,6 +89,9 @@ class AnalyseurHybride:
     
     def analyser_texte(self, texte):
         """Analyse le texte avec spaCy"""
+        debut = time.time()  # AJOUT
+        print(f"   🔄 Analyse NLP en cours...", end='', flush=True)
+        
         doc = self.nlp(texte[:100000])
         
         # Mots-clés
@@ -141,6 +147,9 @@ class AnalyseurHybride:
         else:
             categorie = 'AUTRE'
         
+        duree = time.time() - debut  # AJOUT
+        print(f" ✅ {duree:.1f}s")
+        
         return {
             'mots_cles': mots_cles,
             'entites': entites,
@@ -151,6 +160,7 @@ class AnalyseurHybride:
     def traiter_document(self, doc_source):
         """Traite un DocumentSource complet"""
         print(f"\n📄 Traitement de: {doc_source.nom_fichier}")
+        debut_doc = time.time()  # AJOUT
         
         # 1. Vérifier que le fichier existe
         chemin_complet = f"/media/folly/28DC9DDE2CA969AD/DOCS/SEA/UJKZ/COURS/MEMOIRE/fasoia/web/fasoia/myAppli/pdfs/{doc_source.nom_fichier}"
@@ -190,17 +200,22 @@ class AnalyseurHybride:
                 'mots_cles': resultats['mots_cles'],
                 'entites': resultats['entites'],
                 'categorie': resultats['categorie'],
-                'temps_analyse_ms': 0
+                'temps_analyse_ms': int((time.time() - debut_doc) * 1000)  # AJOUT
             }
         )
         
+        duree_totale = time.time() - debut_doc  # AJOUT
         print(f"   ✅ Analyse {'créée' if created else 'mise à jour'} (ID: {analyse.id})")
         print(f"   📌 Catégorie: {resultats['categorie']}")
         print(f"   🔑 Top mots: {list(resultats['mots_cles'].keys())[:5]}")
+        print(f"   ⏱️  Temps total: {duree_totale:.1f}s")  # AJOUT
         
         return analyse
 
 if __name__ == "__main__":
+    import time  # AJOUT
+    debut_global = time.time()  # AJOUT
+    
     print("="*60)
     print("🔍 ANALYSEUR HYBRIDE PDF (TEXTE + OCR)")
     print("="*60)
@@ -227,3 +242,9 @@ if __name__ == "__main__":
         print(f"\n{'='*60}")
         print(f"[{i}/{len(docs_a_traiter)}]")
         analyseur.traiter_document(doc)
+    
+    duree_globale = time.time() - debut_global  # AJOUT
+    print(f"\n{'='*60}")
+    print(f"🏁 ANALYSE TERMINÉE en {duree_globale:.1f} secondes")
+    print(f"📊 Moyenne: {duree_globale/len(docs_a_traiter):.1f}s par document")
+    print("="*60)

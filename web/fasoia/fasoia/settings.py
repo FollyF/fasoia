@@ -27,8 +27,11 @@ SECRET_KEY = 'django-insecure-n6iyh#cucsuh8bf#^9q$l^!)$x_n7af#!9fz#z8)s3$oqhbr(4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+# Dans fasoia/settings.py
+ALLOWED_HOSTS = [
+    '127.0.0.1',      # ← Important
+    'localhost',      # ← Gardez-le aussi pour compatibilité
+]
 
 # Application definition
 

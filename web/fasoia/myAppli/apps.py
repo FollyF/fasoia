@@ -8,5 +8,4 @@ class MyAppliConfig(AppConfig):
     
     def ready(self):
         # C'est ici que les signaux sont chargés
-        import myAppli.signals
-        print("✅ Signaux chargés avec succès !")
+        pass

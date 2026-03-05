@@ -51,6 +51,7 @@ img:hover {
 }
 
 /* navigation */
+
 .navbar-default {
     background: #fff;
     border: none;
@@ -60,7 +61,6 @@ img:hover {
 .navbar-default .navbar-brand {
     background: #dc5034;
     color: #fff;
-    font-weight: bold;
     font-size: 30px;
     line-height: 50px;
     height: 90px;
@@ -77,7 +77,6 @@ img:hover {
 .navbar-default .navbar-nav li a {
     border-right: 1px solid #f9f9f9;
     color: #202020;
-     font-weight: bold;
     padding-right: 40px;
     padding-left: 40px;
     line-height: 60px;

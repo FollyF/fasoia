@@ -15,11 +15,10 @@
 				<li><a href="{% url 'myAppli:opportunites' %}" class="moothScroll">OPPORTUNITÉS</a></li>
 				<li><a href="#about" class="smoothScroll">ENTREPRISE</a></li>
 				<li><a href="#portfolio" class="smoothScroll">PARTICULIER</a></li>
-				<li><a href="#pricing" class="smoothScroll">RECRUTEUR</a></li>
 				{% if user.is_authenticated %}
 					<!-- Si l'utilisateur est connecté -->
-					<li><a href="{% url 'myAppli:profil' %}">PROFIL ({{ user.username }})</a></li>
-					<li><a href="{% url 'myAppli:deconnexion' %}">DÉCONNEXION</a></li>
+					<li><a href="{% url 'myAppli:tableau_bord_entreprise' %}">{{ user.username }}</a></li>
+					<li><a href="{% url 'myAppli:deconnexion' %}">LOGOUT</a></li>
 				{% else %}
 					<!-- Si l'utilisateur n'est pas connecté -->
 					<li><a href="{% url 'myAppli:connexion' %}">CONNEXION</a></li>
