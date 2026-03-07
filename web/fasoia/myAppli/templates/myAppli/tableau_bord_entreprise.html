@@ -8,9 +8,8 @@
     /* Tes styles existants - je les garde tous */
     .dashboard-container {
         max-width: 1200px;
-        margin: 100px auto 50px;
-        padding: 0 20px;
-    }
+        padding: 10px;
+   }
 
     .dashboard-header {
         background: linear-gradient(135deg, #05192b 0%, #0a2a3f 100%);
@@ -296,22 +295,6 @@
         font-weight: bold;
     }
 
-    .btn-details {
-        background: #1ed760;
-        color: black;
-        padding: 6px 12px;
-        border-radius: 4px;
-        text-decoration: none;
-        font-size: 12px;
-        display: inline-block;
-    }
-
-    .btn-details:hover {
-        background: #15b050;
-        color: black;
-        text-decoration: none;
-    }
-
     .ref-id {
         color: #1ed760;
         font-weight: bold;
@@ -328,6 +311,35 @@
         font-size: 12px;
         margin-top: 4px;
     }
+
+    .btn-container {
+        display: flex;
+        justify-content: center; /* Centre horizontalement */
+        align-items: center;     /* Aligne verticalement */
+        gap: 10px;                /* Espace entre les boutons */
+        flex-wrap: nowrap;       /* Empêche le retour à la ligne automatique */
+    }
+
+
+    /* Centrer le titre 'Actions' et son contenu */
+    th:last-child, td:last-child {
+        text-align: center;
+    }
+
+    /* Ajustement pour les petits écrans */
+    @media (max-width: 768px) {
+        .btn-container {
+            flex-wrap: wrap;     /* Permet aux boutons de s'empiler seulement si vraiment nécessaire */
+            gap: 4px;
+        }
+        
+        .btn-sm {
+            font-size: 10px;      /* Réduit légèrement la taille du texte sur mobile */
+            padding: 5px 8px;
+        }
+    }
+
+
 </style>
 {% endblock %}
 
@@ -558,7 +570,7 @@
                             <th>Description</th>
                             <th>Score</th>
                             <th>Date limite</th>
-                            <th>Action</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -599,10 +611,18 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="{% if reco.opportunite_type == 'Offre_uemoa' %}{% url 'myAppli:detail_offre' reco.opportunite_id %}{% else %}{% url 'myAppli:detail_ami' reco.opportunite_id %}{% endif %}" 
-                                   class="btn-details">
-                                    Détails
-                                </a>
+                                <div class="btn-container">
+                                    <a href="{% if reco.opportunite_type == 'Offre_uemoa' %}
+                                                {% url 'myAppli:detail_offre' reco.opportunite_id %}
+                                            {% else %}
+                                                {% url 'myAppli:detail_ami' reco.opportunite_id %}
+                                            {% endif %}" class="btn btn-info btn-sm">
+                                        <i class="fa fa-info-circle"></i> Détails
+                                    </a>
+                                    <a href="#" class="btn btn-success btn-sm">
+                                        <i class="fa fa-paper-plane"></i> Postuler
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}

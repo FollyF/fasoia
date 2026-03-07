@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Connexion - FasoIA{% endblock %}
 
 {% block extra_css %}
@@ -8,6 +9,13 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+        }
+
+        main.content {
+            padding-top: 0;
+        }
+        .content {
+            padding-top: 0;
         }
 
         /* Conteneur principal pour la page de connexion */
@@ -198,7 +206,7 @@
 
                 <div style="text-align: right; margin-bottom: 15px;">
                     <label style="display: inline; color: #aebbc5;">
-                        <input type="checkbox" name="remember_me" checked> Se souvenir de moi
+                        <input type="checkbox" name="remember_me" unchecked> Se souvenir de moi
                     </label>
                 </div>
 

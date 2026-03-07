@@ -33,12 +33,12 @@
                     
                     <ul class="nav navbar-nav navbar-right">
                         {% if user.is_authenticated %}
-                            <li class="{% if request.resolver_match.view_name == 'myAppli:tableau-bord_entreprise' %}active{% endif %}">
-                                <a href="{% url 'myAppli:tableau-bord_entreprise' %}" class="text-primary">
+                            <li class="{% if request.resolver_match.view_name == 'myAppli:tableau_bord_entreprise' %}active{% endif %}">
+                                <a href="{% url 'myAppli:tableau_bord_entreprise' %}" class="text-primary">
                                     <i class="fa fa-list"></i> {{user.username}}
                                 </a>
                             </li>
-                            <li>
+                            <li class="{% if request.resolver_match.view_name == 'myAppli:deconnexion' %}active{% endif %}">
                                 <a href="{% url 'myAppli:deconnexion' %}" class="text-danger">
                                     <i class="fa fa-sign-out-alt"></i> Déconnexion
                                 </a>
