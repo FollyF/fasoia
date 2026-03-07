@@ -1,85 +1,93 @@
+(function ($) {
 
-// NIVO LIGHTBOX
-$('.iso-box-section a').nivoLightbox({
-        effect: 'fadeScale',
-    });
+  "use strict";
 
-// ISOTOPE FILTER
-jQuery(document).ready(function($){
+  // =========================
+  // PRE LOADER
+  // =========================
+  $(window).on('load', function(){
+      $('.preloader').fadeOut(1000); // 1 seconde pour disparaître
+  });
 
-	if ( $('.iso-box-wrapper').length > 0 ) { 
+  // =========================
+  // MENU COLLAPSE AU CLIC
+  // =========================
+  $('.navbar-collapse a').on('click', function(){
+      $(".navbar-collapse").collapse('hide');
+  });
 
-	    var $container 	= $('.iso-box-wrapper'), 
-	    	$imgs 		= $('.iso-box img');
+  // =========================
+  // MENU FIXÉ AU SCROLL
+  // =========================
+  $(window).scroll(function() {
+      if ($(".navbar").offset().top > 50) {
+          $(".navbar-fixed-top").addClass("top-nav-collapse");
+      } else {
+          $(".navbar-fixed-top").removeClass("top-nav-collapse");
+      }
+  });
 
+  // =========================
+  // SLIDERS
+  // =========================
 
+  // Slider principal (Home)
+  $('.home-slider').owlCarousel({
+      animateOut: 'fadeOut',
+      items: 1,
+      loop: true,
+      dots: false,
+      autoplay: true,
+      autoplayTimeout: 6000,      // 6 secondes par slide
+      autoplayHoverPause: true,   // stop au survol pour lire le message
+      smartSpeed: 800             // transition fluide
+  });
 
-	    $container.imagesLoaded(function () {
+  // Slider des cours
+  $('.owl-courses').owlCarousel({
+      animateOut: 'fadeOut',
+      loop: true,
+      autoplay: true,
+      autoplayHoverPause: false,
+      smartSpeed: 1000,
+      dots: false,
+      nav: true,
+      navText: [
+          '<i class="fa fa-angle-left"></i>',
+          '<i class="fa fa-angle-right"></i>'
+      ],
+      responsiveClass: true,
+      responsive: {
+          0: { items: 1 },
+          1000: { items: 3 }
+      }
+  });
 
-	    	$container.isotope({
-				layoutMode: 'fitRows',
-				itemSelector: '.iso-box'
-	    	});
+  // Slider des clients
+  $('.owl-client').owlCarousel({
+      animateOut: 'fadeOut',
+      loop: true,
+      autoplay: true,
+      autoplayHoverPause: false,
+      smartSpeed: 1000,
+      responsiveClass: true,
+      responsive: {
+          0: { items: 1 },
+          1000: { items: 3 }
+      }
+  });
 
-	    	$imgs.load(function(){
-	    		$container.isotope('reLayout');
-	    	})
+  // =========================
+  // SMOOTH SCROLL POUR NAVIGATION
+  // =========================
+  $(function() {
+      $('.custom-navbar a, #home a').on('click', function(event) {
+          var $anchor = $(this);
+          $('html, body').stop().animate({
+              scrollTop: $($anchor.attr('href')).offset().top - 49
+          }, 1000);
+          event.preventDefault();
+      });
+  });
 
-	    });
-
-	    //filter items on button click
-
-	    $('.filter-wrapper li a').click(function(){
-
-	        var $this = $(this), filterValue = $this.attr('data-filter');
-
-			$container.isotope({ 
-				filter: filterValue,
-				animationOptions: { 
-				    duration: 750, 
-				    easing: 'linear', 
-				    queue: false, 
-				}              	 
-			});	            
-
-			// don't proceed if already selected 
-
-			if ( $this.hasClass('selected') ) { 
-				return false; 
-			}
-
-			var filter_wrapper = $this.closest('.filter-wrapper');
-			filter_wrapper.find('.selected').removeClass('selected');
-			$this.addClass('selected');
-
-	      return false;
-	    }); 
-
-	}
-
-});
-
-
-// HIDE MOBILE MENU AFTER CLIKING ON A LINK
-   $('.navbar-collapse a').click(function(){
-        $(".navbar-collapse").collapse('hide');
-    });
-
-
-// SCROLLTO THE TOP
-$(document).ready(function() {
-	// Show or hide the sticky footer button
-		$(window).scroll(function() {
-			if ($(this).scrollTop() > 200) {
-				$('.go-top').fadeIn(200);
-					} else {
-						$('.go-top').fadeOut(200);
-					}
-				});		
-				// Animate the scroll to top
-				$('.go-top').click(function(event) {
-					event.preventDefault();
-				
-					$('html, body').animate({scrollTop: 0}, 300);
-				})
-			});
+})(jQuery);

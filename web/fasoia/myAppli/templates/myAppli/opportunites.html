@@ -15,9 +15,8 @@
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background-color: #fafafa;
-        margin: 60px;
         color: var(--text-dark);
-        padding-top: 40px;
+        padding: 20px;
     }
 
     /* --- CONTENEUR DES ONGLETS --- */
@@ -58,8 +57,8 @@
     /* --- ZONE DE CONTENU --- */
     .content-container {
         background: white;
-        padding: 30px;
-        border: 1px solid var(--gray-border);
+        padding: 0px 30px 30px 30px;
+        border: 2px solid var(--gray-border);
         border-top: none;
         min-height: 200px;
     }
@@ -106,11 +105,97 @@
 
     .open { background: #e6fffa; color: #2d6a4f; }
     .closed { background: #fff5f5; color: #c53030; }
+
+    /* Bouton Postuler personnalisé */
+    .btn-postuler {
+        background-color: #29CA8E;
+        border-color: #22a477;
+        color: white;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+
+    .btn-postuler:hover {
+        background-color: #22a477;
+        color: white;
+        transform: translateY(-2px); /* Petit effet de levier au survol */
+    }
+
+    /* Bouton Détails personnalisé */
+    .btn-details {
+        background-color: transparent;
+        border: 2px solid #29CA8E;
+        color: #29CA8E;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+
+    .btn-details:hover {
+        background-color: #29CA8E;
+        color: white;
+    }
+
+    /* Centrer le titre 'Actions' et son contenu */
+    th:last-child, td:last-child {
+        text-align: center;
+    }
+
+    .btn-container {
+        display: flex;
+        justify-content: center; /* Centre horizontalement */
+        align-items: center;     /* Aligne verticalement */
+        gap: 8px;                /* Espace entre les boutons */
+        flex-wrap: nowrap;       /* Empêche le retour à la ligne automatique */
+    }
+
+     /* BARRE DE RECHERCHE */
+        .search-container {
+            max-width: 1200px;
+            margin: 10px auto 25px auto;
+
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        #searchInput:focus { border-color: var(--blue-main); }
+
+        /* COLONNES */
+        .main-content { flex: 3; width: 100%; }
+        .sidebar { flex: 1; min-width: 300px; }
+
+
+    /* Ajustement pour les petits écrans */
+    @media (max-width: 768px) {
+        .btn-container {
+            flex-wrap: wrap;     /* Permet aux boutons de s'empiler seulement si vraiment nécessaire */
+            gap: 4px;
+        }
+        
+        .btn-sm {
+            font-size: 10px;      /* Réduit légèrement la taille du texte sur mobile */
+            padding: 5px 8px;
+        }
+    }
+
+
 </style>
 
 {% endblock %}
 
 {% block content %}
+
+<div class="search-container">
+    <input type="text" id="searchInput" onkeyup="filterResults()" placeholder="Rechercher un appel d'offre, un avis ou un poste...">
+</div>
 
 <div class="tabs-wrapper">
     <button class="tab-btn active" onclick="openTab(event, 'offres')">appels d'offres</button>
@@ -129,7 +214,7 @@
                     <th>Référence</th>
                     <th>Objet du marché</th>
                     <th>Date limite</th>
-                    <th>Statut</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -138,7 +223,17 @@
                     <td>AO-2026-00{{ forloop.counter }}</td>
                     <td>{{i.description}}</td>
                     <td>{{i.date_limite}}</td>
-                    <td><span class="status open">OUVERT</span></td>
+                    <td>
+                        <div class="btn-container">
+                            <a href="{% url 'myAppli:detail_offre' i.id %}" class="btn btn-info btn-sm">
+                                <i class="fa fa-info-circle"></i> Détails
+                            </a>
+
+                            <a href="#" class="btn btn-success btn-sm">
+                                <i class="fa fa-paper-plane"></i> Postuler
+                            </a>
+                        </div>
+                    </td>
                 </tr>
                {% endfor %}
             </tbody>
@@ -154,7 +249,7 @@
                     <th>Référence</th>
                     <th>Objet du marché</th>
                     <th>Date limite</th>
-                    <th>Statut</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -163,7 +258,17 @@
                     <td>AO-2025-098{{ forloop.counter}}</td>
                     <td>{{ i.description }}</td>
                     <td>{{ i.date_limite }}</td>
-                    <td><span class="status open">OUVERT</span></td>
+                    <td>
+                        <div class="btn-container">
+                            <a href="{% url 'myAppli:detail_ami' i.id %}" class="btn btn-info btn-sm">
+                                <i class="fa fa-info-circle"></i> Détails
+                            </a>
+
+                            <a href="#" class="btn btn-success btn-sm">
+                                <i class="fa fa-paper-plane"></i> Postuler
+                            </a>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -190,6 +295,45 @@
                 document.getElementById(tabId).classList.add('active');
                 event.currentTarget.classList.add('active');
             }
+    
+    // 1. Fonction pour gérer le changement d'onglets
+    function openTab(event, tabId) {
+        // Optionnel : Réinitialiser la recherche quand on change d'onglet
+        document.getElementById('searchInput').value = "";
+        filterResults(); 
+
+        const panels = document.querySelectorAll('.tab-panel');
+        panels.forEach(panel => panel.classList.remove('active'));
+
+        const buttons = document.querySelectorAll('.tab-btn');
+        buttons.forEach(btn => btn.classList.remove('active'));
+
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    // 2. LA FONCTION RECHERCHER (CORRIGÉE)
+    function filterResults() {
+        // On récupère ce que l'utilisateur tape et on met en majuscules pour ignorer la casse
+        let input = document.getElementById('searchInput').value.toUpperCase();
+        
+        // On cible TOUTES les lignes de données (tr) situées dans les corps de tableau (tbody)
+        // Cela évite de masquer les lignes d'en-tête (th)
+        let rows = document.querySelectorAll('table tbody tr');
+
+        rows.forEach(row => {
+            // On récupère l'ensemble du texte contenu dans la ligne (toutes les colonnes d'un coup)
+            let text = row.textContent || row.innerText;
+            
+            // Si le texte de la ligne contient le mot recherché
+            if (text.toUpperCase().indexOf(input) > -1) {
+                row.style.display = "";      // On affiche la ligne
+            } else {
+                row.style.display = "none";   // On cache la ligne
+            }
+        });
+    }   
+
 </script>            
 {% endblock %}
 
