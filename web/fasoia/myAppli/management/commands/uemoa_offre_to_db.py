@@ -3,6 +3,7 @@ import os
 import requests
 import hashlib
 from pathlib import Path
+from datetime import datetime
 
 from django.core.management.base import BaseCommand
 from myAppli.models import Offre_uemoa
@@ -12,6 +13,49 @@ from analyse_ia.models import DocumentSource
 class Command(BaseCommand):
     help = 'Scrape offres, download PDFs and save to DB (avec lien stable par hash URL)'
     
+    
+    def convertir_date_uemoa(self, date_str):
+        """
+        Convertit une date du site UEMOA vers le format Django
+        Gère différents formats possibles
+        """
+        if not date_str or date_str == "N/A":
+            return None
+        
+        try:
+            # Nettoie la chaîne
+            date_str = date_str.strip()
+            
+            # Format "DD/MM/YYYY - HH:MM" (le plus courant)
+            if " - " in date_str:
+                date_part, time_part = date_str.split(" - ")
+                day, month, year = date_part.split("/")
+                return f"{year}-{month}-{day} {time_part}"
+            
+            # Format "DD/MM/YYYY HH:MM"
+            elif " " in date_str and "/" in date_str:
+                parts = date_str.split(" ")
+                if len(parts) == 2:
+                    date_part, time_part = parts
+                    day, month, year = date_part.split("/")
+                    return f"{year}-{month}-{day} {time_part}"
+            
+            # Format "YYYY-MM-DD" (déjà bon)
+            elif date_str[4] == '-' and date_str[7] == '-':
+                return date_str
+            
+            # Si rien ne correspond, retourne None
+            self.stdout.write(self.style.WARNING(
+                f"   ⚠️ Format de date non reconnu: '{date_str}'"
+            ))
+            return None
+            
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(
+                f"   ❌ Erreur de conversion de date '{date_str}': {e}"
+            ))
+            return None
+        
     def generer_nom_fichier(self, url, prefix="OFFRE"):
         """
         Génère un nom de fichier basé sur le hash de l'URL
@@ -88,10 +132,20 @@ class Command(BaseCommand):
             
             download_url = urljoin(base_url, data['download_url'])
             
+            # CONVERSION DE LA DATE - AJOUTEZ CES LIGNES
+            date_originale = data['date_limite']
+            date_convertie = self.convertir_date_uemoa(date_originale)
+            
+            self.stdout.write(f"   📅 Date originale: {date_originale}")
+            if date_convertie:
+                self.stdout.write(f"   📅 Date convertie: {date_convertie}")
+            
+            # Utilisez date_convertie au lieu de data['date_limite']
+
             # 1. Sauvegarder dans Offre_uemoa
             offre, created = Offre_uemoa.objects.update_or_create(
                 description=data['description'],
-                date_limite=data['date_limite'],
+                date_limite=date_convertie,
                 download_url=download_url
             )
             

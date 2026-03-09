@@ -335,7 +335,7 @@ class Opportunite(models.Model):
     description = models.TextField()
     secteur = models.CharField(max_length=100)
     datePublication = models.DateField()
-    dateLimite = models.DateField()
+    dateLimite = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.titre
@@ -366,7 +366,7 @@ class OffreEmploi(Opportunite):
 
 class Offre_uemoa(models.Model):
     description = models.TextField()
-    date_limite = models.TextField()
+    date_limite = models.DateTimeField(null=True, blank=True)
     download_url = models.URLField(max_length=500)
     date_scraping = models.DateTimeField(auto_now_add=True)
     traite_par_ia = models.BooleanField(default=False)
@@ -376,10 +376,95 @@ class Offre_uemoa(models.Model):
     
 class Ami_uemoa(models.Model):
     description = models.TextField()
-    date_limite = models.TextField()
+    date_limite = models.DateTimeField(null=True, blank=True)
     download_url = models.URLField(max_length=500)
     date_scraping = models.DateTimeField(auto_now_add=True)
     traite_par_ia = models.BooleanField(default=False)
 
     def __str__(self):
         return self.description[:50] + "..."
+
+class ModeleDocument(models.Model):
+    """Modèles de documents pour les soumissions"""
+    CATEGORIE_CHOICES = [
+        ('TECHNIQUE', 'Dossier Technique'),
+        ('FINANCIER', 'Dossier Financier'),
+        ('ADMINISTRATIF', 'Dossier Administratif'),
+        ('CANDIDATURE', 'Dossier de Candidature'),
+    ]
+    
+    nom = models.CharField(max_length=200)
+    categorie = models.CharField(max_length=50, choices=CATEGORIE_CHOICES)
+    description = models.TextField(blank=True)
+    fichier_template = models.FileField(upload_to='templates/documents/')
+    types_opportunites = models.JSONField(default=list)  # ['Offre_uemoa', 'Ami_uemoa']
+    date_creation = models.DateTimeField(auto_now_add=True)
+    actif = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"{self.nom} ({self.get_categorie_display()})"
+
+class DossierSoumission(models.Model):
+    """Dossier de soumission pour une opportunité"""
+    STATUT_CHOICES = [
+        ('EN_PREPARATION', 'En préparation'),
+        ('COMPLET', 'Complet'),
+        ('SOUMIS', 'Soumis'),
+    ]
+    
+    # Entreprise qui soumissionne
+    entreprise = models.ForeignKey('Entreprise', on_delete=models.CASCADE, related_name='dossiers')
+    
+    # Opportunité ciblée (polymorphique)
+    opportunite_type = models.CharField(max_length=50)  # 'Offre_uemoa' ou 'Ami_uemoa'
+    opportunite_id = models.PositiveIntegerField()
+    
+    # Métadonnées
+    reference = models.CharField(max_length=100, unique=True)
+    statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='EN_PREPARATION')
+    date_soumission_prevue = models.DateField()
+    date_soumission_effective = models.DateTimeField(null=True, blank=True)
+    date_creation = models.DateTimeField(auto_now_add=True)
+    date_modification = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['entreprise', 'opportunite_type', 'opportunite_id']
+        indexes = [
+            models.Index(fields=['entreprise', 'statut']),
+        ]
+    
+    def __str__(self):
+        return f"Dossier {self.reference} - {self.entreprise.raisonSociale}"
+    
+    @property
+    def opportunite(self):
+        """Récupère l'objet opportunité"""
+        from analyse_ia.models import Offre_uemoa, Ami_uemoa
+        if self.opportunite_type == 'Offre_uemoa':
+            return Offre_uemoa.objects.get(id=self.opportunite_id)
+        else:
+            return Ami_uemoa.objects.get(id=self.opportunite_id)
+
+class DocumentSoumission(models.Model):
+    """Document généré pour un dossier"""
+    STATUT_CHOICES = [
+        ('BROUILLON', 'Brouillon'),
+        ('VALIDE', 'Validé'),
+        ('A_REVOIR', 'À réviser'),
+    ]
+    
+    dossier = models.ForeignKey(DossierSoumission, on_delete=models.CASCADE, related_name='documents')
+    modele = models.ForeignKey(ModeleDocument, on_delete=models.SET_NULL, null=True)
+    
+    nom_document = models.CharField(max_length=255)
+    fichier_genere = models.FileField(upload_to='soumissions/documents/')
+    taille_fichier = models.IntegerField(default=0)
+    
+    donnees_saisies = models.JSONField(default=dict)  # Données personnalisées
+    statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='BROUILLON')
+    
+    date_generation = models.DateTimeField(auto_now_add=True)
+    date_modification = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.nom_document

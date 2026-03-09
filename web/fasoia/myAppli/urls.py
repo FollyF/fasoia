@@ -25,8 +25,34 @@ urlpatterns = [
     path('inscription/', views.inscription, name='inscription'),
     path('deconnexion/', views.deconnexion, name='deconnexion'),
     path('profil/', views.profil, name='profil'),
-    path('tableau_bord_entreprise/', views.tableau_bord_entreprise, name='tableau_bord_entreprise'),
-    path('completer-profil-entreprise/', views.completer_profil_entreprise, name='completer_profil_entreprise'),
-    path('offre/<int:pk>/', views.detail_offre, name='detail_offre'),
-    path('ami/<int:pk>/', views.detail_ami, name='detail_ami'),
+    path('tableau_bord_entreprise/', 
+         views.tableau_bord_entreprise, 
+         name='tableau_bord_entreprise'
+    ),
+    path('completer-profil-entreprise/', 
+         views.completer_profil_entreprise, 
+         name='completer_profil_entreprise'
+    ),
+    path('offre/<int:pk>/', 
+         views.detail_offre, name='detail_offre'),
+    path('ami/<int:pk>/', views.detail_ami, 
+         name='detail_ami'),
+     path('soumission/<str:opportunite_type>/<int:opportunite_id>/commencer/', 
+          views.commencer_soumission, name='commencer_soumission'),
+    path('soumission/dossier/<int:dossier_id>/preparer/', views.preparer_soumission, 
+         name='preparer_soumission'),
+    
+    path('soumission/dossier/<int:dossier_id>/generer/<int:modele_id>/', 
+          views.generer_document, name='generer_document'),
+    
+    path('soumission/document/<int:document_id>/telecharger/', 
+         views.telecharger_document, name='telecharger_document'),
+    
+    path('soumission/document/<int:document_id>/valider/', 
+         views.valider_document, name='valider_document'),
+    
+    path('soumission/dossier/<int:dossier_id>/soumettre/', 
+         views.soumettre_dossier, name='soumettre_dossier'),
+    path('mes-soumissions/', 
+         views.mes_soumissions, name='mes_soumissions'),
 ]

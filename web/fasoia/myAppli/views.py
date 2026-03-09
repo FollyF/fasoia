@@ -1,15 +1,21 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
+from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators import csrf
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 from django.conf import settings
+from datetime import datetime
+import os
+import json
 import logging
 
 from .forms import InscriptionForm, ConnexionForm
 from .models import *
+from analyse_ia.models import *
+from .services.generateur_document import GenerateurDocument
 logger = logging.getLogger(__name__)
 
 
@@ -493,3 +499,236 @@ def detail_ami(request, pk):
     except Ami_uemoa.DoesNotExist:
         messages.error(request, "Cet AMI n'existe pas.")
         return redirect('myAppli:opportunites')
+    
+@login_required
+def commencer_soumission(request, opportunite_type, opportunite_id):
+    """
+    Point d'entrée quand l'entreprise clique sur "Postuler"
+    Crée ou récupère le dossier et redirige vers la préparation
+    """
+    try:
+        entreprise = Entreprise.objects.get(user=request.user)
+    except Entreprise.DoesNotExist:
+        messages.error(request, "Vous devez être une entreprise pour soumissionner")
+        return redirect('dashboard')
+    
+    # Récupérer l'opportunité
+    if opportunite_type == 'Offre_uemoa':
+        opportunite = get_object_or_404(Offre_uemoa, id=opportunite_id)
+        date_limite = opportunite.date_limite
+    else:
+        opportunite = get_object_or_404(Ami_uemoa, id=opportunite_id)
+        date_limite = opportunite.date_limite
+    
+    # Créer ou récupérer le dossier
+    dossier, created = DossierSoumission.objects.get_or_create(
+        entreprise=entreprise,
+        opportunite_type=opportunite_type,
+        opportunite_id=opportunite_id,
+        defaults={
+            'reference': f"DOS-{opportunite_id}-{entreprise.id}-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+            'date_soumission_prevue': date_limite if date_limite else datetime.now().date(),
+        }
+    )
+    
+    # Marquer la recommandation comme "candidatée"
+    Recommandation.objects.filter(
+        entreprise=entreprise,
+        opportunite_type=opportunite_type,
+        opportunite_id=opportunite_id
+    ).update(candidatee=True)
+    
+    messages.success(request, "Dossier de soumission créé. Commencez à préparer vos documents.")
+    return redirect('preparer_soumission', dossier_id=dossier.id)
+
+@login_required
+def preparer_soumission(request, dossier_id):
+    """Page de préparation du dossier"""
+    dossier = get_object_or_404(DossierSoumission, id=dossier_id)
+    
+    # Vérifier que l'entreprise a le droit
+    if dossier.entreprise.user != request.user:
+        messages.error(request, "Accès non autorisé")
+        return redirect('dashboard')
+    
+    # Récupérer l'opportunité
+    opportunite = dossier.opportunite
+    
+    # Récupérer les modèles de documents disponibles
+    modeles = ModeleDocument.objects.filter(
+        types_opportunites__contains=[dossier.opportunite_type],
+        actif=True
+    )
+    
+    # Récupérer les documents déjà générés
+    documents = dossier.documents.all()
+    
+    # Vérifier la complétude
+    documents_requis = modeles.count()
+    documents_presents = documents.filter(statut='VALIDE').count()
+    complet = documents_presents == documents_requis and documents_requis > 0
+    
+    context = {
+        'dossier': dossier,
+        'opportunite': opportunite,
+        'opportunite_type': dossier.opportunite_type,
+        'modeles': modeles,
+        'documents': documents,
+        'progression': {
+            'total': documents_requis,
+            'valides': documents_presents,
+            'complet': complet,
+            'pourcentage': int((documents_presents / documents_requis * 100)) if documents_requis > 0 else 0
+        }
+    }
+    return render(request, 'soumission/preparer.html', context)
+
+@login_required
+def generer_document(request, dossier_id, modele_id):
+    """Génère un document pour le dossier"""
+    dossier = get_object_or_404(DossierSoumission, id=dossier_id)
+    modele = get_object_or_404(ModeleDocument, id=modele_id)
+    
+    if dossier.entreprise.user != request.user:
+        return JsonResponse({'error': 'Non autorisé'}, status=403)
+    
+    if request.method == 'POST':
+        # Récupérer les données personnalisées
+        donnees_supp = {}
+        for key, value in request.POST.items():
+            if key.startswith('var_'):
+                donnees_supp[key[4:]] = value
+        
+        try:
+            # Générer le document
+            generateur = GenerateurDocument()
+            chemin, nom_fichier, taille = generateur.generer(
+                modele=modele,
+                entreprise=dossier.entreprise,
+                opportunite=dossier.opportunite,
+                opportunite_type=dossier.opportunite_type,
+                donnees_supp=donnees_supp
+            )
+            
+            # Sauvegarder en base
+            document = DocumentSoumission.objects.create(
+                dossier=dossier,
+                modele=modele,
+                nom_document=nom_fichier,
+                fichier_genere=chemin,
+                taille_fichier=taille,
+                donnees_saisies=donnees_supp
+            )
+            
+            messages.success(request, f"Document '{modele.nom}' généré avec succès!")
+            
+        except Exception as e:
+            messages.error(request, f"Erreur lors de la génération: {str(e)}")
+        
+        return redirect('preparer_soumission', dossier_id=dossier.id)
+    
+    # GET : Afficher le formulaire de personnalisation
+    context = {
+        'dossier': dossier,
+        'modele': modele,
+        'opportunite': dossier.opportunite,
+    }
+    return render(request, 'soumission/generer_document.html', context)
+
+@login_required
+def telecharger_document(request, document_id):
+    """Télécharge un document généré"""
+    document = get_object_or_404(DocumentSoumission, id=document_id)
+    
+    if document.dossier.entreprise.user != request.user:
+        return HttpResponse("Non autorisé", status=403)
+    
+    if os.path.exists(document.fichier_genere.path):
+        with open(document.fichier_genere.path, 'rb') as f:
+            response = HttpResponse(
+                f.read(), 
+                content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            )
+            response['Content-Disposition'] = f'attachment; filename="{document.nom_document}"'
+            return response
+    else:
+        messages.error(request, "Fichier non trouvé")
+        return redirect('preparer_soumission', dossier_id=document.dossier.id)
+
+@login_required
+def valider_document(request, document_id):
+    """Marque un document comme validé"""
+    if request.method == 'POST':
+        document = get_object_or_404(DocumentSoumission, id=document_id)
+        
+        if document.dossier.entreprise.user != request.user:
+            return JsonResponse({'error': 'Non autorisé'}, status=403)
+        
+        document.statut = 'VALIDE'
+        document.save()
+        
+        return JsonResponse({'success': True})
+    
+    return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+
+@login_required
+def soumettre_dossier(request, dossier_id):
+    """Soumet le dossier final"""
+    dossier = get_object_or_404(DossierSoumission, id=dossier_id)
+    
+    if dossier.entreprise.user != request.user:
+        messages.error(request, "Non autorisé")
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        # Vérifier que tous les documents sont validés
+        documents_non_valides = dossier.documents.exclude(statut='VALIDE')
+        
+        if documents_non_valides.exists():
+            messages.warning(request, "Tous les documents doivent être validés")
+            return redirect('preparer_soumission', dossier_id=dossier.id)
+        
+        # Mettre à jour le dossier
+        dossier.statut = 'SOUMIS'
+        dossier.date_soumission_effective = datetime.now()
+        dossier.save()
+        
+        # Mettre à jour les statistiques de l'entreprise
+        entreprise = dossier.entreprise
+        entreprise.nb_candidatures_emises += 1
+        entreprise.save()
+        
+        messages.success(request, "Dossier soumis avec succès!")
+        return redirect('mes_soumissions')
+    
+    # GET : page de confirmation
+    context = {
+        'dossier': dossier,
+        'documents': dossier.documents.all(),
+    }
+    return render(request, 'soumission/confirmer_soumission.html', context)
+
+@login_required
+def mes_soumissions(request):
+    """Liste tous les dossiers de l'entreprise"""
+    try:
+        entreprise = Entreprise.objects.get(user=request.user)
+    except Entreprise.DoesNotExist:
+        messages.error(request, "Vous devez être une entreprise")
+        return redirect('dashboard')
+    
+    dossiers = DossierSoumission.objects.filter(
+        entreprise=entreprise
+    ).order_by('-date_modification')
+    
+    stats = {
+        'en_preparation': dossiers.filter(statut='EN_PREPARATION').count(),
+        'soumis': dossiers.filter(statut='SOUMIS').count(),
+        'total': dossiers.count(),
+    }
+    
+    context = {
+        'dossiers': dossiers,
+        'stats': stats,
+    }
+    return render(request, 'soumission/mes_soumissions.html', context)
