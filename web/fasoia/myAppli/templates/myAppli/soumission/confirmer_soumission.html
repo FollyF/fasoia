@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Confirmer la soumission{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card bg-dark text-white">
+                <div class="card-header bg-warning">
+                    <h3>Confirmer la soumission</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fa fa-exclamation-triangle fa-2x float-start me-3"></i>
+                        <h5>Vous êtes sur le point de soumettre votre dossier</h5>
+                        <p>Une fois soumis, vous ne pourrez plus modifier les documents.</p>
+                    </div>
+                    
+                    <h5 class="mt-4">Récapitulatif du dossier</h5>
+                    <table class="table table-dark table-striped">
+                        <tr>
+                            <th>Référence</th>
+                            <td>{{ dossier.reference }}</td>
+                        </tr>
+                        <tr>
+                            <th>Opportunité</th>
+                            <td>{{ dossier.opportunite.titre }}</td>
+                        </tr>
+                        <tr>
+                            <th>Date limite</th>
+                            <td class="text-danger">{{ dossier.date_soumission_prevue|date:"d/m/Y" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Documents</th>
+                            <td>{{ documents.count }} document(s)</td>
+                        </tr>
+                    </table>
+                    
+                    <h5 class="mt-4">Documents inclus :</h5>
+                    <ul class="list-group list-group-flush bg-dark mb-4">
+                        {% for doc in documents %}
+                        <li class="list-group-item bg-dark text-white">
+                            <i class="fa fa-check-circle text-success"></i>
+                            {{ doc.nom_document }}
+                            <span class="badge bg-success float-end">Validé</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="confirm" required>
+                            <label class="form-check-label" for="confirm">
+                                Je certifie que toutes les informations fournies sont exactes et complètes.
+                            </label>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'myAppli:preparer_soumission' dossier.id %}" 
+                               class="btn btn-secondary">
+                                <i class="fa fa-arrow-left"></i> Retour
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fa fa-paper-plane"></i> Confirmer et soumettre
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

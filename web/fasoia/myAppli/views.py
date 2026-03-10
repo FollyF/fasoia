@@ -586,31 +586,63 @@ def preparer_soumission(request, dossier_id):
 @login_required
 def generer_document(request, dossier_id, modele_id):
     """Génère un document pour le dossier"""
+    print(f"\n{'='*50}")
+    print(f"🚀 GÉNÉRATION DOCUMENT - Dossier {dossier_id}, Modèle {modele_id}")
+    print(f"Méthode: {request.method}")
+    print(f"{'='*50}")
+    
     dossier = get_object_or_404(DossierSoumission, id=dossier_id)
     modele = get_object_or_404(ModeleDocument, id=modele_id)
     
+    print(f"📁 Dossier: {dossier.reference}")
+    print(f"📄 Modèle: {modele.nom}")
+    print(f"📂 Template path: {modele.fichier_template.path}")
+    print(f"📂 Template existe? {os.path.exists(modele.fichier_template.path)}")
+    
     if dossier.entreprise.user != request.user:
+        print("❌ Non autorisé")
         return JsonResponse({'error': 'Non autorisé'}, status=403)
     
     if request.method == 'POST':
+        print("✅ Requête POST reçue")
+        print(f"📦 Données POST: {dict(request.POST)}")
+        
         # Récupérer les données personnalisées
         donnees_supp = {}
         for key, value in request.POST.items():
             if key.startswith('var_'):
                 donnees_supp[key[4:]] = value
+                print(f"  📝 Variable: {key[4:]} = {value}")
         
         try:
-            # Générer le document
+            print("🔄 Initialisation du générateur...")
             generateur = GenerateurDocument()
+            
+            print("🔄 Récupération de l'opportunité...")
+            opportunite = dossier.opportunite
+            print(f"✅ Opportunité: {opportunite}")
+            
+            print("🔄 Génération du document...")
             chemin, nom_fichier, taille = generateur.generer(
                 modele=modele,
                 entreprise=dossier.entreprise,
-                opportunite=dossier.opportunite,
+                opportunite=opportunite,
                 opportunite_type=dossier.opportunite_type,
                 donnees_supp=donnees_supp
             )
             
+            print(f"✅ Document généré: {nom_fichier}")
+            print(f"📊 Taille: {taille} octets")
+            print(f"📁 Chemin: {chemin}")
+            
+            # Vérifier que le fichier existe
+            if os.path.exists(chemin):
+                print(f"✅ Fichier trouvé sur le disque")
+            else:
+                print(f"❌ Fichier NON trouvé sur le disque")
+            
             # Sauvegarder en base
+            print("🔄 Sauvegarde en base de données...")
             document = DocumentSoumission.objects.create(
                 dossier=dossier,
                 modele=modele,
@@ -619,15 +651,21 @@ def generer_document(request, dossier_id, modele_id):
                 taille_fichier=taille,
                 donnees_saisies=donnees_supp
             )
+            print(f"✅ Document sauvegardé en base (ID: {document.id})")
             
             messages.success(request, f"Document '{modele.nom}' généré avec succès!")
+            print("✅ SUCCÈS - Redirection vers preparer_soumission")
             
         except Exception as e:
+            print(f"❌ ERREUR: {str(e)}")
+            import traceback
+            traceback.print_exc()
             messages.error(request, f"Erreur lors de la génération: {str(e)}")
         
         return redirect('myAppli:preparer_soumission', dossier_id=dossier.id)
     
     # GET : Afficher le formulaire de personnalisation
+    print("ℹ️ Requête GET - Affichage du formulaire")
     context = {
         'dossier': dossier,
         'modele': modele,
@@ -684,6 +722,10 @@ def soumettre_dossier(request, dossier_id):
         # Vérifier que tous les documents sont validés
         documents_non_valides = dossier.documents.exclude(statut='VALIDE')
         
+        print(f"📊 Documents non valides: {documents_non_valides.count()}")
+        for doc in documents_non_valides:
+            print(f"  - {doc.nom_document}: {doc.statut}")
+
         if documents_non_valides.exists():
             messages.warning(request, "Tous les documents doivent être validés")
             return redirect('myAppli:preparer_soumission', dossier_id=dossier.id)
@@ -706,7 +748,7 @@ def soumettre_dossier(request, dossier_id):
         'dossier': dossier,
         'documents': dossier.documents.all(),
     }
-    return render(request, 'soumission/confirmer_soumission.html', context)
+    return render(request, 'myAppli/soumission/confirmer_soumission.html', context)
 
 @login_required
 def mes_soumissions(request):

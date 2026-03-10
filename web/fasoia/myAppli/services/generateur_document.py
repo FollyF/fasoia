@@ -62,10 +62,29 @@ class GenerateurDocument:
         """
         Génère un document à partir d'un template
         """
+        print(f"\n{'='*50}")
+        print(f"🔍 DÉBUT GÉNÉRATION DANS LE SERVICE")
+        print(f"{'='*50}")
+        
+        # Vérifications du template
+        template_path = modele.fichier_template.path
+        print(f"📂 Template path: {template_path}")
+        print(f"  - Existe? {os.path.exists(template_path)}")
+        if os.path.exists(template_path):
+            print(f"  - Lisible? {os.access(template_path, os.R_OK)}")
+            print(f"  - Taille: {os.path.getsize(template_path)} octets")
+        
         # Charger le template
-        doc = Document(modele.fichier_template.path)
+        try:
+            print("🔄 Chargement du document Word...")
+            doc = Document(template_path)
+            print(f"✅ Document chargé: {len(doc.paragraphs)} paragraphes")
+        except Exception as e:
+            print(f"❌ ERREUR chargement: {str(e)}")
+            raise
         
         # Collecter toutes les données
+        print("🔄 Collecte des données...")
         donnees = {}
         donnees.update(self.collecter_donnees_entreprise(entreprise))
         donnees.update(self.collecter_donnees_opportunite(opportunite, opportunite_type))
@@ -78,22 +97,40 @@ class GenerateurDocument:
         
         # Données supplémentaires
         if donnees_supp:
+            print(f"📝 Données supplémentaires: {donnees_supp}")
             for key, value in donnees_supp.items():
                 donnees[f'{{{{{key}}}}}'] = value
         
+        print(f"📊 Total variables: {len(donnees)}")
+        
         # Remplacer dans tout le document
+        print("🔄 Remplacement des variables...")
         self._remplacer_dans_document(doc, donnees)
+        print("✅ Remplacement terminé")
         
         # Générer nom fichier unique
         hash_obj = hashlib.md5(f"{entreprise.id}_{opportunite.id}_{datetime.now()}".encode())
         nom_fichier = f"{hash_obj.hexdigest()[:10]}_{modele.nom[:30]}.docx"
         nom_fichier = nom_fichier.replace(' ', '_').replace('/', '_')
+        print(f"📄 Nom fichier: {nom_fichier}")
         
         chemin = os.path.join(self.output_dir, nom_fichier)
+        print(f"💾 Sauvegarde dans: {chemin}")
+        
+        # Sauvegarder
         doc.save(chemin)
         
-        return chemin, nom_fichier, os.path.getsize(chemin)
-    
+        # Vérifier la sauvegarde
+        if os.path.exists(chemin):
+            taille = os.path.getsize(chemin)
+            print(f"✅ Fichier sauvegardé: {taille} octets")
+        else:
+            print(f"❌ ERREUR: Fichier non créé!")
+        
+        print(f"{'='*50}\n")
+        
+        return chemin, nom_fichier, taille
+
     def _remplacer_dans_document(self, doc, donnees):
         """Remplace les variables dans le document"""
         # Paragraphes

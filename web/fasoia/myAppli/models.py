@@ -456,9 +456,8 @@ class DocumentSoumission(models.Model):
     modele = models.ForeignKey(ModeleDocument, on_delete=models.SET_NULL, null=True)
     
     nom_document = models.CharField(max_length=255)
-    fichier_genere = models.FileField(upload_to='soumissions/documents/')
+    fichier_genere = models.FileField(upload_to='soumissions/documents/', max_length=255)
     taille_fichier = models.IntegerField(default=0)
-    
     donnees_saisies = models.JSONField(default=dict)  # Données personnalisées
     statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='BROUILLON')
     

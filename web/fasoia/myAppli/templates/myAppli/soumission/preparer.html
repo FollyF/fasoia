@@ -92,7 +92,7 @@
                                 </td>
                                 <td>{{ doc.date_generation|date:"d/m/Y H:i" }}</td>
                                 <td>
-                                    <a href="{% url 'telecharger_document' doc.id %}" 
+                                    <a href="{% url 'myAppli:telecharger_document' doc.id %}" 
                                        class="btn btn-sm btn-info" download>
                                         <i class="fa fa-download"></i>
                                     </a>
@@ -120,7 +120,7 @@
                     <hr>
                     
                     {% if progression.complet %}
-                    <a href="{% url 'soumettre_dossier' dossier.id %}" 
+                    <a href="{% url 'myAppli:soumettre_dossier' dossier.id %}" 
                        class="btn btn-success w-100 mb-2">
                         <i class="fa fa-paper-plane"></i> Soumettre le dossier
                     </a>
