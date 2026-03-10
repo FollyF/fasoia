@@ -439,7 +439,6 @@ class DossierSoumission(models.Model):
     @property
     def opportunite(self):
         """Récupère l'objet opportunité"""
-        from analyse_ia.models import Offre_uemoa, Ami_uemoa
         if self.opportunite_type == 'Offre_uemoa':
             return Offre_uemoa.objects.get(id=self.opportunite_id)
         else:

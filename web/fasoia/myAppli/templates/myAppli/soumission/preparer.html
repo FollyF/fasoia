@@ -49,7 +49,7 @@
                                 <h6>{{ modele.nom }}</h6>
                                 <small class="text-muted">{{ modele.description }}</small>
                             </div>
-                            <a href="{% url 'generer_document' dossier.id modele.id %}" 
+                            <a href="{% url 'myAppli:generer_document' dossier.id modele.id %}" 
                                class="btn btn-primary btn-sm">
                                 <i class="fa fa-file-word-o"></i> Générer
                             </a>
@@ -136,7 +136,7 @@
                     
                     <hr>
                     
-                    <a href="{% url 'mes_soumissions' %}" class="btn btn-outline-secondary w-100">
+                    <a href="{% url 'myAppli:mes_soumissions' %}" class="btn btn-outline-secondary w-100">
                         <i class="fa fa-folder-open"></i> Mes soumissions
                     </a>
                 </div>

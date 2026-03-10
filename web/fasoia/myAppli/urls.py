@@ -53,6 +53,6 @@ urlpatterns = [
     
     path('soumission/dossier/<int:dossier_id>/soumettre/', 
          views.soumettre_dossier, name='soumettre_dossier'),
-    path('mes-soumissions/', 
+    path('mes_soumissions/', 
          views.mes_soumissions, name='mes_soumissions'),
 ]

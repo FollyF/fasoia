@@ -539,7 +539,7 @@ def commencer_soumission(request, opportunite_type, opportunite_id):
     ).update(candidatee=True)
     
     messages.success(request, "Dossier de soumission créé. Commencez à préparer vos documents.")
-    return redirect('preparer_soumission', dossier_id=dossier.id)
+    return redirect('myAppli:preparer_soumission', dossier_id=dossier.id)
 
 @login_required
 def preparer_soumission(request, dossier_id):
@@ -581,7 +581,7 @@ def preparer_soumission(request, dossier_id):
             'pourcentage': int((documents_presents / documents_requis * 100)) if documents_requis > 0 else 0
         }
     }
-    return render(request, 'soumission/preparer.html', context)
+    return render(request, 'myAppli/soumission/preparer.html', context)
 
 @login_required
 def generer_document(request, dossier_id, modele_id):
@@ -625,7 +625,7 @@ def generer_document(request, dossier_id, modele_id):
         except Exception as e:
             messages.error(request, f"Erreur lors de la génération: {str(e)}")
         
-        return redirect('preparer_soumission', dossier_id=dossier.id)
+        return redirect('myAppli:preparer_soumission', dossier_id=dossier.id)
     
     # GET : Afficher le formulaire de personnalisation
     context = {
@@ -633,7 +633,7 @@ def generer_document(request, dossier_id, modele_id):
         'modele': modele,
         'opportunite': dossier.opportunite,
     }
-    return render(request, 'soumission/generer_document.html', context)
+    return render(request, 'myAppli/soumission/generer_document.html', context)
 
 @login_required
 def telecharger_document(request, document_id):
@@ -653,7 +653,7 @@ def telecharger_document(request, document_id):
             return response
     else:
         messages.error(request, "Fichier non trouvé")
-        return redirect('preparer_soumission', dossier_id=document.dossier.id)
+        return redirect('myAppli:preparer_soumission', dossier_id=document.dossier.id)
 
 @login_required
 def valider_document(request, document_id):
@@ -686,7 +686,7 @@ def soumettre_dossier(request, dossier_id):
         
         if documents_non_valides.exists():
             messages.warning(request, "Tous les documents doivent être validés")
-            return redirect('preparer_soumission', dossier_id=dossier.id)
+            return redirect('myAppli:preparer_soumission', dossier_id=dossier.id)
         
         # Mettre à jour le dossier
         dossier.statut = 'SOUMIS'
@@ -699,7 +699,7 @@ def soumettre_dossier(request, dossier_id):
         entreprise.save()
         
         messages.success(request, "Dossier soumis avec succès!")
-        return redirect('mes_soumissions')
+        return redirect('myAppli:mes_soumissions')
     
     # GET : page de confirmation
     context = {
@@ -731,4 +731,4 @@ def mes_soumissions(request):
         'dossiers': dossiers,
         'stats': stats,
     }
-    return render(request, 'soumission/mes_soumissions.html', context)
+    return render(request, 'myAppli/soumission/mes_soumissions.html', context)

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Générer {{ modele.nom }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card bg-dark text-white">
+                <div class="card-header">
+                    <h3>Générer {{ modele.nom }}</h3>
+                    <p class="text-muted">{{ modele.description }}</p>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="alert alert-info">
+                            <i class="fa fa-info-circle"></i>
+                            Les informations de votre entreprise et de l'opportunité seront automatiquement insérées.
+                            Vous pouvez personnaliser ci-dessous si nécessaire.
+                        </div>
+                        
+                        {% if modele.categorie == 'TECHNIQUE' %}
+                        <div class="form-group mb-3">
+                            <label>Méthodologie proposée</label>
+                            <textarea name="var_methodologie" class="form-control" rows="5" 
+                                      placeholder="Décrivez votre approche technique..."></textarea>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Moyens humains</label>
+                            <textarea name="var_moyens_humains" class="form-control" rows="3"
+                                      placeholder="Équipe proposée..."></textarea>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Moyens matériels</label>
+                            <textarea name="var_moyens_materiels" class="form-control" rows="3"
+                                      placeholder="Équipements..."></textarea>
+                        </div>
+                        
+                        {% elif modele.categorie == 'FINANCIER' %}
+                        <div class="form-group mb-3">
+                            <label>Montant proposé (FCFA)</label>
+                            <input type="number" name="var_montant" class="form-control" 
+                                   placeholder="Ex: 5000000">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Délai de paiement proposé</label>
+                            <input type="text" name="var_delai_paiement" class="form-control" 
+                                   placeholder="Ex: 30 jours">
+                        </div>
+                        
+                        {% elif modele.categorie == 'ADMINISTRATIF' %}
+                        <div class="form-group mb-3">
+                            <label>Numéro de registre de commerce</label>
+                            <input type="text" name="var_registre_commerce" class="form-control" 
+                                   value="{{ entreprise.siret }}" readonly>
+                            <small class="text-muted">Récupéré automatiquement de votre profil</small>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Numéro d'identification fiscale</label>
+                            <input type="text" name="var_nif" class="form-control" 
+                                   placeholder="Ex: 123456789">
+                        </div>
+                        
+                        {% else %}
+                        <div class="form-group mb-3">
+                            <label>Informations complémentaires</label>
+                            <textarea name="var_infos" class="form-control" rows="5"
+                                      placeholder="Ajoutez ici toutes les informations nécessaires..."></textarea>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="alert alert-warning">
+                            <i class="fa fa-clock-o"></i>
+                            Vérifiez bien les informations avant de générer le document.
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'myAppli:preparer_soumission' dossier.id %}" 
+                               class="btn btn-secondary">
+                                <i class="fa fa-arrow-left"></i> Retour
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fa fa-file-word-o"></i> Générer le document
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
