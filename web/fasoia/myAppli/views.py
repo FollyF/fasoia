@@ -8,8 +8,11 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 from django.conf import settings
 from datetime import datetime
+from urllib.parse import quote
+
 import os
 import json
+import csv
 import logging
 
 from .forms import InscriptionForm, ConnexionForm
@@ -774,3 +777,237 @@ def mes_soumissions(request):
         'stats': stats,
     }
     return render(request, 'myAppli/soumission/mes_soumissions.html', context)
+
+
+# =============================================
+# FONCTIONS UTILITAIRES WHATSAPP
+# =============================================
+
+def construire_message_whatsapp(entreprise, recommandations):
+    """
+    Construit un message WhatsApp avec toutes les recommandations d'une entreprise
+    """
+    # Récupérer le prénom du contact
+    prenom = entreprise.prenom if entreprise.prenom else "cher partenaire"
+    
+    # En-tête du message
+    message = f"🔔 *RECOMMANDATIONS FASOIA POUR {entreprise.raisonSociale.upper()}*\n\n"
+    message += f"Bonjour {prenom},\n\n"
+    message += f"Nous avons trouvé *{len(recommandations)} opportunités* qui correspondent à votre profil :\n\n"
+    
+    # Liste des recommandations
+    for i, reco in enumerate(recommandations, 1):
+        opportunite = reco.opportunite
+        
+        # Type d'opportunité
+        if reco.opportunite_type == 'Offre_uemoa':
+            type_opp = "📄 APPEL D'OFFRE"
+        else:
+            type_opp = "📋 AMI"
+        
+        # Titre (description courte)
+        titre = opportunite.description[:80] + "..." if len(opportunite.description) > 80 else opportunite.description
+        
+        message += f"{i}. *{type_opp}*\n"
+        message += f"   📌 {titre}\n"
+        
+        # Date limite
+        if opportunite.date_limite:
+            if hasattr(opportunite.date_limite, 'strftime'):
+                date_limite = opportunite.date_limite.strftime('%d/%m/%Y')
+            else:
+                date_limite = str(opportunite.date_limite)
+            message += f"   ⏰ Date limite: {date_limite}\n"
+        
+        # Score de matching
+        message += f"   🎯 Score de matching: {reco.score_global}%\n"
+        
+        # Compétences matchées
+        if reco.competences_match:
+            competences = ", ".join(reco.competences_match[:3])
+            message += f"   🔑 Vos compétences: {competences}\n"
+        
+        message += "\n"
+    
+    # Instructions
+    message += "💡 *Comment postuler ?*\n"
+    message += "1. Connectez-vous sur https://fasoia.com\n"
+    message += "2. Allez dans 'Mes recommandations'\n"
+    message += "3. Cliquez sur l'opportunité qui vous intéresse\n"
+    message += "4. Suivez les instructions pour soumissionner\n\n"
+    
+    # Contact
+    message += "📞 *Besoin d'aide ?*\n"
+    message += "Répondez à ce message ou contactez-nous au +225 07070707\n\n"
+    
+    message += "Cordialement,\n"
+    message += "L'équipe FasoIA"
+    
+    return message
+
+
+@login_required
+def get_whatsapp_link(request, entreprise_id):
+    """
+    Génère un lien WhatsApp pour une entreprise spécifique
+    API endpoint pour usage AJAX
+    """
+    try:
+        entreprise = Entreprise.objects.get(id=entreprise_id)
+    except Entreprise.DoesNotExist:
+        return JsonResponse({'error': 'Entreprise non trouvée'}, status=404)
+    
+    # Récupérer les recommandations (top 5)
+    recommandations = Recommandation.objects.filter(
+        entreprise=entreprise
+    ).order_by('-score_global')[:5]
+    
+    if not recommandations:
+        return JsonResponse({'error': 'Aucune recommandation pour cette entreprise'}, status=404)
+    
+    # Construire le message
+    message = construire_message_whatsapp(entreprise, recommandations)
+    
+    # Encoder pour URL
+    message_encoded = quote(message)
+    
+    # Formater le numéro (enlever + et espaces)
+    telephone = str(entreprise.telephone).replace('+', '').replace(' ', '')
+    
+    # Créer le lien WhatsApp
+    whatsapp_link = f"https://wa.me/{telephone}?text={message_encoded}"
+    
+    return JsonResponse({
+        'success': True,
+        'entreprise_id': entreprise.id,
+        'entreprise': entreprise.raisonSociale,
+        'contact': f"{entreprise.prenom} {entreprise.nom}",
+        'telephone': str(entreprise.telephone),
+        'nb_recommandations': len(recommandations),
+        'whatsapp_link': whatsapp_link,
+        'message_preview': message[:200] + "..."  # Aperçu
+    })
+
+@login_required
+def tous_liens_whatsapp(request):
+    """
+    Page admin avec tous les liens WhatsApp pour toutes les entreprises
+    """
+    # Vérifier que l'utilisateur est admin
+    if not request.user.is_staff:
+        messages.error(request, "Accès réservé aux administrateurs")
+        return redirect('myAppli:home')
+    
+    # Récupérer toutes les entreprises avec profil complet
+    entreprises = Entreprise.objects.filter(profil_complet=True).order_by('raisonSociale')
+    
+    entreprises_data = []
+    
+    for entreprise in entreprises:
+        # Récupérer les recommandations
+        recommandations = Recommandation.objects.filter(
+            entreprise=entreprise
+        ).order_by('-score_global')[:5]
+        
+        if recommandations:
+            # Construire le message et le lien
+            message = construire_message_whatsapp(entreprise, recommandations)
+            message_encoded = quote(message)
+            telephone = str(entreprise.telephone).replace('+', '').replace(' ', '')
+            whatsapp_link = f"https://wa.me/{telephone}?text={message_encoded}"
+            
+            entreprises_data.append({
+                'id': entreprise.id,
+                'raisonSociale': entreprise.raisonSociale,
+                'prenom': entreprise.prenom,
+                'nom': entreprise.nom,
+                'telephone': entreprise.telephone,
+                'email': entreprise.email,
+                'nb_recommandations': len(recommandations),
+                'recommandations': recommandations,
+                'whatsapp_link': whatsapp_link,
+                'message': message  # Message complet pour aperçu
+            })
+    
+    # Statistiques
+    stats = {
+        'total_entreprises': entreprises.count(),
+        'avec_recommandations': len(entreprises_data),
+        'sans_recommandations': entreprises.count() - len(entreprises_data),
+        'total_messages': sum([e['nb_recommandations'] for e in entreprises_data])
+    }
+    
+    return render(request, 'myAppli/admin/whatsapp_links.html', {
+        'entreprises': entreprises_data,
+        'stats': stats
+    })
+
+import csv
+from django.http import HttpResponse
+
+@login_required
+def exporter_liens_whatsapp_csv(request):
+    """Exporte tous les liens WhatsApp au format CSV"""
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="liens_whatsapp.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Entreprise', 'Contact', 'Téléphone', 'Email', 'Nb Recommandations', 'Lien WhatsApp'])
+    
+    entreprises = Entreprise.objects.filter(profil_complet=True)
+    
+    for entreprise in entreprises:
+        recommandations = Recommandation.objects.filter(
+            entreprise=entreprise
+        ).order_by('-score_global')[:5]
+        
+        if recommandations:
+            message = construire_message_whatsapp(entreprise, recommandations)
+            message_encoded = quote(message)
+            telephone = str(entreprise.telephone).replace('+', '').replace(' ', '')
+            lien = f"https://wa.me/{telephone}?text={message_encoded}"
+            
+            writer.writerow([
+                entreprise.raisonSociale,
+                f"{entreprise.prenom} {entreprise.nom}",
+                entreprise.telephone,
+                entreprise.email,
+                len(recommandations),
+                lien
+            ])
+    
+    return response
+
+@login_required
+def exporter_liens_whatsapp_txt(request):
+    """Exporte tous les liens WhatsApp au format texte"""
+    
+    response = HttpResponse(content_type='text/plain')
+    response['Content-Disposition'] = 'attachment; filename="liens_whatsapp.txt"'
+    
+    response.write("🔗 LIENS WHATSAPP POUR ENVOI DES RECOMMANDATIONS\n")
+    response.write("="*80 + "\n\n")
+    
+    entreprises = Entreprise.objects.filter(profil_complet=True)
+    
+    for entreprise in entreprises:
+        recommandations = Recommandation.objects.filter(
+            entreprise=entreprise
+        ).order_by('-score_global')[:5]
+        
+        if recommandations:
+            message = construire_message_whatsapp(entreprise, recommandations)
+            message_encoded = quote(message)
+            telephone = str(entreprise.telephone).replace('+', '').replace(' ', '')
+            lien = f"https://wa.me/{telephone}?text={message_encoded}"
+            
+            response.write(f"🏢 {entreprise.raisonSociale}\n")
+            response.write(f"👤 {entreprise.prenom} {entreprise.nom}\n")
+            response.write(f"📞 {entreprise.telephone}\n")
+            response.write(f"📧 {entreprise.email}\n")
+            response.write(f"📊 {len(recommandations)} recommandations\n")
+            response.write(f"🔗 {lien}\n")
+            response.write("-"*80 + "\n\n")
+    
+    return response

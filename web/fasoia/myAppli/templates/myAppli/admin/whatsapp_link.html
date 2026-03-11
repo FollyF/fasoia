@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% load static %}
+{% load whatsapp_filters %}
+
+{% block title %}Liens WhatsApp - Administration{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-dark text-white">
+                <div class="card-header bg-success">
+                    <h3><i class="fa fa-whatsapp"></i> Envoi des recommandations par WhatsApp</h3>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Statistiques -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h4>{{ stats.total_entreprises }}</h4>
+                                    <p>Entreprises totales</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <h4>{{ stats.avec_recommandations }}</h4>
+                                    <p>Avec recommandations</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-dark">
+                                <div class="card-body text-center">
+                                    <h4>{{ stats.sans_recommandations }}</h4>
+                                    <p>Sans recommandations</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <h4>{{ stats.total_messages }}</h4>
+                                    <p>Messages à envoyer</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Barre d'outils -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <input type="text" id="searchInput" class="form-control bg-dark text-white" 
+                                   placeholder="🔍 Rechercher une entreprise...">
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <button class="btn btn-success" onclick="expandAll()">
+                                <i class="fa fa-expand"></i> Tout déplier
+                            </button>
+                            <button class="btn btn-warning" onclick="collapseAll()">
+                                <i class="fa fa-compress"></i> Tout replier
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Liste des entreprises -->
+                    <div id="entreprisesList">
+                        {% for entreprise in entreprises %}
+                        <div class="card mb-3 bg-secondary text-white entreprise-card" data-nom="{{ entreprise.raisonSociale|lower }}">
+                            <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="mb-0">
+                                        <i class="fa fa-building"></i> {{ entreprise.raisonSociale }}
+                                        <small class="text-muted">({{ entreprise.nb_recommandations }} recommandations)</small>
+                                    </h5>
+                                    <small>
+                                        <i class="fa fa-user"></i> {{ entreprise.prenom }} {{ entreprise.nom }} | 
+                                        <i class="fa fa-phone"></i> {{ entreprise.telephone }} | 
+                                        <i class="fa fa-envelope"></i> {{ entreprise.email }}
+                                    </small>
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-light" onclick="toggleDetails({{ forloop.counter }})">
+                                        <i class="fa fa-chevron-down"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div id="details-{{ forloop.counter }}" class="card-body" style="display: none;">
+                                <!-- Aperçu des recommandations -->
+                                <h6>Recommandations :</h6>
+                                <ul class="list-group list-group-flush bg-dark mb-3">
+                                    {% for reco in entreprise.recommandations %}
+                                    <li class="list-group-item bg-dark text-white">
+                                        <strong>
+                                            {% if reco.opportunite_type == 'Offre_uemoa' %}📄 Offre{% else %}📋 AMI{% endif %}
+                                        </strong> - 
+                                        {{ reco.opportunite.description|truncatechars:100 }}
+                                        <span class="badge bg-success float-end">Score: {{ reco.score_global }}%</span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                
+                                <!-- Aperçu du message -->
+                                <div class="alert alert-info">
+                                    <strong>Aperçu du message WhatsApp :</strong>
+                                    <pre class="bg-dark text-white p-3 mt-2" style="white-space: pre-wrap;">{{ entreprise.message }}</pre>
+                                </div>
+                                
+                                <!-- Actions -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <a href="{{ entreprise.whatsapp_link }}" target="_blank" 
+                                           class="btn btn-success btn-block w-100">
+                                            <i class="fa fa-whatsapp"></i> 
+                                            Ouvrir WhatsApp ({{ entreprise.nb_recommandations }} recommandations)
+                                        </a>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <button class="btn btn-outline-light btn-block w-100" 
+                                                onclick="copyToClipboard('{{ entreprise.whatsapp_link }}')">
+                                            <i class="fa fa-copy"></i> Copier le lien
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="alert alert-warning">
+                            <i class="fa fa-info-circle"></i>
+                            Aucune entreprise avec des recommandations trouvée.
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Option d'export -->
+                    <div class="card mt-4 bg-dark">
+                        <div class="card-header">
+                            <h5>Exporter tous les liens</h5>
+                        </div>
+                        <div class="card-body">
+                            <a href="{% url 'myAppli:exporter_liens_whatsapp' %}" class="btn btn-primary">
+                                <i class="fa fa-download"></i> Télécharger tous les liens (CSV)
+                            </a>
+                            <a href="{% url 'myAppli:exporter_liens_whatsapp_txt' %}" class="btn btn-secondary">
+                                <i class="fa fa-file-text"></i> Télécharger tous les liens (TXT)
+                            </a>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chargement du JS externe (contient copyToClipboard, showNotification, etc.) -->
+<script src="{% static 'myAppli/js/whatsapp.js' %}"></script>
+
+<!-- Scripts spécifiques à cette page (recherche, expand/collapse) -->
+<script>
+// Recherche en direct
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    let searchText = this.value.toLowerCase();
+    let cards = document.querySelectorAll('.entreprise-card');
+    
+    cards.forEach(card => {
+        let nom = card.getAttribute('data-nom');
+        if (nom.includes(searchText)) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+});
+
+// Afficher/masquer les détails
+function toggleDetails(id) {
+    let details = document.getElementById('details-' + id);
+    if (details.style.display === 'none') {
+        details.style.display = 'block';
+    } else {
+        details.style.display = 'none';
+    }
+}
+
+// Tout déplier
+function expandAll() {
+    document.querySelectorAll('[id^="details-"]').forEach(el => {
+        el.style.display = 'block';
+    });
+}
+
+// Tout replier
+function collapseAll() {
+    document.querySelectorAll('[id^="details-"]').forEach(el => {
+        el.style.display = 'none';
+    });
+}
+</script>
+
+<style>
+.pre-wrap {
+    white-space: pre-wrap;
+    font-family: monospace;
+    font-size: 12px;
+}
+</style>
+{% endblock %}

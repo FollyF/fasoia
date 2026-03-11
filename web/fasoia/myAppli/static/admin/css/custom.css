@@ -1,0 +1,24 @@
+/* static/admin/css/custom.css */
+.whatsapp-button {
+    background-color: #25D366 !important;
+    color: white !important;
+    padding: 8px 15px !important;
+    border-radius: 5px !important;
+    text-decoration: none !important;
+    font-weight: bold !important;
+    margin-right: 10px !important;
+}
+
+.whatsapp-button:hover {
+    background-color: #128C7E !important;
+    color: white !important;
+}
+
+.whatsapp-badge {
+    background-color: #25D366;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    margin-left: 5px;
+}

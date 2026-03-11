@@ -55,4 +55,9 @@ urlpatterns = [
          views.soumettre_dossier, name='soumettre_dossier'),
     path('mes_soumissions/', 
          views.mes_soumissions, name='mes_soumissions'),
+
+     path('admin/whatsapp/', views.tous_liens_whatsapp, name='tous_liens_whatsapp'),
+     path('admin/whatsapp/export/csv/', views.exporter_liens_whatsapp_csv, name='exporter_liens_whatsapp'),
+     path('admin/whatsapp/export/txt/', views.exporter_liens_whatsapp_txt, name='exporter_liens_whatsapp_txt'),
+     path('api/whatsapp/lien/<int:entreprise_id>/', views.get_whatsapp_link, name='get_whatsapp_link'),
 ]
