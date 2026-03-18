@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test Modal</title>
+    <!-- Bootstrap 4 CSS - Google CDN -->
+    <link rel="stylesheet" href="bootstrap.min.css">
+</head>
+<body class="p-5">
+    
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#monModal">
+        Ouvrir le modal
+    </button>
+
+    <div class="modal fade" id="monModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Test</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Ça marche !</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1. jQuery d'abord -->
+    <script src="jquery.min.js"></script>
+    
+    <!-- 2. Popper.js ensuite (NÉCESSAIRE pour Bootstrap 4) -->
+    <script src="popper.min.js"></script>
+    
+    <!-- 3. Bootstrap JS en dernier -->
+    <script src="bootstrap.min.js"></script>
+</body>
+</html>

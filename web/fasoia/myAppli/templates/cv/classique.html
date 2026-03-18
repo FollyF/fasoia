@@ -1,0 +1,36 @@
+{% extends "cv/base_cv.html" %}
+
+{% block extra_css %}
+<style>
+    /* Style classique - élégant, sobre */
+    body {
+        font-family: 'Times New Roman', serif;
+    }
+    
+    h1 {
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        border-bottom: 1px solid #333;
+        padding-bottom: 10px;
+    }
+    
+    h2 {
+        font-variant: small-caps;
+        border-bottom: 1px solid #999;
+    }
+    
+    .contact-info {
+        text-align: center;
+    }
+    
+    .experience-item, .formation-item {
+        margin-left: 20px;
+    }
+    
+    .skill-tag {
+        background: #e0e0e0;
+        color: #333;
+    }
+</style>
+{% endblock %}

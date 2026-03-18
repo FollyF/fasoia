@@ -1,0 +1,341 @@
+{% extends "base_app.html" %}
+{% load static %}
+
+{% block title %}Trouver un emploi - FasoIA{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #1ed760;
+        --secondary-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-primary: #ffffff;
+        --text-secondary: #b3b3b3;
+    }
+    
+    body {
+        background-color: var(--secondary-color);
+        color: var(--text-primary);
+    }
+    
+    .emploi-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 30px 20px;
+    }
+    
+    /* En-tête */
+    .page-header {
+        background: linear-gradient(135deg, #1ed760 0%, #0f8f3f 100%);
+        border-radius: 15px;
+        padding: 40px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .page-header h1 {
+        font-size: 36px;
+        margin-bottom: 10px;
+    }
+    
+    .page-header p {
+        font-size: 18px;
+        opacity: 0.9;
+    }
+    
+    /* Statistiques */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+    
+    .stat-card {
+        background: var(--card-bg);
+        border: 1px solid #333;
+        border-radius: 10px;
+        padding: 25px;
+        text-align: center;
+    }
+    
+    .stat-card i {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+    }
+    
+    .stat-card h3 {
+        font-size: 2rem;
+        color: var(--primary-color);
+    }
+    
+    /* Grille d'outils */
+    .tools-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+    
+    .tool-card {
+        background: var(--card-bg);
+        border: 1px solid #333;
+        border-radius: 15px;
+        padding: 30px;
+        transition: transform 0.3s ease;
+        text-decoration: none;
+        color: var(--text-primary);
+        display: block;
+    }
+    
+    .tool-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary-color);
+    }
+    
+    .tool-icon {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+    }
+    
+    .tool-card h3 {
+        margin-bottom: 10px;
+    }
+    
+    .tool-card p {
+        color: var(--text-secondary);
+        margin-bottom: 20px;
+    }
+    
+    .tool-link {
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+    
+    /* Conseils */
+    .tips-section {
+        background: var(--card-bg);
+        border: 1px solid #333;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 40px;
+    }
+    
+    .tips-section h2 {
+        color: var(--primary-color);
+        margin-bottom: 20px;
+    }
+    
+    .tips-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+    
+    .tip-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .tip-item i {
+        font-size: 1.5rem;
+        color: var(--primary-color);
+        width: 30px;
+    }
+    
+    /* Offres récentes */
+    .offres-section {
+        background: var(--card-bg);
+        border: 1px solid #333;
+        border-radius: 15px;
+        padding: 30px;
+    }
+    
+    .offre-card {
+        background: #2a2a2a;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 15px;
+        transition: transform 0.3s ease;
+    }
+    
+    .offre-card:hover {
+        transform: translateX(5px);
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .offre-card h4 {
+        margin-bottom: 5px;
+    }
+    
+    .offre-card .company {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+    }
+    
+    .offre-card .details {
+        display: flex;
+        gap: 20px;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+    
+    @media (max-width: 768px) {
+        .tools-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="emploi-container">
+    <!-- En-tête -->
+    <div class="page-header">
+        <h1>Trouvez l'emploi de vos rêves</h1>
+        <p>Des outils et conseils pour booster votre recherche d'emploi</p>
+    </div>
+    
+    <!-- Statistiques -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <i class="fa fa-briefcase"></i>
+            <h3>{{ stats.offres_disponibles }}</h3>
+            <p>Offres disponibles</p>
+        </div>
+        <div class="stat-card">
+            <i class="fa fa-file-text"></i>
+            <h3>{{ stats.outils }}</h3>
+            <p>Outils pratiques</p>
+        </div>
+        <div class="stat-card">
+            <i class="fa fa-lightbulb-o"></i>
+            <h3>{{ stats.conseils }}</h3>
+            <p>Conseils carrière</p>
+        </div>
+        <div class="stat-card">
+            <i class="fa fa-users"></i>
+            <h3>500+</h3>
+            <p>Embauches réussies</p>
+        </div>
+    </div>
+    
+    <!-- Outils principaux -->
+    <h2 style="margin-bottom: 20px;">📋 Outils pour votre recherche</h2>
+    <div class="tools-grid">
+        <a href="{% url 'myAppli:generer_cv' %}" class="tool-card">
+            <div class="tool-icon">
+                <i class="fa fa-file-pdf-o"></i>
+            </div>
+            <h3>Créer mon CV</h3>
+            <p>Générez un CV professionnel en quelques minutes avec nos modèles personnalisables.</p>
+            <span class="tool-link">Commencer →</span>
+        </a>
+        
+        <a href="{% url 'myAppli:generer_lettre_motivation' %}" class="tool-card">
+            <div class="tool-icon">
+                <i class="fa fa-envelope-open"></i>
+            </div>
+            <h3>Lettre de motivation</h3>
+            <p>Rédigez une lettre de motivation percutante grâce à nos templates et conseils.</p>
+            <span class="tool-link">Commencer →</span>
+        </a>
+        
+        <a href="{% url 'myAppli:preparer_entretien' %}" class="tool-card">
+            <div class="tool-icon">
+                <i class="fa fa-handshake-o"></i>
+            </div>
+            <h3>Préparation entretien</h3>
+            <p>Simulations d'entretien et questions fréquentes pour vous préparer.</p>
+            <span class="tool-link">Commencer →</span>
+        </a>
+        
+        <a href="{% url 'myAppli:opportunites' %}#emplois" class="tool-card">
+            <div class="tool-icon">
+                <i class="fa fa-search"></i>
+            </div>
+            <h3>Recherche avancée</h3>
+            <p>Filtrez les offres par secteur, localisation, salaire et plus encore.</p>
+            <span class="tool-link">Commencer →</span>
+        </a>
+        
+        <a href="{% url 'myAppli:dashboard_candidat' %}" class="tool-card">
+            <div class="tool-icon">
+                <i class="fa fa-tachometer"></i>
+            </div>
+            <h3>Tableau de bord candidat</h3>
+            <p>Suivez vos candidatures, entretiens et statistiques en un coup d'œil.</p>
+            <span class="tool-link">Accéder →</span>
+        </a>
+        
+        <a href="{% url 'myAppli:alertes_emploi' %}" class="tool-card">
+            <div class="tool-icon">
+                <i class="fa fa-bell"></i>
+            </div>
+            <h3>Alertes emploi</h3>
+            <p>Recevez des notifications pour les offres correspondant à votre profil.</p>
+            <span class="tool-link">Configurer →</span>
+        </a>
+    </div>
+    
+    <!-- Conseils et astuces -->
+    <div class="tips-section">
+        <h2><i class="fa fa-lightbulb-o"></i> Conseils pour réussir</h2>
+        <div class="tips-grid">
+            <div class="tip-item">
+                <i class="fa fa-check-circle"></i>
+                <span>Personnalisez votre CV pour chaque offre</span>
+            </div>
+            <div class="tip-item">
+                <i class="fa fa-check-circle"></i>
+                <span>Soignez votre lettre de motivation</span>
+            </div>
+            <div class="tip-item">
+                <i class="fa fa-check-circle"></i>
+                <span>Préparez vos entretiens</span>
+            </div>
+            <div class="tip-item">
+                <i class="fa fa-check-circle"></i>
+                <span>Mettez à jour votre profil régulièrement</span>
+            </div>
+            <div class="tip-item">
+                <i class="fa fa-check-circle"></i>
+                <span>Réseautez avec des professionnels</span>
+            </div>
+            <div class="tip-item">
+                <i class="fa fa-check-circle"></i>
+                <span>Suivez vos candidatures</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Offres récentes -->
+    <div class="offres-section">
+        <h2><i class="fa fa-briefcase"></i> Dernières offres d'emploi</h2>
+        {% for offre in dernieres_offres %}
+        <div class="offre-card">
+            <h4>{{ offre.titre }}</h4>
+            <div class="company">
+                <i class="fa fa-building"></i> 
+                {% if offre.recruteur %}
+                    {{ offre.recruteur.organisation }}
+                {% else %}
+                    Entreprise partenaire
+                {% endif %}
+            </div>
+            <div class="details">
+                <span><i class="fa fa-map-marker"></i> {{ offre.localisation }}</span>
+                <span><i class="fa fa-clock-o"></i> {{ offre.get_type_contrat_display }}</span>
+                <span><i class="fa fa-calendar"></i> Limite: {{ offre.date_limite|date:"d/m/Y" }}</span>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-secondary">Aucune offre disponible pour le moment.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

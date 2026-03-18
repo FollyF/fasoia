@@ -279,6 +279,13 @@
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Simuler un clic sur le bouton "Particulier" au chargement
+            const particulierCard = document.querySelector('.profile-card.active');
+            if (particulierCard) {
+                updateProfile(particulierCard, 'particulier');
+            }
+        });
         function updateProfile(element, type) {
             // 1. Gérer les classes actives
             document.querySelectorAll('.profile-card').forEach(card => {

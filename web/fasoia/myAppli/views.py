@@ -7,8 +7,8 @@ from django.views.decorators import csrf
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 from django.conf import settings
-from datetime import datetime
 from urllib.parse import quote
+from django.utils import timezone
 
 import os
 import json
@@ -18,9 +18,11 @@ import logging
 from .forms import InscriptionForm, ConnexionForm
 from .models import *
 from analyse_ia.models import *
-from .services.generateur_document import GenerateurDocument
+from .services.generateur_cv_public import GenerateurCVPublic
 logger = logging.getLogger(__name__)
 
+def test(request):
+    return render(request, 'myAppli/test.html')
 
 def home(request):
     """
@@ -57,9 +59,21 @@ def inscription(request):
     Vue d'inscription - Gère les 3 types de profils
     """
     if request.user.is_authenticated:
-        messages.info(request, "Vous êtes déjà connecté")
+    # Utilisateur déjà connecté - rediriger vers son dashboard
+        if hasattr(request.user, 'entreprise'):
+            return redirect('myAppli:dashboard_entreprise')
+        elif hasattr(request.user, 'particulier'):
+            particulier = request.user.particulier
+            if hasattr(particulier, 'candidat') and hasattr(particulier, 'recruteur'):
+                return redirect('myAppli:dashboard_particulier')
+            elif hasattr(particulier, 'candidat'):
+                return redirect('myAppli:dashboard_candidat')
+            elif hasattr(particulier, 'recruteur'):
+                return redirect('myAppli:dashboard_recruteur')
+            else:
+                return redirect('myAppli:dashboard_particulier')
         return redirect('myAppli:home')
-    
+
     if request.method == 'POST':
         form = InscriptionForm(request.POST)
         
@@ -80,7 +94,7 @@ def inscription(request):
                         f"Bienvenue {entreprise.raisonSociale} ! Votre compte entreprise a été créé. Complétez votre profil pour commencer."
                     )
                     logger.info(f"Nouvelle inscription entreprise : {user.email} - {entreprise.raisonSociale}")
-                    return redirect('myAppli:tableau_bord_entreprise')
+                    return redirect('myAppli:dashboard_entreprise')
                     
                 elif profile_type == 'particulier':
                     particulier = user.particulier
@@ -89,7 +103,7 @@ def inscription(request):
                         f"Bienvenue {particulier.prenom} {particulier.nom} ! Votre compte a été créé avec succès."
                     )
                     logger.info(f"Nouvelle inscription particulier : {user.email}")
-                    return redirect('myAppli:home')
+                    return redirect('myAppli:dashboard_particulier')
                     
                 elif profile_type == 'partenaire':
                     # Si partenaire = recruteur ou autre
@@ -134,9 +148,21 @@ def connexion(request):
     print("="*50)
 
     if request.user.is_authenticated:
-        messages.info(request, f"Vous êtes déjà connecté en tant que {request.user.email}")
+    # Utilisateur déjà connecté - rediriger vers son dashboard
+        if hasattr(request.user, 'entreprise'):
+            return redirect('myAppli:dashboard_entreprise')
+        elif hasattr(request.user, 'particulier'):
+            particulier = request.user.particulier
+            if hasattr(particulier, 'candidat') and hasattr(particulier, 'recruteur'):
+                return redirect('myAppli:dashboard_particulier')
+            elif hasattr(particulier, 'candidat'):
+                return redirect('myAppli:dashboard_candidat')
+            elif hasattr(particulier, 'recruteur'):
+                return redirect('myAppli:dashboard_recruteur')
+            else:
+                return redirect('myAppli:dashboard_particulier')
         return redirect('myAppli:home')
-    
+ 
     if request.method == 'POST':
         form = ConnexionForm(request, data=request.POST)
         
@@ -167,7 +193,7 @@ def connexion(request):
             if next_url:
                 return redirect(next_url)
             elif hasattr(user, 'entreprise'):
-                return redirect('myAppli:tableau_bord_entreprise')
+                return redirect('myAppli:dashboard_entreprise')
             else:
                 return redirect('myAppli:home')
         else:
@@ -216,7 +242,7 @@ def profil(request):
     return render(request, 'myAppli/profil.html', context)
 
 @login_required
-def tableau_bord_entreprise(request):
+def dashboard_entreprise(request):
     """
     Tableau de bord spécifique pour les entreprises
     """
@@ -293,7 +319,7 @@ def tableau_bord_entreprise(request):
             recommandations_count = 0
             opportunites_correspondantes = 0
     
-    return render(request, 'myAppli/tableau_bord_entreprise.html', {
+    return render(request, 'myAppli/dashboard_entreprise.html', {
         'entreprise': entreprise,
         'user': request.user,
         'pourcentage_completion': pourcentage,
@@ -307,6 +333,435 @@ def tableau_bord_entreprise(request):
         'opportunites_correspondantes': opportunites_correspondantes,
         'recommandations_count': recommandations_count,
     })
+
+@login_required
+def dashboard_particulier(request):
+    """
+    Dashboard principal pour les particuliers
+    Permet de choisir son rôle (candidat ou recruteur)
+    """
+    # Vérifier que l'utilisateur est bien un particulier
+    if not hasattr(request.user, 'particulier'):
+        messages.error(request, "Accès réservé aux particuliers")
+        return redirect('myAppli:home')
+    
+    particulier = request.user.particulier
+    
+    # Vérifier si l'utilisateur a déjà des profils
+    a_profil_candidat = hasattr(particulier, 'candidat')
+    a_profil_recruteur = hasattr(particulier, 'recruteur')
+    
+    context = {
+        'particulier': particulier,
+        'a_profil_candidat': a_profil_candidat,
+        'a_profil_recruteur': a_profil_recruteur,
+    }
+    
+    return render(request, 'myAppli/dashboard_particulier.html', context)
+
+@login_required
+def dashboard_candidat(request):
+    """
+    Dashboard spécifique pour les demandeurs d'emploi
+    """
+    if not hasattr(request.user, 'particulier'):
+        messages.error(request, "Accès non autorisé")
+        return redirect('myAppli:home')
+    
+    particulier = request.user.particulier
+    
+    if not hasattr(particulier, 'candidat'):
+        messages.warning(request, "Vous devez d'abord activer votre profil candidat")
+        return redirect('myAppli:dashboard_particulier')
+    
+    candidat = particulier.candidat
+    
+    # Récupérer les offres recommandées
+    offres_recommandees = OffreEmploi.objects.filter(
+        statut='PUBLIEE',
+        est_active=True
+    ).order_by('-date_publication')[:10]
+    
+    # ===== CALCUL CORRIGÉ DE LA PROGRESSION =====
+    # Liste de TOUS les champs à prendre en compte (particulier + candidat)
+    champs_profil = [
+        # Champs du Particulier
+        ('nom', particulier.nom),
+        ('prenom', particulier.prenom),
+        ('email', particulier.email),
+        ('telephone', particulier.telephone),
+        ('date_naissance', particulier.date_naissance),
+        ('adresse', particulier.adresse),
+        ('ville', particulier.ville),
+        ('pays', particulier.pays),
+        
+        # Champs du Candidat
+        ('niveauEtude', candidat.niveauEtude),
+        ('competences', candidat.competences),
+        ('disponibilite', candidat.disponibilite),
+        ('niveauLangues', candidat.niveauLangues),
+        ('secteur_recherche', candidat.secteur_recherche),
+        ('type_contrat_recherche', candidat.type_contrat_recherche),
+        ('localisation_recherche', candidat.localisation_recherche),
+        ('anneesExperiences', candidat.anneesExperiences),
+        ('salaire_souhaite', candidat.salaire_souhaite),
+        ('mobilite', candidat.mobilite),  # True/False donc toujours rempli
+        ('cv', candidat.cv),
+        ('lettre_motivation', candidat.lettre_motivation),
+    ]
+    
+    # Compter les champs remplis
+    champs_remplis = 0
+    details_champs = {}
+    
+    for nom_champ, valeur in champs_profil:
+        # Déterminer si le champ est considéré comme rempli
+        if nom_champ == 'mobilite':
+            # La mobilité est un boolean, toujours rempli (True ou False)
+            est_rempli = True
+        elif nom_champ in ['cv', 'lettre_motivation']:
+            # Les fichiers sont considérés comme remplis si ils existent
+            est_rempli = bool(valeur)
+        elif nom_champ in ['anneesExperiences', 'salaire_souhaite']:
+            # Les nombres : >0 est considéré comme rempli
+            est_rempli = valeur is not None and valeur > 0
+        elif nom_champ == 'date_naissance':
+            # Date de naissance optionnelle
+            est_rempli = bool(valeur)
+        else:
+            # Champs texte : non vides et non "None"
+            est_rempli = bool(valeur and str(valeur).strip())
+        
+        if est_rempli:
+            champs_remplis += 1
+            details_champs[nom_champ] = True
+        else:
+            details_champs[nom_champ] = False
+    
+    total_champs = len(champs_profil)
+    progression = int((champs_remplis / total_champs) * 100) if total_champs > 0 else 0
+    
+    # Définir les champs obligatoires (ceux avec * dans le formulaire)
+    champs_obligatoires = [
+        ('nom', particulier.nom),
+        ('prenom', particulier.prenom),
+        ('email', particulier.email),
+        ('telephone', particulier.telephone),
+        ('niveauEtude', candidat.niveauEtude),
+        ('competences', candidat.competences),
+        ('disponibilite', candidat.disponibilite),
+        ('cv', candidat.cv),
+    ]
+    
+    # Vérifier si tous les champs obligatoires sont remplis
+    profil_complet = True
+    champs_manquants = []
+    
+    for nom_champ, valeur in champs_obligatoires:
+        if nom_champ in ['cv']:
+            if not bool(valeur):
+                profil_complet = False
+                champs_manquants.append(nom_champ)
+        else:
+            if not bool(valeur and str(valeur).strip()):
+                profil_complet = False
+                champs_manquants.append(nom_champ)
+    
+    # Gérer l'affichage du formulaire
+    show_form = not profil_complet or request.GET.get('edit') == 'true'
+    
+    # Si on vient juste d'enregistrer, on cache le formulaire
+    if request.session.pop('profil_juste_complete', False):
+        show_form = False
+    
+    # Libellés des champs pour l'affichage
+    libelles_champs = {
+        'nom': 'Nom',
+        'prenom': 'Prénom',
+        'email': 'Email',
+        'telephone': 'Téléphone',
+        'date_naissance': 'Date de naissance',
+        'adresse': 'Adresse',
+        'ville': 'Ville',
+        'pays': 'Pays',
+        'niveauEtude': "Niveau d'étude",
+        'competences': 'Compétences',
+        'disponibilite': 'Disponibilité',
+        'niveauLangues': 'Niveau en langues',
+        'secteur_recherche': 'Secteur recherché',
+        'type_contrat_recherche': 'Type de contrat',
+        'localisation_recherche': 'Localisation recherchée',
+        'anneesExperiences': "Années d'expérience",
+        'salaire_souhaite': 'Salaire souhaité',
+        'mobilite': 'Mobilité',
+        'cv': 'CV',
+        'lettre_motivation': 'Lettre de motivation',
+    }
+    
+    context = {
+        'candidat': candidat,
+        'particulier': particulier,
+        'offres_recommandees': offres_recommandees,
+        'progression': progression,
+        'champs_remplis': champs_remplis,
+        'total_champs': total_champs,
+        'profil_complet': profil_complet,
+        'champs_manquants': champs_manquants,
+        'libelles_champs': libelles_champs,
+        'details_champs': details_champs,
+        'show_form': show_form,
+    }
+    
+    return render(request, 'myAppli/dashboard_candidat.html', context)
+
+@login_required
+def dashboard_recruteur(request):
+    """
+    Dashboard spécifique pour les recruteurs
+    """
+    if not hasattr(request.user, 'particulier'):
+        messages.error(request, "Accès non autorisé")
+        return redirect('myAppli:home')
+    
+    particulier = request.user.particulier
+    
+    if not hasattr(particulier, 'recruteur'):
+        messages.warning(request, "Vous devez d'abord activer votre profil recruteur")
+        return redirect('myAppli:dashboard_particulier')
+    
+    recruteur = particulier.recruteur
+    
+    # Récupérer les offres publiées par ce recruteur
+    offres_publiees = OffreEmploi.objects.filter(recruteur=recruteur).order_by('-date_publication')
+    
+    # Talents recommandés (exemple simple)
+    talents_recommandes = []
+    candidats = Candidat.objects.all()[:10]
+    
+    for candidat in candidats:
+        # Score fictif à remplacer par un vrai algorithme
+        score = 75
+        talents_recommandes.append({
+            'id': candidat.particulier_id,
+            'prenom': candidat.prenom,
+            'nom': candidat.nom,
+            'competences': candidat.competences,
+            'niveauEtude': candidat.niveauEtude,
+            'experience': candidat.anneesExperiences,
+            'score': score,
+            'date': candidat.particulier.dateInscription,
+        })
+    
+    # Statistiques
+    stats = {
+        'offres_publiees': offres_publiees.count(),
+        'candidatures_recues': 0,  # À implémenter
+        'talents_recommandes': len(talents_recommandes),
+    }
+    
+    # Calcul de la progression du profil
+    champs_recruteur = [
+        ('organisation', recruteur.organisation),
+        ('secteur', recruteur.secteur),
+        ('typeStructure', recruteur.typeStructure),
+        ('poste_occupe', recruteur.poste_occupe),
+        ('secteurs_recherches', recruteur.secteurs_recherches),
+        ('types_contrats_proposes', recruteur.types_contrats_proposes),
+    ]
+    
+    champs_remplis = sum(1 for champ, valeur in champs_recruteur if valeur)
+    total_champs = len(champs_recruteur)
+    progression = int((champs_remplis / total_champs) * 100) if champs_remplis > 0 else 0
+    profil_complet = (champs_remplis == total_champs)
+    
+    # Traitement du formulaire d'offre (POST)
+    if request.method == 'POST' and 'offre_form' in request.POST:
+        try:
+            offre = OffreEmploi.objects.create(
+                recruteur=recruteur,
+                titre=request.POST.get('titre'),
+                description=request.POST.get('description'),
+                missions=request.POST.get('missions'),
+                profil_recherche=request.POST.get('profil_recherche'),
+                localisation=request.POST.get('localisation'),
+                teletravail=request.POST.get('teletravail') == 'on',
+                type_contrat=request.POST.get('type_contrat'),
+                niveau_experience=request.POST.get('niveau_experience'),
+                annees_experience_min=request.POST.get('annees_experience_min') or 0,
+                niveau_etude_requis=request.POST.get('niveau_etude_requis'),
+                date_limite=request.POST.get('date_limite') or None,
+                statut='PUBLIEE'
+            )
+            messages.success(request, "Offre d'emploi publiée avec succès !")
+        except Exception as e:
+            messages.error(request, f"Erreur: {e}")
+        return redirect('myAppli:dashboard_recruteur')
+    
+    context = {
+        'recruteur': recruteur,
+        'offres_publiees': offres_publiees,
+        'talents_recommandes': talents_recommandes,
+        'stats': stats,
+        'progression': progression,
+        'champs_remplis': champs_remplis,
+        'total_champs': total_champs,
+        'profil_complet': profil_complet,
+    }
+    
+    return render(request, 'myAppli/dashboard_recruteur.html', context)
+
+@login_required
+def activer_profil_candidat(request):
+    """Active le profil candidat pour un particulier"""
+    if not hasattr(request.user, 'particulier'):
+        messages.error(request, "Vous devez être un particulier")
+        return redirect('myAppli:home')
+    
+    particulier = request.user.particulier
+    
+    # Vérifier si le profil existe déjà
+    if hasattr(particulier, 'candidat'):
+        messages.info(request, "Vous avez déjà un profil candidat")
+        return redirect('myAppli:dashboard_candidat')
+    
+    # Créer le profil candidat
+    Candidat.objects.create(
+        particulier=particulier,
+        niveauEtude='',
+        competences='',
+        disponibilite='',
+        secteur_recherche='',
+        type_contrat_recherche='',
+        localisation_recherche='',
+        mobilite=False
+    )
+    
+    messages.success(request, "Profil candidat activé avec succès !")
+    return redirect('myAppli:dashboard_candidat')
+
+
+@login_required
+def activer_profil_recruteur(request):
+    """Active le profil recruteur pour un particulier"""
+    if not hasattr(request.user, 'particulier'):
+        messages.error(request, "Vous devez être un particulier")
+        return redirect('myAppli:home')
+    
+    particulier = request.user.particulier
+    
+    # Vérifier si le profil existe déjà
+    if hasattr(particulier, 'recruteur'):
+        messages.info(request, "Vous avez déjà un profil recruteur")
+        return redirect('myAppli:dashboard_recruteur')
+    
+    # Créer le profil recruteur
+    Recruteur.objects.create(
+        particulier=particulier,
+        organisation='',
+        secteur='',
+        typeStructure='',
+        poste_occupe=''
+    )
+    
+    messages.success(request, "Profil recruteur activé avec succès !")
+    return redirect('myAppli:dashboard_recruteur')
+
+@login_required
+def dashboard_recruteur(request):
+    return render(request, 'myAppli/dashboard_recruteur.html')
+
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_protect
+def completer_profil_candidat(request):
+    """
+    Vue pour enregistrer les modifications du profil candidat
+    """
+    print("="*50)
+    print("DONNÉES REÇUES PROFIL CANDIDAT:")
+    print(request.POST)
+    print(request.FILES)
+    print("="*50)
+    
+    if not hasattr(request.user, 'particulier'):
+        messages.error(request, "Accès réservé aux particuliers")
+        return redirect('myAppli:home')
+    
+    particulier = request.user.particulier
+    
+    if not hasattr(particulier, 'candidat'):
+        messages.warning(request, "Vous devez d'abord activer votre profil candidat")
+        return redirect('myAppli:dashboard_particulier')
+    
+    candidat = particulier.candidat
+    
+    try:
+        # ===== MISE À JOUR DES CHAMPS DU PARTICULIER =====
+        particulier.nom = request.POST.get('nom', particulier.nom)
+        particulier.prenom = request.POST.get('prenom', particulier.prenom)
+        particulier.email = request.POST.get('email', particulier.email)
+        particulier.telephone = request.POST.get('telephone', particulier.telephone)
+        
+        # Date de naissance (optionnelle)
+        date_naissance = request.POST.get('date_naissance')
+        if date_naissance:
+            from datetime import datetime
+            particulier.date_naissance = datetime.strptime(date_naissance, '%Y-%m-%d').date()
+        
+        particulier.adresse = request.POST.get('adresse', particulier.adresse)
+        particulier.ville = request.POST.get('ville', particulier.ville)
+        particulier.pays = request.POST.get('pays', particulier.pays)
+        
+        # Sauvegarder le particulier
+        particulier.save()
+        print("✅ Particulier mis à jour")
+        
+        # ===== MISE À JOUR DES CHAMPS DU CANDIDAT =====
+        # Gestion des chaînes vides pour les champs texte
+        candidat.niveauEtude = request.POST.get('niveauEtude', '')
+        candidat.competences = request.POST.get('competences', '')
+        candidat.disponibilite = request.POST.get('disponibilite', '')
+        candidat.niveauLangues = request.POST.get('niveauLangues', '')
+        candidat.secteur_recherche = request.POST.get('secteur_recherche', '')
+        candidat.type_contrat_recherche = request.POST.get('type_contrat_recherche', '')
+        candidat.localisation_recherche = request.POST.get('localisation_recherche', '')
+        
+        # ✅ Gestion des nombres avec valeur par défaut 0
+        annees = request.POST.get('anneesExperiences', '0')
+        candidat.anneesExperiences = int(annees) if annees and annees.strip() else 0
+        
+        # ✅ Gestion du salaire (optionnel)
+        salaire = request.POST.get('salaire_souhaite', '')
+        if salaire and salaire.strip():
+            try:
+                candidat.salaire_souhaite = float(salaire)
+            except ValueError:
+                candidat.salaire_souhaite = None
+        else:
+            candidat.salaire_souhaite = None
+        
+        # ✅ Gestion de la mobilité (checkbox)
+        candidat.mobilite = request.POST.get('mobilite') == 'on'
+        
+        # ✅ Gestion des fichiers
+        if 'cv' in request.FILES:
+            candidat.cv = request.FILES['cv']
+        if 'lettre_motivation' in request.FILES:
+            candidat.lettre_motivation = request.FILES['lettre_motivation']
+        
+        candidat.save()
+        print("✅ Candidat mis à jour")
+        
+        messages.success(request, "Votre profil a été mis à jour avec succès !")
+        
+    except Exception as e:
+        print(f"❌ ERREUR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        messages.error(request, f"Erreur lors de la sauvegarde : {str(e)}")
+    
+    return redirect('myAppli:dashboard_candidat')
 
 @login_required
 @require_http_methods(["POST"])
@@ -529,8 +984,8 @@ def commencer_soumission(request, opportunite_type, opportunite_id):
         opportunite_type=opportunite_type,
         opportunite_id=opportunite_id,
         defaults={
-            'reference': f"DOS-{opportunite_id}-{entreprise.id}-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-            'date_soumission_prevue': date_limite if date_limite else datetime.now().date(),
+            'reference': f"DOS-{opportunite_id}-{entreprise.id}-{timezone.now().strftime('%Y%m%d%H%M%S')}",
+            'date_soumission_prevue': date_limite if date_limite else timezone.now().date(),
         }
     )
     
@@ -942,9 +1397,6 @@ def tous_liens_whatsapp(request):
         'stats': stats
     })
 
-import csv
-from django.http import HttpResponse
-
 @login_required
 def exporter_liens_whatsapp_csv(request):
     """Exporte tous les liens WhatsApp au format CSV"""
@@ -1011,3 +1463,137 @@ def exporter_liens_whatsapp_txt(request):
             response.write("-"*80 + "\n\n")
     
     return response
+
+def trouver_emploi(request):
+    """
+    Page d'outils et de conseils pour la recherche d'emploi
+    """
+    # Récupérer les dernières offres d'emploi
+    dernieres_offres = OffreEmploi.objects.filter(
+        statut='PUBLIEE',
+        est_active=True
+    ).order_by('-date_publication')[:5]
+    
+    # Statistiques
+    stats = {
+        'offres_disponibles': OffreEmploi.objects.filter(
+            statut='PUBLIEE', 
+            est_active=True
+        ).count(),
+        'outils': 6,  # Nombre d'outils affichés dans la grille
+        'conseils': 6,  # Nombre de conseils affichés
+    }
+    
+    # Si l'utilisateur est un candidat, on peut personnaliser
+    if hasattr(request.user, 'particulier'):
+        particulier = request.user.particulier
+        if hasattr(particulier, 'candidat'):
+            candidat = particulier.candidat
+            # On pourrait ajouter des recommandations personnalisées ici
+            pass
+    
+    context = {
+        'dernieres_offres': dernieres_offres,
+        'stats': stats,
+    }
+    
+    return render(request, 'myAppli/outils_emploi/trouver_emploi.html', context)
+
+def gestion_entreprise(request):
+    return
+
+def generer_cv(request):
+    """
+    Générateur de CV accessible à tous
+    """
+    if request.method == 'POST':
+        try:
+            # Afficher les données reçues
+            print("="*50)
+            print("📦 DONNÉES POST REÇUES:")
+            for key, value in request.POST.items():
+                print(f"   {key}: {value}")
+            print("="*50)
+            
+            # Récupérer le format
+            format_export = request.POST.get('format', 'pdf')
+            print(f"🎯 FORMAT EXTRAIT: '{format_export}'")
+            
+            # Initialiser le générateur
+            from .services.generateur_cv_public import GenerateurCVPublic
+            generateur = GenerateurCVPublic()
+            
+            # Préparer les données
+            donnees = generateur.preparer_donnees(request.POST)
+            
+            # Vérifier les champs obligatoires
+            if not donnees['prenom'] or not donnees['nom']:
+                messages.error(request, "Le prénom et le nom sont obligatoires.")
+                return redirect('myAppli:generer_cv')
+            
+            # Générer la réponse
+            print(f"🚀 Génération du CV au format {format_export}...")
+            response = generateur.generer_cv(donnees, format_export)
+            
+            print(f"✅ CV généré avec succès !")
+            return response
+            
+        except ImportError as e:
+            print(f"❌ Erreur d'import: {e}")
+            messages.error(request, "Le format DOCX n'est pas disponible pour le moment. Veuillez utiliser le format PDF.")
+            return redirect('myAppli:generer_cv')
+            
+        except Exception as e:
+            print(f"❌ Erreur: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            messages.error(request, f"Erreur lors de la génération du CV: {str(e)}")
+            return redirect('myAppli:generer_cv')
+    
+    return render(request, 'myAppli/outils_emploi/generer_cv.html')
+
+def generer_lettre_motivation(request):
+    """
+    Outil de génération de lettre de motivation
+    """
+    return render(request, 'myAppli/outils_emploi/generer_lettre.html')
+
+@login_required
+def preparer_entretien(request):
+    """
+    Outil de préparation aux entretiens
+    """
+    return render(request, 'myAppli/outils_emploi/preparation_entretien.html')
+
+@login_required
+def alertes_emploi(request):
+    """
+    Gestion des alertes emploi
+    """
+    return render(request, 'myAppli/outils_emploi /alertes_emploi.html')
+
+def apercu_style_cv(request, style):
+    """
+    Génère un aperçu HTML d'un style de CV
+    """
+    generateur = GenerateurCVPublic()
+    html_apercu = generateur.generer_apercu(style)
+    return HttpResponse(html_apercu)
+
+def faq(request):
+    return
+
+def contact(request):
+    return
+
+def guide(request):
+    return
+
+def parametres(request):
+    return
+
+def mes_offres(request):
+    return
+
+def mes_candidatures(request):
+    return

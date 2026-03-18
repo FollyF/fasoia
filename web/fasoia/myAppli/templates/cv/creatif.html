@@ -1,0 +1,164 @@
+{% extends "cv/base_cv.html" %}
+
+{% block extra_css %}
+<style>
+    body {
+        font-family: 'Montserrat', 'Arial', sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+    }
+    
+    .cv-content {
+        background: white;
+        max-width: 800px;
+        margin: 20px auto;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        overflow: hidden;
+    }
+    
+    .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px;
+        text-align: center;
+    }
+    
+    .header h1 {
+        color: white;
+        margin: 0;
+        font-size: 36px;
+        font-weight: 700;
+    }
+    
+    .contact-info {
+        background: rgba(255,255,255,0.2);
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 20px;
+    }
+    
+    .content {
+        padding: 40px;
+    }
+    
+    h2 {
+        color: #667eea;
+        border: none;
+        font-size: 24px;
+        margin-top: 0;
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    h2:before {
+        content: "◆";
+        position: absolute;
+        left: 0;
+        color: #764ba2;
+    }
+    
+    .experience-item, .formation-item {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        transition: transform 0.3s ease;
+    }
+    
+    .experience-item:hover {
+        transform: translateX(10px);
+    }
+    
+    .item-header {
+        color: #667eea;
+        font-size: 18px;
+    }
+    
+    .date {
+        background: #764ba2;
+        color: white;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+    }
+    
+    .skill-tag {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 8px 15px;
+        border-radius: 25px;
+    }
+    
+    .company, .institution {
+        color: #764ba2;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cv-content">
+    <div class="header">
+        <h1>{{ prenom }} {{ nom }}</h1>
+        <div class="contact-info">
+            {% if email %}{{ email }}{% endif %}
+            {% if telephone %} | {{ telephone }}{% endif %}
+        </div>
+    </div>
+    
+    <div class="content">
+        <!-- Résumé -->
+        {% if resume %}
+        <div class="section">
+            <h2>PROFIL</h2>
+            <p>{{ resume }}</p>
+        </div>
+        {% endif %}
+        
+        <!-- Expériences -->
+        {% if experiences %}
+        <div class="section">
+            <h2>EXPÉRIENCES</h2>
+            {% for exp in experiences %}
+            <div class="experience-item">
+                <div class="item-header">
+                    {{ exp.titre }}
+                    <span class="date">{{ exp.date_debut }} - {{ exp.date_fin|default:"Présent" }}</span>
+                </div>
+                <div class="company">{{ exp.entreprise }}</div>
+                <div class="description">{{ exp.description }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Formations -->
+        {% if formations %}
+        <div class="section">
+            <h2>FORMATION</h2>
+            {% for formation in formations %}
+            <div class="formation-item">
+                <div class="item-header">{{ formation.diplome }}</div>
+                <div class="institution">{{ formation.etablissement }} - {{ formation.annee }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Compétences -->
+        {% if competences %}
+        <div class="section">
+            <h2>COMPÉTENCES</h2>
+            <div class="skills">
+                {% for competence in competences %}
+                <span class="skill-tag">{{ competence }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

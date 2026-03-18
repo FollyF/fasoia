@@ -1,0 +1,64 @@
+{% extends "cv/base_cv.html" %}
+
+{% block extra_css %}
+<style>
+    body {
+        font-family: 'Calibri', 'Arial', sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        padding: 40px;
+    }
+    
+    h1 {
+        color: #2c3e50;
+        font-size: 32px;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    h2 {
+        color: #2c3e50;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 8px;
+        font-size: 18px;
+        text-transform: uppercase;
+    }
+    
+    .contact-info {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 25px;
+        color: #2c3e50;
+    }
+    
+    .experience-item {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+    }
+    
+    .item-header {
+        color: #3498db;
+    }
+    
+    .company {
+        color: #7f8c8d;
+    }
+    
+    .skill-tag {
+        background: #3498db;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 3px;
+        font-size: 13px;
+    }
+    
+    .date {
+        color: #95a5a6;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,569 @@
+{% extends "base_app.html" %}
+{% load static %}
+
+{% block title %}Générateur de CV - FasoIA{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #1ed760;
+        --secondary-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-primary: #ffffff;
+        --text-secondary: #b3b3b3;
+    }
+    
+    body {
+        background-color: var(--secondary-color);
+        color: var(--text-primary);
+    }
+    
+    .cv-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 30px 20px;
+    }
+    
+    /* En-tête */
+    .page-header {
+        background: linear-gradient(135deg, #1ed760 0%, #0f8f3f 100%);
+        border-radius: 15px;
+        padding: 40px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .info-message {
+        background-color: rgba(30, 215, 96, 0.1);
+        border: 1px solid #1ed760;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+        color: white;
+        text-align: center;
+    }
+    
+    /* Sélecteur de styles */
+    .style-selector {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .style-option {
+        flex: 1;
+        min-width: 120px;
+        padding: 15px;
+        border: 1px solid #333;
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: #2a2a2a;
+        color: white;
+    }
+    
+    .style-option:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+    }
+    
+    .style-option.selected {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: black;
+    }
+    
+    .preview-btn {
+        margin-top: 5px;
+        font-size: 0.9rem;
+        color: var(--primary-color);
+        cursor: pointer;
+    }
+    
+    /* Formulaire */
+    .cv-form {
+        background: var(--card-bg);
+        border-radius: 15px;
+        padding: 30px;
+    }
+    
+    .form-section {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #333;
+    }
+    
+    .form-section h3 {
+        color: var(--primary-color);
+        margin-bottom: 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        color: white;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+    
+    .form-control {
+        width: 100%;
+        background-color: #2a2a2a;
+        border: 1px solid #333;
+        border-radius: 5px;
+        padding: 12px;
+        color: white;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary-color);
+        outline: none;
+    }
+    
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    /* Boutons */
+    .format-selector {
+        display: flex;
+        gap: 10px;
+        margin: 20px 0;
+    }
+    
+    .format-btn {
+        flex: 1;
+        padding: 12px;
+        border: 1px solid #333;
+        border-radius: 8px;
+        background: #2a2a2a;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .format-btn:hover {
+        border-color: var(--primary-color);
+    }
+    
+    .format-btn.selected {
+        background: var(--primary-color);
+        color: black;
+    }
+    
+    .btn-generate {
+        background-color: var(--primary-color);
+        color: black;
+        border: none;
+        border-radius: 25px;
+        padding: 15px 40px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-generate:hover {
+        background-color: #15b050;
+        transform: scale(1.02);
+    }
+    
+    /* Modal */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+    }
+    
+    .modal-content {
+        background-color: var(--card-bg);
+        margin: 5% auto;
+        padding: 20px;
+        width: 90%;
+        max-width: 800px;
+        max-height: 80vh;
+        overflow-y: auto;
+        border-radius: 10px;
+        position: relative;
+    }
+    
+    .close {
+        color: var(--text-secondary);
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    
+    .close:hover {
+        color: var(--primary-color);
+    }
+    
+    .preview-content {
+        background: white;
+        color: black;
+        padding: 20px;
+        border-radius: 5px;
+    }
+    
+    /* Loader */
+    .loading {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        align-items: center;
+        justify-content: center;
+    }
+
+    .loading-content {
+        text-align: center;
+        color: white;
+        max-width: 400px;
+        padding: 30px;
+        background: var(--card-bg);
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .spinner {
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid var(--primary-color);
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cv-container">
+    <!-- En-tête -->
+    
+    
+    <!-- Message d'information -->
+    <div class="info-message">
+        <i class="fa fa-info-circle"></i>
+        Vous n'avez pas besoin de compte pour générer votre CV. 
+        <a href="{% url 'myAppli:inscription' %}" style="color: white; text-decoration: underline;">Inscrivez-vous</a> 
+        pour sauvegarder vos CV et postuler aux offres.
+    </div>
+    
+    <form method="POST" class="cv-form" id="cvForm" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <!-- Sélection du style avec aperçu -->
+        <div class="form-section">
+            <h3>1. Choisissez un style</h3>
+            <div class="style-selector">
+                <div class="style-option selected" data-style="moderne">
+                    Moderne
+                    <div class="preview-btn" onclick="showPreview('moderne')">👁️ Aperçu</div>
+                </div>
+                <div class="style-option" data-style="classique">
+                    Classique
+                    <div class="preview-btn" onclick="showPreview('classique')">👁️ Aperçu</div>
+                </div>
+                <div class="style-option" data-style="minimaliste">
+                    Minimaliste
+                    <div class="preview-btn" onclick="showPreview('minimaliste')">👁️ Aperçu</div>
+                </div>
+                <div class="style-option" data-style="professionnel">
+                    Professionnel
+                    <div class="preview-btn" onclick="showPreview('professionnel')">👁️ Aperçu</div>
+                </div>
+                <div class="style-option" data-style="creatif">
+                    Créatif
+                    <div class="preview-btn" onclick="showPreview('creatif')">👁️ Aperçu</div>
+                </div>
+            </div>
+            <input type="hidden" name="style" id="styleInput" value="moderne">
+        </div>
+        
+        <!-- Informations personnelles -->
+        <div class="form-section">
+            <h3>2. Informations personnelles</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Prénom *</label>
+                        <input type="text" name="prenom" class="form-control" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Nom *</label>
+                        <input type="text" name="nom" class="form-control" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Téléphone</label>
+                        <input type="text" name="telephone" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Adresse</label>
+                        <input type="text" name="adresse" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Ville</label>
+                        <input type="text" name="ville" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Pays</label>
+                        <input type="text" name="pays" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Permis de conduire</label>
+                        <input type="text" name="permis" class="form-control" placeholder="Ex: B">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Profil professionnel -->
+        <div class="form-section">
+            <h3>3. Profil professionnel</h3>
+            <div class="form-group">
+                <label>Résumé / Objectif</label>
+                <textarea name="resume" class="form-control" rows="3" 
+                          placeholder="Décrivez votre profil en quelques lignes..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Compétences (séparées par des virgules)</label>
+                <input type="text" name="competences" class="form-control" 
+                       placeholder="Ex: Python, Django, JavaScript, Gestion de projet">
+            </div>
+            
+            <div class="form-group">
+                <label>Langues (séparées par des virgules)</label>
+                <input type="text" name="langues" class="form-control" 
+                       placeholder="Ex: Français (courant), Anglais (professionnel)">
+            </div>
+            
+            <div class="form-group">
+                <label>Centres d'intérêt (séparés par des virgules)</label>
+                <input type="text" name="centres_interet" class="form-control" 
+                       placeholder="Ex: Sport, Lecture, Voyages">
+            </div>
+        </div>
+        
+        <!-- Expériences (format simplifié) -->
+        <div class="form-section">
+            <h3>4. Expériences professionnelles</h3>
+            <p class="text-secondary">
+                <i class="fa fa-info-circle"></i> 
+                Format: Poste | Entreprise | Date début | Date fin | Description (une ligne par expérience)
+            </p>
+            <div class="form-group">
+                <textarea name="experiences" class="form-control" rows="5" 
+                          placeholder="Ex: Développeur Python | TechCorp | 2020 | 2023 | Développement d'applications web..."></textarea>
+            </div>
+        </div>
+        
+        <!-- Formations (format simplifié) -->
+        <div class="form-section">
+            <h3>5. Formations</h3>
+            <p class="text-secondary">
+                <i class="fa fa-info-circle"></i> 
+                Format: Diplôme | Établissement | Année (une ligne par formation)
+            </p>
+            <div class="form-group">
+                <textarea name="formations" class="form-control" rows="4" 
+                          placeholder="Ex: Master en Informatique | Université de Ouagadougou | 2020"></textarea>
+            </div>
+        </div>
+        
+        <!-- Choix du format -->
+        <div class="form-section">
+            <h3>6. Choisissez le format</h3>
+            <div class="format-selector">
+                <div class="format-btn selected" data-format="pdf">📄 PDF</div>
+                <div class="format-btn" data-format="docx">📝 Word (DOCX)</div>
+            </div>
+            <input type="hidden" name="format" id="formatInput" value="pdf">
+        </div>
+        
+        <!-- Bouton de génération -->
+        <button type="submit" class="btn-generate" id="generateBtn">
+            <i class="fa fa-magic"></i> Générer mon CV
+        </button>
+    </form>
+</div>
+
+<!-- Modal d'aperçu -->
+<div id="previewModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closePreview()">&times;</span>
+        <h2 style="color: var(--primary-color); margin-bottom: 20px;">Aperçu du style</h2>
+        <div id="previewContent" class="preview-content">
+            <!-- Le contenu de l'aperçu sera chargé ici -->
+        </div>
+    </div>
+</div>
+
+<!-- Loading -->
+<div id="loadingOverlay" class="loading">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <h3>Génération de votre CV...</h3>
+        <p style="color: var(--text-secondary);">Cela ne prendra que quelques secondes</p>
+    </div>
+</div>
+
+<script>
+// Sélection du style
+document.querySelectorAll('.style-option').forEach(option => {
+    option.addEventListener('click', function(e) {
+        if (!e.target.classList.contains('preview-btn')) {
+            document.querySelectorAll('.style-option').forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            document.getElementById('styleInput').value = this.dataset.style;
+        }
+    });
+});
+
+// Sélection du format
+document.querySelectorAll('.format-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('selected'));
+        this.classList.add('selected');
+        document.getElementById('formatInput').value = this.dataset.format;
+    });
+});
+
+// Aperçu du style
+function showPreview(style) {
+    document.getElementById('previewModal').style.display = 'block';
+    document.getElementById('previewContent').innerHTML = '<div style="text-align: center; padding: 50px;">Chargement de l\'aperçu...</div>';
+    
+    fetch(`/cv/apercu/${style}/`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('previewContent').innerHTML = html;
+        })
+        .catch(error => {
+            document.getElementById('previewContent').innerHTML = '<div style="color: red; text-align: center;">Erreur lors du chargement de l\'aperçu</div>';
+        });
+}
+
+function closePreview() {
+    document.getElementById('previewModal').style.display = 'none';
+}
+
+// Fermer le modal en cliquant en dehors
+window.onclick = function(event) {
+    if (event.target == document.getElementById('previewModal')) {
+        closePreview();
+    }
+}
+
+// SOLUTION POUR LE LOADER INFINI
+document.getElementById('cvForm').addEventListener('submit', function(e) {
+    // Valider les champs obligatoires
+    const prenom = document.querySelector('input[name="prenom"]').value;
+    const nom = document.querySelector('input[name="nom"]').value;
+    
+    if (!prenom || !nom) {
+        e.preventDefault();
+        alert('Veuillez remplir votre prénom et votre nom.');
+        return false;
+    }
+    
+    // Afficher le loader
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    
+    // Programmer la disparition du loader après 3 secondes maximum
+    // (au cas où le téléchargement prendrait trop de temps ou échouerait)
+    setTimeout(function() {
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }, 10000); // 10 secondes maximum
+    
+    return true;
+});
+
+// Détecter la fin du téléchargement (solution plus élégante)
+// Cette fonction sera appelée quand la réponse sera reçue
+window.addEventListener('load', function() {
+    // Cacher le loader au chargement de la page
+    document.getElementById('loadingOverlay').style.display = 'none';
+});
+
+// Pour les téléchargements de fichiers, on peut aussi détecter 
+// quand le navigateur reçoit le fichier
+let downloadTimer = null;
+
+document.querySelectorAll('.format-btn, .btn-generate').forEach(element => {
+    element.addEventListener('click', function() {
+        // Réinitialiser le timer à chaque clic
+        if (downloadTimer) {
+            clearTimeout(downloadTimer);
+        }
+        
+        // Après le clic, attendre que le téléchargement commence
+        downloadTimer = setTimeout(function() {
+            // Si après 2 secondes le loader est toujours affiché,
+            // c'est que le téléchargement a probablement commencé
+            const loader = document.getElementById('loadingOverlay');
+            if (loader.style.display === 'flex') {
+                // On laisse le loader encore 3 secondes puis on le cache
+                setTimeout(function() {
+                    loader.style.display = 'none';
+                }, 3000);
+            }
+        }, 2000);
+    });
+});
+
+// Solution de secours : cacher le loader si l'utilisateur revient sur la page
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        // L'utilisateur revient sur l'onglet, cacher le loader
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+});
+
+// Initialisation : cacher le loader au chargement
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+});
+</script>
+{% endblock %}

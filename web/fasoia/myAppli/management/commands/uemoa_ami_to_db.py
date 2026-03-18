@@ -9,6 +9,7 @@ from django.core.management.base import BaseCommand
 from myAppli.models import Ami_uemoa
 from myAppli.utils.web_scraper.uemoa_scraper import scraper
 from analyse_ia.models import DocumentSource
+from django.conf import settings
 
 class Command(BaseCommand):
     help = 'Scrape AMIs, download PDFs and save to DB (avec lien stable par hash URL)'
@@ -73,8 +74,8 @@ class Command(BaseCommand):
         Télécharge un PDF avec des headers de navigateur
         """
         try:
-            dossier_pdfs = Path(__file__).parent.parent.parent / "pdfs"
-            dossier_pdfs.mkdir(exist_ok=True)
+            dossier_pdfs = Path(settings.MEDIA_ROOT) / "pdfs"
+            dossier_pdfs.mkdir(parents=True, exist_ok=True)
             
             chemin = dossier_pdfs / nom_fichier
             

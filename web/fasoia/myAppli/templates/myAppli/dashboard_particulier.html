@@ -1,0 +1,219 @@
+{% extends "base_app.html" %}
+{% load static %}
+
+{% block title %}Choisissez votre rôle{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #1ed760;
+        --secondary-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-primary: #ffffff;
+        --text-secondary: #b3b3b3;
+    }
+    
+    body {
+        background-color: var(--secondary-color);
+        color: var(--text-primary);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+    }
+    
+    .choice-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    /* En-tête */
+    .welcome-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    
+    .welcome-header h1 {
+        font-size: 36px;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+    }
+    
+    .welcome-header p {
+        font-size: 18px;
+        color: var(--text-secondary);
+    }
+    
+    /* Cartes de choix */
+    .choice-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 30px;
+        margin-top: 30px;
+    }
+    
+    .choice-card {
+        background: var(--card-bg);
+        border: 2px solid #333;
+        border-radius: 20px;
+        padding: 40px 30px;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        color: var(--text-primary);
+        display: block;
+    }
+    
+    .choice-card:hover {
+        transform: translateY(-10px);
+        border-color: var(--primary-color);
+        box-shadow: 0 20px 30px rgba(30, 215, 96, 0.2);
+    }
+    
+    .card-icon {
+        font-size: 5rem;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+    }
+    
+    .choice-card h2 {
+        font-size: 28px;
+        margin-bottom: 15px;
+    }
+    
+    .choice-card p {
+        color: var(--text-secondary);
+        margin-bottom: 25px;
+        line-height: 1.6;
+    }
+    
+    .btn-choice {
+        display: inline-block;
+        background: transparent;
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+        padding: 12px 30px;
+        border-radius: 30px;
+        font-weight: bold;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .choice-card:hover .btn-choice {
+        background: var(--primary-color);
+        color: black;
+    }
+    
+    .features-list {
+        text-align: left;
+        margin: 20px 0;
+        padding: 0 20px;
+    }
+    
+    .features-list li {
+        margin: 10px 0;
+        color: var(--text-secondary);
+        list-style: none;
+    }
+    
+    .features-list li i {
+        color: var(--primary-color);
+        margin-right: 10px;
+    }
+    
+    .skip-link {
+        text-align: center;
+        margin-top: 30px;
+    }
+    
+    .skip-link a {
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .skip-link a:hover {
+        color: var(--primary-color);
+    }
+    
+    @media (max-width: 768px) {
+        .choice-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .welcome-header h1 {
+            font-size: 28px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="choice-container">
+    <div class="welcome-header">
+        <h1>Bienvenue, {{ particulier.prenom }} {{ particulier.nom }} !</h1>
+        <p>Pour commencer, choisissez comment vous souhaitez utiliser FasoIA</p>
+    </div>
+
+    <div class="choice-grid">
+        <!-- Carte Demandeur d'emploi -->
+        <a href="{% url 'myAppli:activer_profil_candidat' %}" class="choice-card">
+            <div class="card-icon">
+                <i class="fa fa-user-graduate"></i>
+            </div>
+            <h2>Je cherche un emploi</h2>
+            <p>En tant que demandeur d'emploi, vous pourrez :</p>
+            
+            <ul class="features-list">
+                <li><i class="fa fa-check-circle"></i> Parcourir les offres d'emploi</li>
+                <li><i class="fa fa-check-circle"></i> Postuler en un clic</li>
+                <li><i class="fa fa-check-circle"></i> Suivre vos candidatures</li>
+                <li><i class="fa fa-check-circle"></i> Recevoir des recommandations</li>
+            </ul>
+            
+            <span class="btn-choice">Choisir ce rôle</span>
+        </a>
+
+        <!-- Carte Recruteur -->
+        <a href="{% url 'myAppli:activer_profil_recruteur' %}" class="choice-card">
+            <div class="card-icon">
+                <i class="fa fa-building"></i>
+            </div>
+            <h2>Je recrute des talents</h2>
+            <p>En tant que recruteur, vous pourrez :</p>
+            
+            <ul class="features-list">
+                <li><i class="fa fa-check-circle"></i> Publier des offres d'emploi</li>
+                <li><i class="fa fa-check-circle"></i> Gérer les candidatures</li>
+                <li><i class="fa fa-check-circle"></i> Rechercher des talents</li>
+                <li><i class="fa fa-check-circle"></i> Développer votre réseau</li>
+            </ul>
+            
+            <span class="btn-choice">Choisir ce rôle</span>
+        </a>
+    </div>
+    
+    <!-- Option pour ceux qui veulent activer les deux plus tard -->
+    <div class="skip-link">
+        <a href="{% url 'myAppli:home' %}">
+            <i class="fa fa-clock-o"></i> Je choisis plus tard
+        </a>
+    </div>
+</div>
+
+<script>
+// Animation d'entrée
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.choice-card').forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 200);
+    });
+});
+</script>
+{% endblock %}
