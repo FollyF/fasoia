@@ -1,0 +1,56 @@
+/* Centrage vertical pour Bootstrap 3 */
+    .modal-dialog {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) !important;
+        margin: 0 !important;
+        width: 600px;
+        max-width: 90%;
+    }
+
+    
+<div class="btn-container">
+    <!-- Bouton pour ouvrir le modal (AVEC ID UNIQUE) -->
+    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#modal{{ i.id }}">
+        <i class="fa fa-info-circle"></i> Détails
+    </button>
+
+    <!-- Modal avec ID unique -->
+    <div class="modal fade" id="modal{{ i.id }}" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Détails de l'offre</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Référence:</strong> AO-2026-00{{ forloop.counter }}</p>
+                    <p><strong>Description:</strong> {{ i.description }}</p>
+                    <p><strong>Date limite:</strong> {{ i.date_limite }}</p>
+                    {% if i.fichier_local %}
+                        <p>
+                            <strong>Télécharger:</strong> 
+                            <a href="{{ i.fichier_local.url }}" class="btn btn-sm btn-success" download>
+                                <i class="fa fa-download"></i> Télécharger le PDF
+                            </a>
+                        </p>
+                    {% else %}
+                        <p>
+                            <strong>Télécharger:</strong> 
+                            <a href="{{ i.download_url }}" target="_blank" class="btn btn-sm btn-info">
+                                <i class="fa fa-external-link"></i> Voir sur le site
+                            </a>
+                        </p>
+                    {% endif %}    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="#" class="btn btn-success btn-sm">
+        <i class="fa fa-paper-plane"></i> Postuler
+    </a>
+</div>
