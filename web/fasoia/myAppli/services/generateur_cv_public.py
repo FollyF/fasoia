@@ -7,6 +7,7 @@ from weasyprint import HTML
 from datetime import datetime
 from docx import Document
 from docx.shared import Inches, Pt
+from django.core.files.base import ContentFile
 
 class GenerateurCVPublic:
     """
@@ -235,7 +236,7 @@ class GenerateurCVPublic:
             <body>
                 <div class="preview-box">
                     <h1>Aperçu du style {style}</h1>
-                    <p><strong>Jean DUPONT</strong></p>
+                    <p><strong>Sissao SIDIBE</strong></p>
                     <p>Développeur Full Stack</p>
                     <hr>
                     <h2>EXPÉRIENCES</h2>
@@ -245,7 +246,7 @@ class GenerateurCVPublic:
                     <p>Maintenance et évolution d'applications existantes.</p>
                     
                     <h2>FORMATION</h2>
-                    <p><strong>Master en Informatique</strong> - Université de Paris (2019)</p>
+                    <p><strong>Master en Informatique</strong> - Université Joseph KI-ZERBO (2019)</p>
                     
                     <h2>COMPÉTENCES</h2>
                     <p>Python, Django, JavaScript, React, SQL</p>
@@ -254,6 +255,40 @@ class GenerateurCVPublic:
             </html>
             """
     
+    def sauvegarder_cv(self, donnees, contenu, format_fichier):
+        """
+        Sauvegarde le CV en base de données pour les utilisateurs connectés
+        """
+        from ..models import CVGenere, ModeleCV
+        
+        # Récupérer le modèle de CV correspondant au style choisi
+        try:
+            modele = ModeleCV.objects.get(categorie=donnees.get('style', 'moderne'), est_actif=True)
+            # Incrémenter le compteur d'utilisations
+            modele.nb_utilisations += 1
+            modele.save(update_fields=['nb_utilisations'])
+        except ModeleCV.DoesNotExist:
+            # Si le modèle n'existe pas, on ne lie pas
+            modele = None
+        
+        # Créer le CV en base
+        cv = CVGenere.objects.create(
+            utilisateur=self.request.user,
+            modele=modele,
+            titre=f"CV - {donnees['prenom']} {donnees['nom']}",
+            donnees_cv=donnees,
+        )
+        
+        # Sauvegarder le fichier selon son format
+        nom_fichier = f"CV_{donnees['prenom']}_{donnees['nom']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}".replace(' ', '_')
+        
+        if format_fichier == 'pdf':
+            cv.fichier_pdf.save(f"{nom_fichier}.pdf", ContentFile(contenu), save=True)
+        elif format_fichier == 'docx':
+            cv.fichier_docx.save(f"{nom_fichier}.docx", ContentFile(contenu), save=True)
+        
+        return cv
+
     def generer_cv(self, donnees, format='pdf'):
         """Génère un CV dans le format demandé"""
         if format == 'pdf':

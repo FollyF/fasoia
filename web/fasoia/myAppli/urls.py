@@ -90,6 +90,7 @@ urlpatterns = [
     path('contact/', views.contact, name='contact'),
     path('guide/', views.guide, name='guide'),
     path('parametres/', views.parametres, name='parametres'),
-    path('mes-candidatures/', views.mes_candidatures, name='mes_candidatures'),
-    path('mes-offres/', views.mes_offres, name='mes_offres'),
+    path('mes_candidatures/', views.mes_candidatures, name='mes_candidatures'),
+    path('mes_offres/', views.mes_offres, name='mes_offres'),
+    path('mes_cvs/', views.mes_cvs, name='mes_cvs'),
 ]

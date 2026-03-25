@@ -45,9 +45,11 @@ def home(request):
 def opportunites(request):
     offre_uemoa = Offre_uemoa.objects.all()
     ami = Ami_uemoa.objects.all()
+    offres_emploi= OffreEmploi.objects.all()
     context = {
         'offre': offre_uemoa,
-        'ami' : ami    
+        'ami' : ami,    
+        'offres_emploi' : offres_emploi    
     }
     return render(request, 'myAppli/opportunites.html', context)
 
@@ -194,6 +196,16 @@ def connexion(request):
                 return redirect(next_url)
             elif hasattr(user, 'entreprise'):
                 return redirect('myAppli:dashboard_entreprise')
+            elif hasattr(user, 'particulier'):
+                particulier = user.particulier
+                if hasattr(particulier, 'candidat') and hasattr(particulier, 'recruteur'):
+                    return redirect('myAppli:dashboard_particulier')
+                elif hasattr(particulier, 'candidat'):
+                    return redirect('myAppli:dashboard_candidat')
+                elif hasattr(particulier, 'recruteur'):
+                    return redirect('myAppli:dashboard_recruteur')
+                else:
+                    return redirect('myAppli:dashboard_particulier')
             else:
                 return redirect('myAppli:home')
         else:
@@ -207,7 +219,6 @@ def connexion(request):
         'title': 'Connexion',
         'no_header_footer': True
     })
-
 
 @login_required
 def deconnexion(request):
@@ -1506,6 +1517,20 @@ def generer_cv(request):
     """
     Générateur de CV accessible à tous
     """
+    # Récupérer les modèles actifs
+    modeles_cv = ModeleCV.objects.filter(est_actif=True).order_by('ordre_affichage')
+    
+    # Pour le JavaScript
+    modeles_json = json.dumps([
+        {
+            'nom': m.nom,
+            'categorie': m.categorie,
+            'est_populaire': m.est_populaire,
+            'est_premium': m.est_premium
+        }
+        for m in modeles_cv
+    ])
+
     if request.method == 'POST':
         try:
             # Afficher les données reçues
@@ -1535,7 +1560,11 @@ def generer_cv(request):
             print(f"🚀 Génération du CV au format {format_export}...")
             response = generateur.generer_cv(donnees, format_export)
             
-            print(f"✅ CV généré avec succès !")
+            # Message personnalisé selon l'état de connexion
+            if request.user.is_authenticated:
+                messages.success(request, "✅ CV généré et sauvegardé dans votre espace personnel !")
+            else:
+                messages.info(request, "📝 CV généré avec succès ! Créez un compte pour le sauvegarder.")
             return response
             
         except ImportError as e:
@@ -1550,7 +1579,10 @@ def generer_cv(request):
             messages.error(request, f"Erreur lors de la génération du CV: {str(e)}")
             return redirect('myAppli:generer_cv')
     
-    return render(request, 'myAppli/outils_emploi/generer_cv.html')
+    return render(request, 'myAppli/outils_emploi/generer_cv.html', {
+        'modeles_cv': modeles_cv,
+        'modeles_json': modeles_json
+    })
 
 def generer_lettre_motivation(request):
     """
@@ -1596,4 +1628,7 @@ def mes_offres(request):
     return
 
 def mes_candidatures(request):
+    return
+
+def mes_cvs(request):
     return

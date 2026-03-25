@@ -25,11 +25,19 @@
     }
     
     /* En-tête */
+    .page-header {
+        background: linear-gradient(135deg, #1ed760 0%, #0f8f3f 100%);
+        border-radius: 15px;
+        padding: 40px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
     .info-message {
         background-color: rgba(30, 215, 96, 0.1);
         border: 1px solid #1ed760;
         border-radius: 5px;
-        padding: 30px;
+        padding: 15px;
         margin-bottom: 20px;
         color: white;
         text-align: center;
@@ -69,7 +77,7 @@
     
     .preview-btn {
         margin-top: 5px;
-        font-size: 1rem;
+        font-size: 0.9rem;
         color: var(--primary-color);
         cursor: pointer;
     }
@@ -167,43 +175,46 @@
         transform: scale(1.02);
     }
     
-    /* MODAL */
-    .modal-content {
-        background: var(--card-bg);
-        color: white;
-        border: 1px solid #333;
-    }
-    
-    .modal-header {
-        border-bottom: 1px solid #333;
-        padding: 15px 20px;
-    }
-    
-    .modal-header .close {
-        color: white;
-        font-size: 28px;
-        opacity: 0.8;
-    }
-    
-    .modal-header .close:hover {
-        color: var(--primary-color);
-        opacity: 1;
-    }
-    
-    .modal-title {
-        color: var(--primary-color);
-    }
-    
-    .modal-body {
-        padding: 20px;
-    }
-    
-    /* Iframe pour l'aperçu - solution d'isolation */
-    .preview-iframe {
+    /* Modal */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
         width: 100%;
-        height: 500px;
-        border: none;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+    }
+    
+    .modal-content {
+        background-color: var(--card-bg);
+        margin: 5% auto;
+        padding: 20px;
+        width: 90%;
+        max-width: 800px;
+        max-height: 80vh;
+        overflow-y: auto;
+        border-radius: 10px;
+        position: relative;
+    }
+    
+    .close {
+        color: var(--text-secondary);
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    
+    .close:hover {
+        color: var(--primary-color);
+    }
+    
+    .preview-content {
         background: white;
+        color: black;
+        padding: 20px;
         border-radius: 5px;
     }
     
@@ -245,80 +256,49 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
-        /* Badge premium */
-    .badge-premium {
-        background: gold;
-        color: black;
-        font-size: 10px;
-        padding: 2px 6px;
-        border-radius: 10px;
-        margin-left: 5px;
-    }
-    
-    .badge-populaire {
-        background: #ff4444;
-        color: white;
-        font-size: 10px;
-        padding: 2px 6px;
-        border-radius: 10px;
-        margin-left: 5px;
-    }
-    
-    .style-option.premium-verrouille {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-    
-    .style-option.premium-verrouille:hover {
-        transform: none;
-        border-color: #333;
-    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="cv-container">
+    <!-- En-tête -->
+    
+    
     <!-- Message d'information -->
-    <div class="info-message" style="display: block; text-align: center; width: 100%; clear: both;">
-        {% if user.is_authenticated %}
-            <span style="color: #1ed760; display: inline-block; width: 100%;">
-                ✓ Mode sauvegarde automatique activé
-            </span>
-        {% else %}
-            <i class="fa fa-info-circle"></i>
-            Vous n'avez pas besoin de compte pour générer votre CV. 
-            <a href="{% url 'myAppli:inscription' %}" style="color: #1ed760; text-decoration: underline;">Inscrivez-vous</a> 
-            pour sauvegarder vos CV et postuler aux offres.
-        {% endif %}
+    <div class="info-message">
+        <i class="fa fa-info-circle"></i>
+        Vous n'avez pas besoin de compte pour générer votre CV. 
+        <a href="{% url 'myAppli:inscription' %}" style="color: white; text-decoration: underline;">Inscrivez-vous</a> 
+        pour sauvegarder vos CV et postuler aux offres.
     </div>
     
     <form method="POST" class="cv-form" id="cvForm" enctype="multipart/form-data">
         {% csrf_token %}
         
-        <!-- Sélection du style avec aperçu - DYNAMIQUE -->
+        <!-- Sélection du style avec aperçu -->
         <div class="form-section">
             <h3>1. Choisissez un style</h3>
             <div class="style-selector">
-                {% for modele in modeles_cv %}
-                <div class="style-option 
-                    {% if modele.categorie == 'moderne' %}selected{% endif %}
-                    {% if modele.est_premium and not user.is_premium %}premium-verrouille{% endif %}"
-                    data-style="{{ modele.categorie }}"
-                    {% if modele.est_premium and not user.is_premium %}
-                        onclick="alert('Ce style est réservé aux membres premium.')"
-                    {% else %}
-                        onclick="selectStyle('{{ modele.categorie }}')"
-                    {% endif %}>
-                    {{ modele.nom }}
-                    {% if modele.est_populaire %}
-                        <span class="badge-populaire">🔥 Populaire</span>
-                    {% endif %}
-                    {% if modele.est_premium %}
-                        <span class="badge-premium">⭐ Premium</span>
-                    {% endif %}
-                    <div class="preview-btn" onclick="showPreview('{{ modele.categorie }}'); event.stopPropagation();">👁️ Aperçu</div>
+                <div class="style-option selected" data-style="moderne">
+                    Moderne
+                    <div class="preview-btn" onclick="showPreview('moderne')">👁️ Aperçu</div>
                 </div>
-                {% endfor %}
+                <div class="style-option" data-style="classique">
+                    Classique
+                    <div class="preview-btn" onclick="showPreview('classique')">👁️ Aperçu</div>
+                </div>
+                <div class="style-option" data-style="minimaliste">
+                    Minimaliste
+                    <div class="preview-btn" onclick="showPreview('minimaliste')">👁️ Aperçu</div>
+                </div>
+                <div class="style-option" data-style="professionnel">
+                    Professionnel
+                    <div class="preview-btn" onclick="showPreview('professionnel')">👁️ Aperçu</div>
+                </div>
+                <div class="style-option" data-style="creatif">
+                    Créatif
+                    <div class="preview-btn" onclick="showPreview('creatif')">👁️ Aperçu</div>
+                </div>
             </div>
             <input type="hidden" name="style" id="styleInput" value="moderne">
         </div>
@@ -436,8 +416,8 @@
         <div class="form-section">
             <h3>6. Choisissez le format</h3>
             <div class="format-selector">
-                <div class="format-btn selected" data-format="pdf" onclick="selectFormat('pdf')">📄 PDF</div>
-                <div class="format-btn" data-format="docx" onclick="selectFormat('docx')">📝 Word (DOCX)</div>
+                <div class="format-btn selected" data-format="pdf">📄 PDF</div>
+                <div class="format-btn" data-format="docx">📝 Word (DOCX)</div>
             </div>
             <input type="hidden" name="format" id="formatInput" value="pdf">
         </div>
@@ -449,19 +429,13 @@
     </form>
 </div>
 
-<!-- Modal d'aperçu avec IFRAME -->
-<div class="modal fade" id="previewModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">Aperçu du style</h4>
-            </div>
-            <div class="modal-body">
-                <iframe id="previewIframe" class="preview-iframe" sandbox="allow-same-origin allow-scripts"></iframe>
-            </div>
+<!-- Modal d'aperçu -->
+<div id="previewModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closePreview()">&times;</span>
+        <h2 style="color: var(--primary-color); margin-bottom: 20px;">Aperçu du style</h2>
+        <div id="previewContent" class="preview-content">
+            <!-- Le contenu de l'aperçu sera chargé ici -->
         </div>
     </div>
 </div>
@@ -474,9 +448,7 @@
         <p style="color: var(--text-secondary);">Cela ne prendra que quelques secondes</p>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
 <script>
 // Sélection du style
 document.querySelectorAll('.style-option').forEach(option => {
@@ -490,37 +462,43 @@ document.querySelectorAll('.style-option').forEach(option => {
 });
 
 // Sélection du format
-function selectFormat(format) {
-    document.querySelectorAll('.format-btn').forEach(btn => {
-        if(btn.dataset.format === format) {
-            btn.classList.add('selected');
-        } else {
-            btn.classList.remove('selected');
-        }
+document.querySelectorAll('.format-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('selected'));
+        this.classList.add('selected');
+        document.getElementById('formatInput').value = this.dataset.format;
     });
-    document.getElementById('formatInput').value = format;
-}
+});
 
-// Aperçu du style - Version avec iframe
+// Aperçu du style
 function showPreview(style) {
-    $('#previewModal').modal('show');
-    
-    const iframe = document.getElementById('previewIframe');
-    iframe.srcdoc = '<html><body style="background: white; padding: 20px; font-family: Arial;">Chargement...</body></html>';
+    document.getElementById('previewModal').style.display = 'block';
+    document.getElementById('previewContent').innerHTML = '<div style="text-align: center; padding: 50px;">Chargement de l\'aperçu...</div>';
     
     fetch(`/cv/apercu/${style}/`)
         .then(response => response.text())
         .then(html => {
-            // Injecter le HTML dans l'iframe
-            iframe.srcdoc = html;
+            document.getElementById('previewContent').innerHTML = html;
         })
         .catch(error => {
-            iframe.srcdoc = '<html><body style="background: white; color: red; padding: 20px;">Erreur de chargement</body></html>';
+            document.getElementById('previewContent').innerHTML = '<div style="color: red; text-align: center;">Erreur lors du chargement de l\'aperçu</div>';
         });
 }
 
-// Gestion du formulaire
+function closePreview() {
+    document.getElementById('previewModal').style.display = 'none';
+}
+
+// Fermer le modal en cliquant en dehors
+window.onclick = function(event) {
+    if (event.target == document.getElementById('previewModal')) {
+        closePreview();
+    }
+}
+
+// SOLUTION POUR LE LOADER INFINI
 document.getElementById('cvForm').addEventListener('submit', function(e) {
+    // Valider les champs obligatoires
     const prenom = document.querySelector('input[name="prenom"]').value;
     const nom = document.querySelector('input[name="nom"]').value;
     
@@ -530,11 +508,61 @@ document.getElementById('cvForm').addEventListener('submit', function(e) {
         return false;
     }
     
+    // Afficher le loader
     document.getElementById('loadingOverlay').style.display = 'flex';
+    
+    // Programmer la disparition du loader après 3 secondes maximum
+    // (au cas où le téléchargement prendrait trop de temps ou échouerait)
+    setTimeout(function() {
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }, 10000); // 10 secondes maximum
+    
+    return true;
 });
 
-// Gestion du loader
+// Détecter la fin du téléchargement (solution plus élégante)
+// Cette fonction sera appelée quand la réponse sera reçue
 window.addEventListener('load', function() {
+    // Cacher le loader au chargement de la page
+    document.getElementById('loadingOverlay').style.display = 'none';
+});
+
+// Pour les téléchargements de fichiers, on peut aussi détecter 
+// quand le navigateur reçoit le fichier
+let downloadTimer = null;
+
+document.querySelectorAll('.format-btn, .btn-generate').forEach(element => {
+    element.addEventListener('click', function() {
+        // Réinitialiser le timer à chaque clic
+        if (downloadTimer) {
+            clearTimeout(downloadTimer);
+        }
+        
+        // Après le clic, attendre que le téléchargement commence
+        downloadTimer = setTimeout(function() {
+            // Si après 2 secondes le loader est toujours affiché,
+            // c'est que le téléchargement a probablement commencé
+            const loader = document.getElementById('loadingOverlay');
+            if (loader.style.display === 'flex') {
+                // On laisse le loader encore 3 secondes puis on le cache
+                setTimeout(function() {
+                    loader.style.display = 'none';
+                }, 3000);
+            }
+        }, 2000);
+    });
+});
+
+// Solution de secours : cacher le loader si l'utilisateur revient sur la page
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        // L'utilisateur revient sur l'onglet, cacher le loader
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+});
+
+// Initialisation : cacher le loader au chargement
+document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('loadingOverlay').style.display = 'none';
 });
 </script>

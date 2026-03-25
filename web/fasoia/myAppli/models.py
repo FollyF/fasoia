@@ -476,17 +476,26 @@ class DocumentSoumission(models.Model):
         return self.nom_document
     
 
+from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
+from phonenumber_field.modelfields import PhoneNumberField
+import uuid
+
 class OffreEmploi(models.Model):
     """
-    Modèle pour les offres d'emploi publiées par les recruteurs
+    Modèle pour les offres d'emploi avec support multi-sources
     """
-    # Types de contrat
+    
+    # ===== TYPES DE CONTRAT =====
     CDI = 'CDI'
     CDD = 'CDD'
     STAGE = 'STAGE'
     ALTERNANCE = 'ALTERNANCE'
     FREELANCE = 'FREELANCE'
     TEMPORAIRE = 'TEMPORAIRE'
+    CONSULTANCE = 'CONSULTANCE'
+    VOLONTARIAT = 'VOLONTARIAT'
     
     TYPE_CONTRAT_CHOICES = [
         (CDI, 'CDI'),
@@ -495,37 +504,43 @@ class OffreEmploi(models.Model):
         (ALTERNANCE, 'Alternance'),
         (FREELANCE, 'Freelance'),
         (TEMPORAIRE, 'Temporaire'),
+        (CONSULTANCE, 'Consultance'),
+        (VOLONTARIAT, 'Volontariat'),
     ]
     
-    # Niveaux d'expérience
+    # ===== NIVEAUX D'EXPÉRIENCE =====
     DEBUTANT = 'DEBUTANT'
     CONFIRME = 'CONFIRME'
     SENIOR = 'SENIOR'
     EXPERT = 'EXPERT'
+    SANS_EXPERIENCE = 'SANS_EXP'
     
     NIVEAU_EXPERIENCE_CHOICES = [
+        (SANS_EXPERIENCE, 'Sans expérience'),
         (DEBUTANT, 'Débutant (0-2 ans)'),
         (CONFIRME, 'Confirmé (3-5 ans)'),
         (SENIOR, 'Sénior (6-10 ans)'),
         (EXPERT, 'Expert (10+ ans)'),
     ]
     
-    # Statuts de l'offre
+    # ===== STATUTS DE L'OFFRE =====
     BROUILLON = 'BROUILLON'
     PUBLIEE = 'PUBLIEE'
     POURVOIE = 'POURVOIE'
     ANNULEE = 'ANNULEE'
     EXPIREE = 'EXPIREE'
+    EN_ATTENTE = 'EN_ATTENTE'
     
     STATUT_CHOICES = [
         (BROUILLON, 'Brouillon'),
+        (EN_ATTENTE, 'En attente de validation'),
         (PUBLIEE, 'Publiée'),
         (POURVOIE, 'Pourvue'),
         (ANNULEE, 'Annulée'),
         (EXPIREE, 'Expirée'),
     ]
     
-    # Télétravail
+    # ===== TÉLÉTRAVAIL =====
     NON = 'NON'
     PARTIEL = 'PARTIEL'
     TOTAL = 'TOTAL'
@@ -536,35 +551,166 @@ class OffreEmploi(models.Model):
         (TOTAL, 'Total'),
     ]
     
-    # Relations
+    # ===== SOURCES DE L'OFFRE =====
+    SOURCE_MANUEL = 'MANUEL'
+    SOURCE_SCRAPING = 'SCRAPING'
+    SOURCE_API = 'API'
+    SOURCE_IMPORT = 'IMPORT'
+    SOURCE_PARTENAIRE = 'PARTENAIRE'
+    
+    SOURCE_CHOICES = [
+        (SOURCE_MANUEL, 'Création manuelle'),
+        (SOURCE_SCRAPING, 'Scraping automatique'),
+        (SOURCE_API, 'API externe'),
+        (SOURCE_IMPORT, 'Import de fichier'),
+        (SOURCE_PARTENAIRE, 'Partenaire'),
+    ]
+    
+    # ===== SECTEURS D'ACTIVITÉ =====
+    SECTEUR_AGRICULTURE = 'AGRICULTURE'
+    SECTEUR_COMMERCE = 'COMMERCE'
+    SECTEUR_CONSTRUCTION = 'CONSTRUCTION'
+    SECTEUR_EDUCATION = 'EDUCATION'
+    SECTEUR_FINANCE = 'FINANCE'
+    SECTEUR_HEALTH = 'HEALTH'
+    SECTEUR_IT = 'IT'
+    SECTEUR_MARKETING = 'MARKETING'
+    SECTEUR_SERVICE = 'SERVICE'
+    SECTEUR_TRANSPORT = 'TRANSPORT'
+    SECTEUR_AUTRE = 'AUTRE'
+    
+    SECTEUR_CHOICES = [
+        (SECTEUR_AGRICULTURE, 'Agriculture'),
+        (SECTEUR_COMMERCE, 'Commerce / Distribution'),
+        (SECTEUR_CONSTRUCTION, 'Construction / BTP'),
+        (SECTEUR_EDUCATION, 'Éducation / Formation'),
+        (SECTEUR_FINANCE, 'Finance / Comptabilité'),
+        (SECTEUR_HEALTH, 'Santé / Social'),
+        (SECTEUR_IT, 'Informatique / Télécoms'),
+        (SECTEUR_MARKETING, 'Marketing / Communication'),
+        (SECTEUR_SERVICE, 'Services'),
+        (SECTEUR_TRANSPORT, 'Transport / Logistique'),
+        (SECTEUR_AUTRE, 'Autre'),
+    ]
+    
+    # ===== RELATIONS =====
     recruteur = models.ForeignKey(
-        'myAppli.Recruteur', 
+        'myAppli.Recruteur',
         on_delete=models.CASCADE,
         related_name='offres_emploi',
-        verbose_name="Recruteur"
+        verbose_name="Recruteur",
+        null=True,
+        blank=True,
+        help_text="Recruteur associé (pour les offres créées manuellement)"
     )
     
-    # Informations générales
+    # ===== INFORMATIONS SUR LA SOURCE =====
+    source = models.CharField(
+        max_length=20,
+        choices=SOURCE_CHOICES,
+        default=SOURCE_MANUEL,
+        verbose_name="Source de l'offre"
+    )
+    
+    source_url = models.URLField(
+        max_length=500,
+        blank=True,
+        null=True,
+        verbose_name="URL source",
+        help_text="URL d'origine si issue de scraping/API"
+    )
+    
+    source_id = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        verbose_name="ID source",
+        help_text="Identifiant unique dans le système source"
+    )
+    
+    source_nom = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name="Nom de la source",
+        help_text="Ex: EmploiBurkinA, LinkedIn, etc."
+    )
+    
+    date_scraping = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Date de scraping"
+    )
+    
+    # ===== INFORMATIONS SUR L'ENTREPRISE (pour les offres scrapées) =====
+    entreprise_nom = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name="Nom de l'entreprise",
+        help_text="Pour les offres sans recruteur associé"
+    )
+    
+    entreprise_logo = models.URLField(
+        max_length=500,
+        blank=True,
+        null=True,
+        verbose_name="Logo de l'entreprise"
+    )
+    
+    entreprise_description = models.TextField(
+        blank=True,
+        verbose_name="Description de l'entreprise"
+    )
+    
+    entreprise_site_web = models.URLField(
+        max_length=500,
+        blank=True,
+        null=True,
+        verbose_name="Site web de l'entreprise"
+    )
+    
+    entreprise_email = models.EmailField(
+        blank=True,
+        null=True,
+        verbose_name="Email de contact"
+    )
+    
+    entreprise_telephone = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        verbose_name="Téléphone de contact"
+    )
+    
+    # ===== INFORMATIONS PRINCIPALES =====
     titre = models.CharField(max_length=255, verbose_name="Titre du poste")
     reference = models.CharField(
-        max_length=50, 
-        unique=True, 
-        blank=True, 
+        max_length=50,
+        unique=True,
+        blank=True,
         null=True,
         verbose_name="Référence interne"
     )
     
-    # Description détaillée
+    secteur = models.CharField(
+        max_length=20,
+        choices=SECTEUR_CHOICES,
+        default=SECTEUR_AUTRE,
+        verbose_name="Secteur d'activité"
+    )
+    
+    # ===== DESCRIPTION DÉTAILLÉE =====
     description = models.TextField(verbose_name="Description du poste")
     missions = models.TextField(verbose_name="Missions principales", blank=True)
     profil_recherche = models.TextField(verbose_name="Profil recherché", blank=True)
     
-    # Localisation
+    # ===== LOCALISATION =====
     localisation = models.CharField(max_length=255, verbose_name="Lieu de travail")
     pays = models.CharField(max_length=100, default="Burkina Faso", verbose_name="Pays")
+    region = models.CharField(max_length=100, blank=True, verbose_name="Région")
     ville = models.CharField(max_length=100, blank=True, verbose_name="Ville")
     
-    # Modalités de travail
+    # ===== MODALITÉS DE TRAVAIL =====
     type_contrat = models.CharField(
         max_length=20,
         choices=TYPE_CONTRAT_CHOICES,
@@ -579,7 +725,7 @@ class OffreEmploi(models.Model):
         verbose_name="Télétravail possible"
     )
     
-    # Expérience requise
+    # ===== EXPÉRIENCE REQUISE =====
     niveau_experience = models.CharField(
         max_length=20,
         choices=NIVEAU_EXPERIENCE_CHOICES,
@@ -593,14 +739,27 @@ class OffreEmploi(models.Model):
         verbose_name="Années d'expérience minimum"
     )
     
-    # Formation requise
+    annees_experience_max = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(50)],
+        verbose_name="Années d'expérience maximum"
+    )
+    
+    # ===== FORMATION REQUISE =====
     niveau_etude_requis = models.CharField(
         max_length=100,
         blank=True,
         verbose_name="Niveau d'étude requis"
     )
     
-    # Compétences requises (stockées en JSON)
+    domaine_etude = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="Domaine d'étude"
+    )
+    
+    # ===== COMPÉTENCES =====
     competences_requises = models.JSONField(
         default=list,
         blank=True,
@@ -613,19 +772,26 @@ class OffreEmploi(models.Model):
         verbose_name="Compétences souhaitées"
     )
     
-    # Rémunération
+    # ===== LANGUES =====
+    langues_requises = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name="Langues requises"
+    )
+    
+    # ===== RÉMUNÉRATION =====
     salaire_min = models.DecimalField(
-        max_digits=10, 
+        max_digits=12,
         decimal_places=0,
-        null=True, 
+        null=True,
         blank=True,
         verbose_name="Salaire minimum (FCFA)"
     )
     
     salaire_max = models.DecimalField(
-        max_digits=10, 
+        max_digits=12,
         decimal_places=0,
-        null=True, 
+        null=True,
         blank=True,
         verbose_name="Salaire maximum (FCFA)"
     )
@@ -636,20 +802,26 @@ class OffreEmploi(models.Model):
         verbose_name="Salaire (texte libre)"
     )
     
-    # Dates
+    salaire_devise = models.CharField(
+        max_length=10,
+        default="FCFA",
+        verbose_name="Devise"
+    )
+    
+    # ===== DATES =====
     date_publication = models.DateTimeField(
         default=timezone.now,
         verbose_name="Date de publication"
     )
     
     date_limite = models.DateField(
-        null=True, 
+        null=True,
         blank=True,
         verbose_name="Date limite de candidature"
     )
     
     date_debut = models.DateField(
-        null=True, 
+        null=True,
         blank=True,
         verbose_name="Date de début souhaitée"
     )
@@ -659,7 +831,7 @@ class OffreEmploi(models.Model):
         verbose_name="Dernière mise à jour"
     )
     
-    # Statut et visibilité
+    # ===== STATUT ET VISIBILITÉ =====
     statut = models.CharField(
         max_length=20,
         choices=STATUT_CHOICES,
@@ -677,11 +849,35 @@ class OffreEmploi(models.Model):
         verbose_name="Offre urgente"
     )
     
-    # Statistiques
+    est_confirmee = models.BooleanField(
+        default=False,
+        verbose_name="Offre confirmée",
+        help_text="Pour les offres scrapées, indique si les infos ont été vérifiées"
+    )
+    
+    # ===== MÉTADONNÉES POUR SCRAPING =====
+    raw_data = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name="Données brutes",
+        help_text="Données originales du scraping"
+    )
+    
+    hash_contenu = models.CharField(
+        max_length=64,
+        blank=True,
+        null=True,
+        verbose_name="Hash du contenu",
+        help_text="Pour détecter les doublons"
+    )
+    
+    # ===== STATISTIQUES =====
     nb_vues = models.PositiveIntegerField(default=0, verbose_name="Nombre de vues")
     nb_candidatures = models.PositiveIntegerField(default=0, verbose_name="Nombre de candidatures")
+    nb_partages = models.PositiveIntegerField(default=0, verbose_name="Nombre de partages")
+    nb_clics = models.PositiveIntegerField(default=0, verbose_name="Nombre de clics")
     
-    # Métadonnées
+    # ===== MÉTADONNÉES =====
     class Meta:
         verbose_name = "Offre d'emploi"
         verbose_name_plural = "Offres d'emploi"
@@ -690,22 +886,38 @@ class OffreEmploi(models.Model):
             models.Index(fields=['statut', 'est_active']),
             models.Index(fields=['date_publication']),
             models.Index(fields=['recruteur']),
+            models.Index(fields=['source']),
+            models.Index(fields=['secteur']),
+            models.Index(fields=['type_contrat']),
+            models.Index(fields=['ville', 'pays']),
+            models.Index(fields=['hash_contenu']),
         ]
+        unique_together = ['source', 'source_id']  # Évite les doublons par source
     
     def __str__(self):
-        return f"{self.titre} - {self.recruteur.organisation if self.recruteur else 'Inconnu'}"
+        if self.recruteur:
+            return f"{self.titre} - {self.recruteur.organisation}"
+        elif self.entreprise_nom:
+            return f"{self.titre} - {self.entreprise_nom}"
+        return f"{self.titre} - Source: {self.get_source_display()}"
     
     def save(self, *args, **kwargs):
         """Génère une référence automatique si nécessaire"""
         if not self.reference:
             prefix = "OFF"
             date_str = timezone.now().strftime("%Y%m")
-            # Compter les offres du mois pour générer un numéro séquentiel
             count = OffreEmploi.objects.filter(
                 date_publication__year=timezone.now().year,
                 date_publication__month=timezone.now().month
             ).count() + 1
             self.reference = f"{prefix}-{date_str}-{count:04d}"
+        
+        # Générer un hash du contenu pour détecter les doublons
+        if not self.hash_contenu:
+            import hashlib
+            content_string = f"{self.titre}{self.description}{self.entreprise_nom}".lower()
+            self.hash_contenu = hashlib.sha256(content_string.encode()).hexdigest()
+        
         super().save(*args, **kwargs)
     
     def est_expiree(self):
@@ -723,7 +935,115 @@ class OffreEmploi(models.Model):
         """Incrémente le compteur de candidatures"""
         self.nb_candidatures += 1
         self.save(update_fields=['nb_candidatures'])
+    
+    @classmethod
+    def depuis_scraping(cls, data, source_nom):
+        """
+        Crée ou met à jour une offre à partir de données de scraping
+        """
+        import hashlib
+        
+        # Créer un hash unique
+        content_string = f"{data.get('titre', '')}{data.get('description', '')}{data.get('entreprise', '')}".lower()
+        hash_contenu = hashlib.sha256(content_string.encode()).hexdigest()
+        
+        # Vérifier si l'offre existe déjà
+        offre_existante = cls.objects.filter(
+            hash_contenu=hash_contenu
+        ).first()
+        
+        if offre_existante:
+            return offre_existante
+        
+        # Créer une nouvelle offre
+        offre = cls(
+            source=cls.SOURCE_SCRAPING,
+            source_nom=source_nom,
+            source_url=data.get('url'),
+            source_id=data.get('external_id'),
+            date_scraping=timezone.now(),
+            titre=data.get('titre', 'Offre sans titre'),
+            entreprise_nom=data.get('entreprise', ''),
+            entreprise_logo=data.get('logo'),
+            description=data.get('description', ''),
+            missions=data.get('missions', ''),
+            profil_recherche=data.get('profil', ''),
+            localisation=data.get('localisation', 'Non précisée'),
+            pays=data.get('pays', 'Burkina Faso'),
+            ville=data.get('ville', ''),
+            type_contrat=data.get('type_contrat', cls.CDI),
+            niveau_experience=data.get('niveau_experience', cls.DEBUTANT),
+            date_limite=data.get('date_limite'),
+            salaire_affiche=data.get('salaire', ''),
+            competences_requises=data.get('competences', []),
+            statut=cls.EN_ATTENTE,
+            est_active=True,
+            raw_data=data,
+            hash_contenu=hash_contenu,
+        )
+        offre.save()
+        return offre
 
+
+class SourceScraping(models.Model):
+    """
+    Configuration des sources de scraping
+    """
+    nom = models.CharField(max_length=100, unique=True)
+    url_base = models.URLField(max_length=500)
+    type = models.CharField(
+        max_length=20,
+        choices=[
+            ('API', 'API REST'),
+            ('HTML', 'Site HTML'),
+            ('RSS', 'Flux RSS'),
+            ('JSON', 'Fichier JSON'),
+        ]
+    )
+    actif = models.BooleanField(default=True)
+    frequence = models.IntegerField(
+        default=24,
+        help_text="Fréquence de scraping en heures"
+    )
+    dernier_scraping = models.DateTimeField(null=True, blank=True)
+    configuration = models.JSONField(default=dict, help_text="Configuration spécifique")
+    
+    class Meta:
+        verbose_name = "Source de scraping"
+        verbose_name_plural = "Sources de scraping"
+    
+    def __str__(self):
+        return self.nom
+
+
+class LogScraping(models.Model):
+    """
+    Journal des opérations de scraping
+    """
+    source = models.ForeignKey(SourceScraping, on_delete=models.CASCADE)
+    date_debut = models.DateTimeField(auto_now_add=True)
+    date_fin = models.DateTimeField(null=True, blank=True)
+    statut = models.CharField(
+        max_length=20,
+        choices=[
+            ('SUCCES', 'Succès'),
+            ('ECHEC', 'Échec'),
+            ('EN_COURS', 'En cours'),
+        ]
+    )
+    offres_trouvees = models.IntegerField(default=0)
+    offres_nouvelles = models.IntegerField(default=0)
+    offres_mises_a_jour = models.IntegerField(default=0)
+    message_erreur = models.TextField(blank=True)
+    details = models.JSONField(default=dict, blank=True)
+    
+    class Meta:
+        verbose_name = "Log de scraping"
+        verbose_name_plural = "Logs de scraping"
+        ordering = ['-date_debut']
+    
+    def __str__(self):
+        return f"{self.source.nom} - {self.date_debut.strftime('%d/%m/%Y %H:%M')}"
 
 class Candidature(models.Model):
     """
@@ -809,3 +1129,79 @@ class Candidature(models.Model):
     
     def __str__(self):
         return f"{self.candidat} - {self.offre.titre}"
+
+
+class ModeleCV(models.Model):
+    """
+    Modèles de CV disponibles
+    """
+    nom = models.CharField(max_length=100, help_text="Nom affiché du style")
+    categorie = models.CharField(max_length=50, unique=True, help_text="Identifiant unique du style (moderne, classique, etc.)")
+    description = models.TextField(blank=True, help_text="Description du style")
+    image_apercu = models.ImageField(upload_to='modeles/apercus/', null=True, blank=True)
+    
+    # Statistiques et classement
+    est_populaire = models.BooleanField(default=False)
+    ordre_affichage = models.IntegerField(default=0, help_text="Ordre d'apparition dans le sélecteur")
+    nb_utilisations = models.IntegerField(default=0, help_text="Nombre de fois que ce style a été utilisé")
+    
+    # Gestion
+    est_actif = models.BooleanField(default=True, help_text="Visible dans le sélecteur")
+    est_premium = models.BooleanField(default=False, help_text="Réservé aux utilisateurs premium")
+    date_creation = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Modèle de CV"
+        verbose_name_plural = "Modèles de CV"
+        ordering = ['ordre_affichage', 'nom']
+    
+    def __str__(self):
+        return self.nom
+    
+    def incrementer_utilisation(self):
+        """Incrémente le compteur d'utilisations"""
+        self.nb_utilisations += 1
+        self.save(update_fields=['nb_utilisations'])
+
+
+class CVGenere(models.Model):
+    """
+    CV généré par un utilisateur
+    """
+    utilisateur = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True,
+        related_name='cvs_generes'
+    )
+    
+    # Liaison avec le modèle de CV
+    modele = models.ForeignKey(
+        ModeleCV, 
+        on_delete=models.SET_NULL, 
+        null=True,
+        related_name='cvs'
+    )
+    
+    # Informations du CV
+    titre = models.CharField(max_length=200)
+    donnees_cv = models.JSONField(default=dict, help_text="Toutes les données du CV au format JSON")
+    
+    # Fichiers générés
+    fichier_pdf = models.FileField(upload_to='cvs/pdf/', null=True, blank=True)
+    fichier_docx = models.FileField(upload_to='cvs/docx/', null=True, blank=True)
+    
+    # Métadonnées
+    date_generation = models.DateTimeField(auto_now_add=True)
+    est_public = models.BooleanField(default=False, help_text="Rendre le CV visible pour les recruteurs")
+    
+    class Meta:
+        verbose_name = "CV généré"
+        verbose_name_plural = "CVs générés"
+        ordering = ['-date_generation']
+    
+    def __str__(self):
+        if self.utilisateur:
+            return f"CV de {self.utilisateur.username} - {self.modele.nom if self.modele else 'Sans style'}"
+        return f"CV anonyme - {self.date_generation.strftime('%d/%m/%Y')}"
