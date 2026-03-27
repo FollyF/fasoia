@@ -55,6 +55,10 @@ urlpatterns = [
          views.completer_profil_candidat, 
          name='completer_profil_candidat'
     ),
+    path('completer/profil/recruteur/', 
+         views.completer_profil_recruteur, 
+         name='completer_profil_recruteur'
+    ),
     path('offre/<int:pk>/', 
          views.detail_offre, name='detail_offre'),
 
@@ -111,4 +115,5 @@ urlpatterns = [
     path('cv/apercu/<str:style>/', views.apercu_style_cv, name='apercu_style_cv'),
     path('soumission/dossier/<int:dossier_id>/documents/', views.get_dossier_documents, name='get_dossier_documents'),
     path('soumission/document/<int:document_id>/telecharger/', views.telecharger_document, name='telecharger_document'),
+    path('recruteur/publier/offre/', views.publier_offre_emploi, name='publier_offre_emploi'),
 ]

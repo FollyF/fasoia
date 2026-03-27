@@ -594,72 +594,35 @@ def dashboard_recruteur(request):
     
     recruteur = particulier.recruteur
     
-    # Récupérer les offres publiées par ce recruteur
+    # Récupérer les offres publiées
     offres_publiees = OffreEmploi.objects.filter(recruteur=recruteur).order_by('-date_publication')
     
-    # Talents recommandés (exemple simple)
-    talents_recommandes = []
-    candidats = Candidat.objects.all()[:10]
+    # ===== CALCUL DE LA PROGRESSION =====
+    champs_obligatoires = ['organisation', 'secteur', 'typeStructure', 'poste_occupe']
+    champs_remplis = 0
     
-    for candidat in candidats:
-        # Score fictif à remplacer par un vrai algorithme
-        score = 75
-        talents_recommandes.append({
-            'id': candidat.particulier_id,
-            'prenom': candidat.prenom,
-            'nom': candidat.nom,
-            'competences': candidat.competences,
-            'niveauEtude': candidat.niveauEtude,
-            'experience': candidat.anneesExperiences,
-            'score': score,
-            'date': candidat.particulier.dateInscription,
-        })
+    for champ in champs_obligatoires:
+        valeur = getattr(recruteur, champ)
+        if valeur and str(valeur).strip():
+            champs_remplis += 1
+    
+    total_champs = len(champs_obligatoires)
+    progression = int((champs_remplis / total_champs) * 100) if total_champs > 0 else 0
+    profil_complet = (champs_remplis == total_champs)
+    nombre = 120000
+
+    print(f"🔍 Dashboard recruteur - profil_complet: {profil_complet}")
     
     # Statistiques
     stats = {
         'offres_publiees': offres_publiees.count(),
-        'candidatures_recues': 0,  # À implémenter
-        'talents_recommandes': len(talents_recommandes),
+        'candidatures_recues': 0,
+        'talents_recommandes': 0,
     }
     
-    # Calcul de la progression du profil
-    champs_recruteur = [
-        ('organisation', recruteur.organisation),
-        ('secteur', recruteur.secteur),
-        ('typeStructure', recruteur.typeStructure),
-        ('poste_occupe', recruteur.poste_occupe),
-        ('secteurs_recherches', recruteur.secteurs_recherches),
-        ('types_contrats_proposes', recruteur.types_contrats_proposes),
-    ]
+    talents_recommandes = []
     
-    champs_remplis = sum(1 for champ, valeur in champs_recruteur if valeur)
-    total_champs = len(champs_recruteur)
-    progression = int((champs_remplis / total_champs) * 100) if champs_remplis > 0 else 0
-    profil_complet = (champs_remplis == total_champs)
-    
-    # Traitement du formulaire d'offre (POST)
-    if request.method == 'POST' and 'offre_form' in request.POST:
-        try:
-            offre = OffreEmploi.objects.create(
-                recruteur=recruteur,
-                titre=request.POST.get('titre'),
-                description=request.POST.get('description'),
-                missions=request.POST.get('missions'),
-                profil_recherche=request.POST.get('profil_recherche'),
-                localisation=request.POST.get('localisation'),
-                teletravail=request.POST.get('teletravail') == 'on',
-                type_contrat=request.POST.get('type_contrat'),
-                niveau_experience=request.POST.get('niveau_experience'),
-                annees_experience_min=request.POST.get('annees_experience_min') or 0,
-                niveau_etude_requis=request.POST.get('niveau_etude_requis'),
-                date_limite=request.POST.get('date_limite') or None,
-                statut='PUBLIEE'
-            )
-            messages.success(request, "Offre d'emploi publiée avec succès !")
-        except Exception as e:
-            messages.error(request, f"Erreur: {e}")
-        return redirect('myAppli:dashboard_recruteur')
-    
+    # ===== CONTEXTE AVEC TOUTES LES VARIABLES =====
     context = {
         'recruteur': recruteur,
         'offres_publiees': offres_publiees,
@@ -668,7 +631,8 @@ def dashboard_recruteur(request):
         'progression': progression,
         'champs_remplis': champs_remplis,
         'total_champs': total_champs,
-        'profil_complet': profil_complet,
+        'profil_complet': profil_complet,  # ← ESSENTIEL !
+        'nombre': nombre
     }
     
     return render(request, 'myAppli/dashboard_recruteur.html', context)
@@ -728,11 +692,6 @@ def activer_profil_recruteur(request):
     
     messages.success(request, "Profil recruteur activé avec succès !")
     return redirect('myAppli:dashboard_recruteur')
-
-@login_required
-def dashboard_recruteur(request):
-    return render(request, 'myAppli/dashboard_recruteur.html')
-
 
 @login_required
 @require_http_methods(["POST"])
@@ -825,6 +784,86 @@ def completer_profil_candidat(request):
         messages.error(request, f"Erreur lors de la sauvegarde : {str(e)}")
     
     return redirect('myAppli:dashboard_candidat')
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_protect
+def completer_profil_recruteur(request):
+    """
+    Vue pour enregistrer les modifications du profil recruteur
+    """
+    print("="*50)
+    print("DONNÉES REÇUES PROFIL RECRUTEUR:")
+    print(request.POST)
+    print("="*50)
+    
+    if not hasattr(request.user, 'particulier'):
+        messages.error(request, "Accès réservé aux particuliers")
+        return redirect('myAppli:home')
+    
+    particulier = request.user.particulier
+    
+    if not hasattr(particulier, 'recruteur'):
+        messages.warning(request, "Vous devez d'abord activer votre profil recruteur")
+        return redirect('myAppli:dashboard_particulier')
+    
+    recruteur = particulier.recruteur
+    
+    try:
+        # Mise à jour des champs simples
+        recruteur.organisation = request.POST.get('organisation', recruteur.organisation)
+        recruteur.secteur = request.POST.get('secteur', recruteur.secteur)
+        recruteur.typeStructure = request.POST.get('typeStructure', recruteur.typeStructure)
+        recruteur.poste_occupe = request.POST.get('poste_occupe', recruteur.poste_occupe)
+        
+        # Traitement des secteurs recherchés
+        secteurs_recherches = request.POST.get('secteurs_recherches', '')
+        if secteurs_recherches and secteurs_recherches.strip():
+            recruteur.secteurs_recherches = [s.strip() for s in secteurs_recherches.split(',') if s.strip()]
+        else:
+            recruteur.secteurs_recherches = []
+        
+        # Traitement des types de contrats
+        types_contrats = request.POST.get('types_contrats_proposes', '')
+        if types_contrats and types_contrats.strip():
+            recruteur.types_contrats_proposes = [t.strip() for t in types_contrats.split(',') if t.strip()]
+        else:
+            recruteur.types_contrats_proposes = []
+        
+        recruteur.save()
+        
+        # ===== VÉRIFICATION DU PROFIL COMPLET =====
+        champs_obligatoires = ['organisation', 'secteur', 'typeStructure', 'poste_occupe']
+        champs_remplis = 0
+        champs_manquants = []
+        
+        for champ in champs_obligatoires:
+            valeur = getattr(recruteur, champ)
+            if valeur and str(valeur).strip():
+                champs_remplis += 1
+            else:
+                champs_manquants.append(champ)
+        
+        total_champs = len(champs_obligatoires)
+        progression = int((champs_remplis / total_champs) * 100) if total_champs > 0 else 0
+        profil_complet = (champs_remplis == total_champs)
+        
+        print(f"📊 Progression: {progression}% ({champs_remplis}/{total_champs})")
+        print(f"✅ Profil complet: {profil_complet}")
+        
+        # Message personnalisé
+        if profil_complet:
+            messages.success(request, "🎉 Félicitations ! Votre profil recruteur est maintenant complet ! Vous pouvez maintenant publier des offres.")
+        else:
+            messages.success(request, f"Votre profil a été mis à jour ! Il vous manque : {', '.join(champs_manquants)}")
+        
+    except Exception as e:
+        print(f"❌ ERREUR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        messages.error(request, f"Erreur : {str(e)}")
+    
+    return redirect('myAppli:dashboard_recruteur')
 
 @login_required
 @require_http_methods(["POST"])
@@ -1971,4 +2010,62 @@ def get_dossier_documents(request, dossier_id):
     }
     
     return JsonResponse(data)
+
+@login_required
+def publier_offre_emploi(request):
+    """
+    Vue pour publier une offre d'emploi
+    """
+    if request.method == 'POST':
+        # Vérifier que l'utilisateur est un recruteur
+        if not hasattr(request.user, 'particulier') or not hasattr(request.user.particulier, 'recruteur'):
+            messages.error(request, "Vous devez être recruteur pour publier une offre")
+            return redirect('myAppli:home')
+        
+        recruteur = request.user.particulier.recruteur
+        
+        try:
+            # Traitement des compétences
+            competences_requises = []
+            if request.POST.get('competences_requises'):
+                competences_requises = [c.strip() for c in request.POST.get('competences_requises').split(',') if c.strip()]
+            
+            competences_souhaitees = []
+            if request.POST.get('competences_souhaitees'):
+                competences_souhaitees = [c.strip() for c in request.POST.get('competences_souhaitees').split(',') if c.strip()]
+            
+            # Création de l'offre
+            offre = OffreEmploi.objects.create(
+                recruteur=recruteur,
+                titre=request.POST.get('titre'),
+                description=request.POST.get('description', ''),
+                missions=request.POST.get('missions', ''),
+                profil_recherche=request.POST.get('profil_recherche', ''),
+                localisation=request.POST.get('localisation'),
+                type_contrat=request.POST.get('type_contrat'),
+                teletravail='TOTAL' if request.POST.get('teletravail') else 'NON',
+                niveau_experience=request.POST.get('niveau_experience'),
+                annees_experience_min=request.POST.get('annees_experience_min') or 0,
+                niveau_etude_requis=request.POST.get('niveau_etude_requis', ''),
+                competences_requises=competences_requises,
+                competences_souhaitees=competences_souhaitees,
+                salaire_min=request.POST.get('salaire_min') or None,
+                salaire_max=request.POST.get('salaire_max') or None,
+                salaire_affiche=request.POST.get('salaire_affiche', ''),
+                date_limite=request.POST.get('date_limite') or None,
+                statut='PUBLIEE',
+                est_active=True,
+                source='MANUEL'
+            )
+            
+            messages.success(request, f"L'offre '{offre.titre}' a été publiée avec succès !")
+            logger.info(f"Offre publiée par {recruteur.organisation} : {offre.titre}")
+            
+        except Exception as e:
+            messages.error(request, f"Erreur lors de la publication : {str(e)}")
+            logger.error(f"Erreur publication offre : {e}")
+        
+        return redirect('myAppli:dashboard_recruteur')
+    
+    return redirect('myAppli:dashboard_recruteur')
 

@@ -298,6 +298,14 @@
 {% endblock %}
 
 {% block content %}
+
+<!-- ===== DEBUG ===== -->
+<div style="background-color: #ff6600; color: white; padding: 15px; margin: 10px 0; border-radius: 5px; font-weight: bold;">
+    🔍 DEBUG: profil_complet = {{ profil_complet}}
+    🔍 DEBUG: nombre = {{ nombre}}
+
+</div>
+
 <div class="container-fluid mt-4">
     <!-- En-tête spécifique recruteur -->
     <div class="dashboard-header">
@@ -437,9 +445,8 @@
             </button>
         </div>
         
-        <form method="POST" action="{% url 'myAppli:dashboard_recruteur' %}" id="offre-form">
+        <form method="POST" action="{% url 'myAppli:publier_offre_emploi' %}" id="offre-form">
             {% csrf_token %}
-            <input type="hidden" name="offre_form" value="1">
             
             <div class="row">
                 <div class="col-md-8">
@@ -497,10 +504,10 @@
                     <div class="form-group">
                         <label>Niveau d'expérience</label>
                         <select name="niveau_experience" class="form-control">
-                            <option value="Débutant">Débutant (moins de 2 ans)</option>
-                            <option value="Intermédiaire">Intermédiaire (2-5 ans)</option>
-                            <option value="Confirmé">Confirmé (5-10 ans)</option>
-                            <option value="Expert">Expert (plus de 10 ans)</option>
+                            <option value="DEBUTANT">Débutant (moins de 2 ans)</option>
+                            <option value="CONFIRME">Intermédiaire (2-5 ans)</option>
+                            <option value="SENIOR">Confirmé (5-10 ans)</option>
+                            <option value="EXPERT">Expert (plus de 10 ans)</option>
                         </select>
                     </div>
                 </div>

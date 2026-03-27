@@ -28,9 +28,16 @@ SECRET_KEY = 'django-insecure-n6iyh#cucsuh8bf#^9q$l^!)$x_n7af#!9fz#z8)s3$oqhbr(4
 DEBUG = True
 
 # Dans fasoia/settings.py
+
+#Ajoute l'URL de ngrok aux origines de confiance pour le CSRF
+CSRF_TRUSTED_ORIGINS = [
+    'https://barefacedly-phraseologic-ruby.ngrok-free.dev',
+]
+
 ALLOWED_HOSTS = [
     '127.0.0.1',      # ← Important
     'localhost',      # ← Gardez-le aussi pour compatibilité
+    'barefacedly-phraseologic-ruby.ngrok-free.dev'
 ]
 
 # Application definition
