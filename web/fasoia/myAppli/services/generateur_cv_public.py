@@ -170,13 +170,13 @@ class GenerateurCVPublic:
         # Données d'exemple pour l'aperçu
         donnees_exemple = {
             'style': style,
-            'prenom': 'Jean',
-            'nom': 'DUPONT',
-            'email': 'jean.dupont@email.com',
-            'telephone': '+33 6 12 34 56 78',
+            'prenom': 'Ramata',
+            'nom': 'TALL',
+            'email': 'ramatatall@efasoia.com',
+            'telephone': '+226 09 09 09 56 78',
             'adresse': '15 Rue de la Paix',
-            'ville': 'Paris',
-            'pays': 'France',
+            'ville': 'Patte d''oie',
+            'pays': 'BURKINA FASO',
             'code_postal': '75001',
             'permis': 'B',
             'resume': 'Professionnel dynamique avec 5 ans d\'expérience dans le développement web. Passionné par les nouvelles technologies et le travail en équipe.',
@@ -308,3 +308,111 @@ class GenerateurCVPublic:
         response['Content-Disposition'] = f'attachment; filename="{nom_fichier}.{extension}"'
         
         return response
+    
+    def generer_cv_buffer(self, donnees, format_export, style='moderne'):
+        """
+        Génère le CV et retourne le buffer et le nom du fichier
+        Utilisé pour la sauvegarde en base avant le téléchargement
+        """
+        # Mettre à jour le style dans les données
+        donnees['style'] = style
+        
+        buffer = BytesIO()
+        nom_fichier = f"CV_{donnees['prenom']}_{donnees['nom']}_{donnees.get('date_generation', datetime.now().strftime('%Y%m%d_%H%M%S'))}".replace(' ', '_')
+        
+        if format_export == 'pdf':
+            # Générer le PDF
+            contenu = self.generer_pdf(donnees)
+            buffer.write(contenu)
+            extension = 'pdf'
+            
+        elif format_export == 'docx':
+            # Générer le DOCX
+            contenu = self.generer_docx(donnees)
+            buffer.write(contenu)
+            extension = 'docx'
+        else:
+            raise ValueError(f"Format non supporté: {format_export}")
+        
+        buffer.seek(0)
+        return buffer, f"{nom_fichier}.{extension}"
+    
+
+    def generer_html_avec_donnees(self, style, donnees):
+        """Génère le HTML à partir du template avec les données du CV"""
+        template_name = f"{self.templates_dir}{style}.html"
+        
+        print(f"🔍 Template recherché: {template_name}")
+        
+        try:
+            # S'assurer que le style est dans les données
+            donnees['style'] = style
+            
+            # Rendre le template avec les données
+            html_string = render_to_string(template_name, donnees)
+            print(f"✅ Template trouvé, HTML généré")
+            return html_string
+            
+        except Exception as e:
+            print(f"❌ Erreur: {e}")
+            # Template de secours
+            return f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body {{ font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background: white; color: black; }}
+                    h1 {{ color: #1ed760; }}
+                    .section {{ margin-bottom: 20px; }}
+                    .section-title {{ color: #1ed760; border-bottom: 2px solid #1ed760; padding-bottom: 5px; margin-bottom: 10px; }}
+                </style>
+            </head>
+            <body>
+                <h1>{donnees.get('prenom', '')} {donnees.get('nom', '')}</h1>
+                <p><strong>Email:</strong> {donnees.get('email', '')}</p>
+                <p><strong>Téléphone:</strong> {donnees.get('telephone', '')}</p>
+                
+                <div class="section">
+                    <div class="section-title">Résumé</div>
+                    <p>{donnees.get('resume', '')}</p>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">Compétences</div>
+                    <p>{', '.join(donnees.get('competences', [])) if donnees.get('competences') else ''}</p>
+                </div>
+            </body>
+            </html>
+            """
+
+    def _render_experiences(self, experiences):
+        """Helper pour afficher les expériences dans l'aperçu de secours"""
+        if not experiences:
+            return "<p>Aucune expérience</p>"
+        
+        html = ""
+        for exp in experiences:
+            html += f"""
+            <div>
+                <strong>{exp.get('titre', '')}</strong> - {exp.get('entreprise', '')}
+                <br><small>{exp.get('date_debut', '')} - {exp.get('date_fin', 'Présent')}</small>
+                <p>{exp.get('description', '')}</p>
+            </div>
+            """
+        return html
+
+    def _render_formations(self, formations):
+        """Helper pour afficher les formations dans l'aperçu de secours"""
+        if not formations:
+            return "<p>Aucune formation</p>"
+        
+        html = ""
+        for formation in formations:
+            html += f"""
+            <div>
+                <strong>{formation.get('diplome', '')}</strong> - {formation.get('etablissement', '')}
+                <br><small>{formation.get('annee', '')}</small>
+            </div>
+            """
+        return html

@@ -1196,6 +1196,12 @@ class CVGenere(models.Model):
     date_generation = models.DateTimeField(auto_now_add=True)
     est_public = models.BooleanField(default=False, help_text="Rendre le CV visible pour les recruteurs")
     
+    nb_telechargements = models.IntegerField(default=0)  # Compteur de téléchargements
+    nb_utilisations = models.IntegerField(default=0)     # Compteur d'utilisations
+    est_favori = models.BooleanField(default=False)      # CV favori
+    est_utilise = models.BooleanField(default=False)     # CV utilisé pour candidature
+    derniere_utilisation = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         verbose_name = "CV généré"
         verbose_name_plural = "CVs générés"

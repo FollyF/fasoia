@@ -43,7 +43,9 @@ urlpatterns = [
          name='dashboard_candidat'
     ),
     path('activer/profil/candidat/', views.activer_profil_candidat, name='activer_profil_candidat'),
+
     path('activer/profil/recruteur/', views.activer_profil_recruteur, name='activer_profil_recruteur'),
+
     path('completer/profil/entreprise/', 
          views.completer_profil_entreprise, 
          name='completer_profil_entreprise'
@@ -54,10 +56,16 @@ urlpatterns = [
     ),
     path('offre/<int:pk>/', 
          views.detail_offre, name='detail_offre'),
+
     path('ami/<int:pk>/', views.detail_ami, 
          name='detail_ami'),
+
+    path('emploi/<int:pk>/', views.detail_emploi, 
+         name='detail_emploi'),
+
     path('soumission/<str:opportunite_type>/<int:opportunite_id>/commencer/', 
           views.commencer_soumission, name='commencer_soumission'),
+
     path('soumission/dossier/<int:dossier_id>/preparer/', views.preparer_soumission, 
          name='preparer_soumission'),
     
@@ -72,6 +80,7 @@ urlpatterns = [
     
     path('soumission/dossier/<int:dossier_id>/soumettre/', 
          views.soumettre_dossier, name='soumettre_dossier'),
+    
     path('mes_soumissions/', 
          views.mes_soumissions, name='mes_soumissions'),
 
@@ -81,7 +90,6 @@ urlpatterns = [
     path('api/whatsapp/lien/<int:entreprise_id>/', views.get_whatsapp_link, name='get_whatsapp_link'),
     path('trouver/emploi/', views.trouver_emploi, name='trouver_emploi'),
     path('generer/cv/', views.generer_cv, name='generer_cv'),
-    path('cv/apercu/<str:style>/', views.apercu_style_cv, name='apercu_cv'),
     path('generer/lettre_motivation/', views.generer_lettre_motivation, name='generer_lettre_motivation'),
     path('preparer/entretien/', views.preparer_entretien, name='preparer_entretien'),
     path('alerte/emploi/', views.alertes_emploi, name='alertes_emploi'),
@@ -93,4 +101,13 @@ urlpatterns = [
     path('mes_candidatures/', views.mes_candidatures, name='mes_candidatures'),
     path('mes_offres/', views.mes_offres, name='mes_offres'),
     path('mes_cvs/', views.mes_cvs, name='mes_cvs'),
+    path('cv/importer/', views.importer_cv, name='importer_cv'),
+    path('cv/telecharger/<int:cv_id>/<str:format>/', views.telecharger_cv, name='telecharger_cv'),
+    path('cv/supprimer/<int:cv_id>/', views.supprimer_cv, name='supprimer_cv'),
+    path('cv/dupliquer/<int:cv_id>/', views.dupliquer_cv, name='dupliquer_cv'),
+    path('cv/modifier/<int:cv_id>/', views.modifier_cv, name='modifier_cv'),
+    path('cv/apercu/<int:cv_id>/', views.apercu_cv, name='apercu_cv'), 
+    path('cv/apercu/<str:style>/', views.apercu_style_cv, name='apercu_style_cv'),
+    path('soumission/dossier/<int:dossier_id>/documents/', views.get_dossier_documents, name='get_dossier_documents'),
+    path('soumission/document/<int:document_id>/telecharger/', views.telecharger_document, name='telecharger_document'),
 ]

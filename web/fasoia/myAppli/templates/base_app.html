@@ -457,7 +457,6 @@
                             <a href="{% url 'myAppli:mes_cvs' %}" class="nav-item {% if request.resolver_match.url_name == 'mes_cvs' %}active{% endif %}">
                                 <i class="fa fa-files-o"></i>
                                 <span>Mes CV</span>
-                                <span class="nav-badge">{{ nb_cvs|default:"0" }}</span>
                             </a>
                         {% elif user.entreprise %}
                             <a href="{% url 'myAppli:dashboard_entreprise' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard_entreprise' %}active{% endif %}">

@@ -9,6 +9,7 @@ from django.views.decorators.http import require_http_methods
 from django.conf import settings
 from urllib.parse import quote
 from django.utils import timezone
+from django.core.files.base import ContentFile
 
 import os
 import json
@@ -19,6 +20,7 @@ from .forms import InscriptionForm, ConnexionForm
 from .models import *
 from analyse_ia.models import *
 from .services.generateur_cv_public import GenerateurCVPublic
+from .generateur import GenerateurDocument
 logger = logging.getLogger(__name__)
 
 def test(request):
@@ -968,6 +970,17 @@ def detail_ami(request, pk):
     except Ami_uemoa.DoesNotExist:
         messages.error(request, "Cet AMI n'existe pas.")
         return redirect('myAppli:opportunites')
+
+def detail_emploi(request, pk):
+    """
+    Vue pour afficher les détails d'une offre d'emploi
+    """
+    try:
+        emploi = OffreEmploi.objects.get(pk=pk)
+        return render(request, 'myAppli/detail_ami.html', {'emploi': emploi})
+    except OffreEmploi.DoesNotExist:
+        messages.error(request, "Cette offre d'emploi n'existe pas.")
+        return redirect('myAppli:opportunites')
     
 @login_required
 def commencer_soumission(request, opportunite_type, opportunite_id):
@@ -1050,7 +1063,7 @@ def preparer_soumission(request, dossier_id):
             'pourcentage': int((documents_presents / documents_requis * 100)) if documents_requis > 0 else 0
         }
     }
-    return render(request, 'myAppli/soumission/preparer.html', context)
+    return render(request, 'myAppli/soumission/preparer_soumission.html', context)
 
 @login_required
 def generer_document(request, dossier_id, modele_id):
@@ -1201,7 +1214,7 @@ def soumettre_dossier(request, dossier_id):
         
         # Mettre à jour le dossier
         dossier.statut = 'SOUMIS'
-        dossier.date_soumission_effective = datetime.now()
+        dossier.date_soumission_effective = timezone.now()
         dossier.save()
         
         # Mettre à jour les statistiques de l'entreprise
@@ -1216,6 +1229,7 @@ def soumettre_dossier(request, dossier_id):
     context = {
         'dossier': dossier,
         'documents': dossier.documents.all(),
+        'now': timezone.now(),
     }
     return render(request, 'myAppli/soumission/confirmer_soumission.html', context)
 
@@ -1542,7 +1556,9 @@ def generer_cv(request):
             
             # Récupérer le format
             format_export = request.POST.get('format', 'pdf')
+            style = request.POST.get('style', 'moderne')
             print(f"🎯 FORMAT EXTRAIT: '{format_export}'")
+            print(f"🎨 STYLE CHOISI: '{style}'")
             
             # Initialiser le générateur
             from .services.generateur_cv_public import GenerateurCVPublic
@@ -1556,15 +1572,69 @@ def generer_cv(request):
                 messages.error(request, "Le prénom et le nom sont obligatoires.")
                 return redirect('myAppli:generer_cv')
             
-            # Générer la réponse
+            # Générer le fichier (sans encore renvoyer la réponse)
             print(f"🚀 Génération du CV au format {format_export}...")
-            response = generateur.generer_cv(donnees, format_export)
+            buffer, nom_fichier = generateur.generer_cv_buffer(donnees, format_export, style)
             
-            # Message personnalisé selon l'état de connexion
+            # ===== SAUVEGARDE SI UTILISATEUR CONNECTÉ =====
             if request.user.is_authenticated:
-                messages.success(request, "✅ CV généré et sauvegardé dans votre espace personnel !")
+                try:
+                    from django.core.files.base import ContentFile
+                    # Récupérer le modèle de CV
+                    modele_cv = ModeleCV.objects.filter(categorie=style, est_actif=True).first()
+                    
+                    # Récupérer le candidat
+                    try:
+                        particulier = Particulier.objects.get(user=request.user)
+                        candidat = Candidat.objects.get(particulier=particulier)
+                    except (Particulier.DoesNotExist, Candidat.DoesNotExist):
+                        # Si le profil n'existe pas, on sauvegarde quand même le CV
+                        # mais sans l'associer à un candidat
+                        pass
+                    
+                    # Créer l'enregistrement CV
+                    cv_genere = CVGenere.objects.create(
+                        utilisateur=request.user,
+                        modele=modele_cv,
+                        titre=f"CV de {donnees['prenom']} {donnees['nom']}",
+                        donnees_cv=donnees,  # Sauvegarde toutes les données
+                        est_public=False
+                    )
+                    
+                    # Sauvegarder le fichier selon le format
+                    buffer.seek(0)
+                    if format_export == 'pdf':
+                        cv_genere.fichier_pdf.save(
+                            f"CV_{donnees['prenom']}_{donnees['nom']}_{donnees['date_generation']}.pdf",
+                            ContentFile(buffer.getvalue())
+                        )
+                    elif format_export == 'docx':
+                        cv_genere.fichier_docx.save(
+                            f"CV_{donnees['prenom']}_{donnees['nom']}_{donnees['date_generation']}.docx",
+                            ContentFile(buffer.getvalue())
+                        )
+                    
+                    print(f"✅ CV sauvegardé en base (ID: {cv_genere.id})")
+                    messages.success(request, "✅ CV généré et sauvegardé dans votre espace personnel !")
+                    
+                except Exception as e:
+                    print(f"⚠️ Erreur lors de la sauvegarde: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    messages.warning(request, "CV généré mais non sauvegardé. Erreur technique.")
+            
             else:
+                # Utilisateur non connecté
                 messages.info(request, "📝 CV généré avec succès ! Créez un compte pour le sauvegarder.")
+            
+            # Renvoyer le fichier pour téléchargement
+            buffer.seek(0)
+            from django.http import FileResponse
+            response = FileResponse(
+                buffer,
+                as_attachment=True,
+                filename=nom_fichier
+            )
             return response
             
         except ImportError as e:
@@ -1612,6 +1682,32 @@ def apercu_style_cv(request, style):
     html_apercu = generateur.generer_apercu(style)
     return HttpResponse(html_apercu)
 
+@login_required
+def apercu_cv(request, cv_id):
+    """Affiche un aperçu du CV en utilisant le template du style et les données sauvegardées"""
+    cv = get_object_or_404(CVGenere, id=cv_id, utilisateur=request.user)
+    
+    # Récupérer les données du CV
+    donnees = cv.donnees_cv
+    
+    # Récupérer le style
+    style = donnees.get('style', 'moderne')
+    if cv.modele:
+        style = cv.modele.categorie
+    
+    print(f"🎨 Génération aperçu pour style: {style}")
+    
+    # Utiliser le générateur
+    from .services.generateur_cv_public import GenerateurCVPublic
+    generateur = GenerateurCVPublic()
+    
+    # Générer le HTML
+    html = generateur.generer_html_avec_donnees(style, donnees)
+    
+    print(f"✅ HTML généré, longueur: {len(html)} caractères")
+    
+    return HttpResponse(html)
+
 def faq(request):
     return
 
@@ -1630,5 +1726,178 @@ def mes_offres(request):
 def mes_candidatures(request):
     return
 
+@login_required
 def mes_cvs(request):
-    return
+    """Affiche tous les CV de l'utilisateur"""
+    cvs = CVGenere.objects.filter(utilisateur=request.user).order_by('-date_generation')
+    
+    # Statistiques avec gestion des champs optionnels
+    stats = {
+        'total': cvs.count(),
+        'telechargements': sum(cv.nb_telechargements for cv in cvs if hasattr(cv, 'nb_telechargements')),
+        'favoris': cvs.filter(est_favori=True).count() if hasattr(CVGenere, 'est_favori') else 0,
+        'utilises': cvs.filter(est_utilise=True).count() if hasattr(CVGenere, 'est_utilise') else 0,
+    }
+    
+    context = {
+        'cvs': cvs,
+        'stats': stats,
+    }
+    return render(request, 'myAppli/outils_emploi/mes_cvs.html', context)
+
+@login_required
+def telecharger_cv(request, cv_id, format):
+    cv = get_object_or_404(CVGenere, id=cv_id, utilisateur=request.user)
+    
+    cv.nb_telechargements += 1
+    cv.save()
+    
+    if format == 'pdf' and cv.fichier_pdf:
+        return FileResponse(cv.fichier_pdf, as_attachment=True, filename=cv.fichier_pdf.name)
+    elif format == 'docx' and cv.fichier_docx:
+        return FileResponse(cv.fichier_docx, as_attachment=True, filename=cv.fichier_docx.name)
+    
+    return JsonResponse({'error': 'Fichier non disponible'}, status=404)
+
+@login_required
+def supprimer_cv(request, cv_id):
+    cv = get_object_or_404(CVGenere, id=cv_id, utilisateur=request.user)
+    cv.delete()
+    return JsonResponse({'success': True})
+
+@login_required
+def dupliquer_cv(request, cv_id):
+    original = get_object_or_404(CVGenere, id=cv_id, utilisateur=request.user)
+    
+    copie = CVGenere.objects.create(
+        utilisateur=request.user,
+        modele=original.modele,
+        titre=f"{original.titre} (copie)",
+        donnees_cv=original.donnees_cv,
+        est_public=False
+    )
+    
+    return JsonResponse({'success': True, 'id': copie.id})
+
+@login_required
+def importer_cv(request):
+    """Importe un CV depuis un fichier"""
+    print("="*50)
+    print("🚀 FONCTION IMPORTER_CV APPELEE")
+    print(f"Méthode: {request.method}")
+    print(f"Fichiers: {request.FILES}")
+    print("="*50)
+    
+    if request.method == 'POST':
+        if not request.FILES.get('file'):
+            print("❌ Aucun fichier trouvé")
+            return JsonResponse({'error': 'Aucun fichier fourni'}, status=400)
+        
+        file = request.FILES['file']
+        filename = file.name
+        print(f"📁 Fichier reçu: {filename}")
+        print(f"📊 Taille: {file.size} octets")
+        
+        try:
+            if filename.endswith('.json'):
+                # Lire le fichier JSON
+                print("📄 Traitement fichier JSON...")
+                data = json.load(file)
+                
+                # Créer le CV
+                cv = CVGenere.objects.create(
+                    utilisateur=request.user,
+                    titre=data.get('titre', filename),
+                    donnees_cv=data,
+                    est_public=False
+                )
+                
+                print(f"✅ CV JSON créé avec ID: {cv.id}")
+                return JsonResponse({'success': True, 'id': cv.id})
+                
+            elif filename.endswith('.pdf'):
+                print("📄 Traitement fichier PDF...")
+                # Créer un CV minimal avec le fichier PDF
+                cv = CVGenere.objects.create(
+                    utilisateur=request.user,
+                    titre=filename.replace('.pdf', ''),
+                    donnees_cv={'prenom': filename.replace('.pdf', ''), 'nom': '', 'fichier_original': filename},
+                    est_public=False
+                )
+                
+                # Sauvegarder le fichier PDF
+                cv.fichier_pdf.save(filename, ContentFile(file.read()))
+                
+                print(f"✅ CV PDF créé avec ID: {cv.id}")
+                return JsonResponse({'success': True, 'id': cv.id})
+                
+            elif filename.endswith('.docx'):
+                print("📄 Traitement fichier DOCX...")
+                # Créer un CV minimal avec le fichier DOCX
+                cv = CVGenere.objects.create(
+                    utilisateur=request.user,
+                    titre=filename.replace('.docx', ''),
+                    donnees_cv={'prenom': filename.replace('.docx', ''), 'nom': '', 'fichier_original': filename},
+                    est_public=False
+                )
+                
+                # Sauvegarder le fichier DOCX
+                cv.fichier_docx.save(filename, ContentFile(file.read()))
+                
+                print(f"✅ CV DOCX créé avec ID: {cv.id}")
+                return JsonResponse({'success': True, 'id': cv.id})
+                
+            else:
+                print(f"❌ Format non supporté: {filename}")
+                return JsonResponse({'error': 'Format non supporté. Utilisez .pdf, .docx ou .json'}, status=400)
+                
+        except json.JSONDecodeError as e:
+            print(f"❌ Erreur JSON: {e}")
+            return JsonResponse({'error': 'Fichier JSON invalide'}, status=400)
+        except Exception as e:
+            print(f"❌ Erreur: {e}")
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+
+@login_required
+def get_dossier_documents(request, dossier_id):
+    """Retourne la liste des documents d'un dossier en JSON"""
+    dossier = get_object_or_404(DossierSoumission, id=dossier_id)
+    
+    # Vérifier que l'entreprise a le droit
+    if dossier.entreprise.user != request.user:
+        return JsonResponse({'error': 'Non autorisé'}, status=403)
+    
+    documents = dossier.documents.all()
+    
+    data = {
+        'documents': [
+            {
+                'id': doc.id,
+                'nom_document': doc.nom_document,
+                'statut': doc.statut,
+                'taille_fichier': doc.taille_fichier,
+                'date_generation': doc.date_generation.strftime('%d/%m/%Y %H:%M'),
+            }
+            for doc in documents
+        ]
+    }
+    
+    return JsonResponse(data)
+
+@login_required
+def modifier_cv(request, cv_id):
+    """Modifier un CV - Version simple"""
+    cv = get_object_or_404(CVGenere, id=cv_id, utilisateur=request.user)
+    
+    if request.method == 'POST':
+        # Mettre à jour le titre
+        cv.titre = request.POST.get('titre', cv.titre)
+        cv.save()
+        messages.success(request, "CV modifié avec succès")
+        return redirect('myAppli:mes_cvs')
+    
+    return render(request, 'myAppli/outils_emploi/modifier_cv.html', {'cv': cv})
