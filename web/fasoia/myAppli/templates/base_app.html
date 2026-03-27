@@ -411,22 +411,22 @@
             
             <!-- Navigation -->
             <nav class="sidebar-nav">
-                <!-- Section Recherche -->
-                <div class="nav-section">
-                    <div class="nav-section-title">Recherche</div>
-                    <a href="{% url 'myAppli:trouver_emploi' %}" class="nav-item {% if request.resolver_match.url_name == 'trouver_emploi' %}active{% endif %}">
-                        <i class="fa fa-search"></i>
-                        <span>Trouver un emploi</span>
-                        {% if total_offres > 0 %}
-                        <span class="nav-badge">{{ total_offres }}</span>
-                        {% endif %}
-                    </a>
-                    <a href="{% url 'myAppli:opportunites' %}" class="nav-item {% if request.resolver_match.url_name == 'opportunites' %}active{% endif %}">
-                        <i class="fa fa-briefcase"></i>
-                        <span>Opportunités</span>
-                        <span class="nav-badge">{{ total_opportunites|default:"0" }}</span>
-                    </a>
-                </div>
+
+            <!-- Section Recherche -->
+            <div class="nav-section">
+                <div class="nav-section-title">Recherche</div>
+                <a href="{% url 'myAppli:trouver_emploi' %}" class="nav-item">
+                    <i class="fa fa-search"></i>
+                    <span>Trouver un emploi</span>
+                </a>
+                
+                <!-- Lien vers les opportunités personnalisées du dashboard -->
+                <a href="{% url 'myAppli:dashboard_opportunites' %}" class="nav-item">
+                    <i class="fa fa-briefcase"></i>
+                    <span>Mes opportunités</span>
+                    <span class="nav-badge">{{ total_opportunites|default:"0" }}</span>
+                </a>
+            </div>
                 
                 <!-- Section Outils -->
                 <div class="nav-section">

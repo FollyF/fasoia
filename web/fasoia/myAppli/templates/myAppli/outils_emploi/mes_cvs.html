@@ -183,88 +183,82 @@
         font-size: 11px;
     }
     
+    /* Actions - Style épuré et professionnel */
     .cv-actions {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 6px;
         margin-top: 15px;
         padding-top: 15px;
         border-top: 1px solid var(--border-color);
     }
-    
+
     .action-btn {
         flex: 1;
-        min-width: 50px;
-        padding: 8px;
-        border: none;
-        border-radius: 8px;
+        min-width: 65px;
+        padding: 6px 8px;
+        border-radius: 5px;
         cursor: pointer;
-        transition: all 0.3s ease;
-        font-size: 12px;
+        transition: all 0.2s ease;
+        font-size: 11px;
+        font-weight: 500;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 5px;
         text-decoration: none;
+        background: transparent;
+        border: 1px solid #444;
+        color: var(--text-secondary);
     }
-    
+
     .action-btn i {
-        font-size: 12px;
+        font-size: 11px;
     }
-    
-    .btn-view {
-        background: rgba(23, 162, 184, 0.2);
-        color: var(--info-color);
-        border: 1px solid var(--info-color);
-    }
-    
-    .btn-view:hover {
-        background: var(--info-color);
-        color: white;
-    }
-    
-    .btn-download {
-        background: rgba(30, 215, 96, 0.2);
+
+    .action-btn:hover {
+        background: rgba(30, 215, 96, 0.1);
+        border-color: var(--primary-color);
         color: var(--primary-color);
-        border: 1px solid var(--primary-color);
+        transform: translateY(-1px);
     }
-    
-    .btn-download:hover {
-        background: var(--primary-color);
-        color: black;
+
+    /* Bouton Voir */
+    .action-btn.btn-view {
+        border-color: #444;
     }
-    
-    .btn-edit {
-        background: rgba(255, 193, 7, 0.2);
+
+    .action-btn.btn-view:hover {
+        border-color: var(--info-color);
+        color: var(--info-color);
+        background: rgba(23, 162, 184, 0.1);
+    }
+
+    /* Bouton Télécharger */
+    .action-btn.btn-download:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    /* Bouton Modifier */
+    .action-btn.btn-edit:hover {
+        border-color: var(--warning-color);
         color: var(--warning-color);
-        border: 1px solid var(--warning-color);
+        background: rgba(255, 193, 7, 0.1);
     }
-    
-    .btn-edit:hover {
-        background: var(--warning-color);
-        color: black;
-    }
-    
-    .btn-delete {
-        background: rgba(255, 68, 68, 0.2);
-        color: var(--danger-color);
-        border: 1px solid var(--danger-color);
-    }
-    
-    .btn-delete:hover {
-        background: var(--danger-color);
-        color: white;
-    }
-    
-    .btn-duplicate {
-        background: rgba(40, 167, 69, 0.2);
+
+    /* Bouton Dupliquer */
+    .action-btn.btn-duplicate:hover {
+        border-color: var(--success-color);
         color: var(--success-color);
-        border: 1px solid var(--success-color);
+        background: rgba(40, 167, 69, 0.1);
     }
-    
-    .btn-duplicate:hover {
-        background: var(--success-color);
-        color: white;
+
+    /* Bouton Supprimer */
+    .action-btn.btn-delete:hover {
+        border-color: var(--danger-color);
+        color: var(--danger-color);
+        background: rgba(255, 68, 68, 0.1);
     }
     
     /* Modal */
@@ -293,6 +287,26 @@
     
     .modal-body {
         padding: 20px;
+    }
+
+    /* Centrage et taille du modal d'aperçu */
+    #previewModal .modal-dialog {
+        width: 90%;
+        max-width: 800px;
+        margin: 30px auto;
+    }
+
+    #previewModal .modal-content {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 15px;
+        min-height: 80vh;
+    }
+
+    #previewModal .modal-body {
+        padding: 0;
+        height: 70vh;
+        overflow: hidden;
     }
     
     .preview-iframe {
@@ -327,6 +341,19 @@
     /* Responsive */
     @media (max-width: 768px) {
 
+        #previewModal .modal-dialog {
+            width: 95%;
+            margin: 20px auto;
+        }
+        
+        #previewModal .modal-body {
+            height: 60vh;
+        }
+        
+        .preview-iframe {
+            height: 60vh;
+        }
+
         .page-header {
             padding: 30px 20px;
         }
@@ -348,12 +375,17 @@
         }
         
         .cv-actions {
-            flex-wrap: wrap;
+            gap: 5px;
         }
         
         .action-btn {
-            flex: 1;
-            min-width: 70px;
+            min-width: 55px;
+            font-size: 10px;
+            padding: 5px 6px;
+        }
+        
+        .action-btn span {
+            display: inline; /* Garder le texte sur mobile */
         }
     }
     
@@ -362,16 +394,14 @@
             grid-template-columns: 1fr;
         }
         
-        .action-btn span {
-            display: none;
-        }
-        
         .action-btn {
-            min-width: 40px;
+            min-width: 45px;
+            font-size: 9px;
+            padding: 4px 5px;
         }
         
         .action-btn i {
-            font-size: 16px;
+            font-size: 10px;
         }
     }
     
@@ -416,17 +446,7 @@
         }
     }
 
-    /* Centrage du modal */
-    .modal {
-        text-align: center;
-    }
-
-    .modal-dialog {
-        display: inline-block;
-        width: 300px;
-        margin: 100px auto;
-        text-align: left;
-    }
+    
 
 </style>
 {% endblock %}
@@ -551,13 +571,15 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">Aperçu du CV</h4>
+                <h4 class="modal-title">
+                    <i class="fa fa-file-text-o"></i> Aperçu du CV
+                </h4>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <iframe id="previewIframe" class="preview-iframe"></iframe>
+                <iframe id="previewIframe" class="preview-iframe" title="Aperçu du CV"></iframe>
             </div>
         </div>
     </div>
@@ -639,9 +661,10 @@ function downloadCV(cvId, format) {
     showToast(`Téléchargement du CV au format ${format.toUpperCase()} en cours...`);
 }
 
-// 3. Modifier
+// 3. Modifier - Redirige vers le générateur avec les données du CV
 function editCV(cvId) {
-    window.location.href = `/cv/modifier/${cvId}/`;
+    // Rediriger vers le générateur avec l'ID du CV
+    window.location.href = `/generer/cv/?edit=${cvId}`;
 }
 
 // 4. Supprimer

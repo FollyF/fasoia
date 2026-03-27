@@ -301,6 +301,21 @@
             padding: 20px;
         }
     }
+
+    .btn-generate:hover {
+        background-color: #15b050;
+        transform: scale(1.02);
+    }
+    .btn-secondary:hover {
+        background-color: #5a6268 !important;
+        transform: scale(1.02);
+    }
+    .btn-warning:hover {
+        background-color: #e0a800 !important;
+        transform: scale(1.02);
+    }
+
+
 </style>
 {% endblock %}
 
@@ -321,6 +336,12 @@
     
     <form method="POST" class="cv-form" id="cvForm" target="_blank">
         {% csrf_token %}
+
+        {% if is_edit_mode %}
+            <div class="alert alert-warning" style="background: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                <i class="fa fa-edit"></i> <strong>Mode édition</strong> - Vous modifiez le CV : {{ cv_a_modifier.titre }}
+            </div>
+        {% endif %}
         
         <div class="form-section">
             <h3>1. Choisissez un style</h3>
@@ -459,9 +480,22 @@
             <input type="hidden" name="format" id="formatInput" value="pdf">
         </div>
         
-        <button type="submit" class="btn-generate" id="generateBtn">
-            <i class="fa fa-magic"></i> Générer mon CV
-        </button>
+       <!-- Boutons d'action -->
+        <div class="d-flex justify-content-center gap-3 mt-4" style="display: flex; justify-content: center; gap: 15px;">
+            {% if is_edit_mode %}
+                <a href="{% url 'myAppli:mes_cvs' %}" class="btn btn-secondary" style="background: #6c757d; color: white; border-radius: 25px; padding: 12px 30px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fa fa-times"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-warning" style="background: #ffc107; color: black; border-radius: 25px; padding: 12px 30px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fa fa-save"></i> Mettre à jour
+                </button>
+            {% else %}
+                <button type="submit" class="btn-generate" style="background-color: #1ed760; color: black; border: none; border-radius: 25px; padding: 12px 40px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+                    <i class="fa fa-magic"></i> Générer mon CV
+                </button>
+            {% endif %}
+        </div>
+
     </form>
 </div>
 
@@ -491,7 +525,56 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+
 <script>
+
+// Pré-remplir le formulaire avec les données existantes
+// Pré-remplir le formulaire avec les données existantes
+{% if donnees_init %}
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("📝 Pré-remplissage du formulaire");
+    
+    // Données à pré-remplir
+    const donnees = {
+        prenom: "{{ donnees_init.prenom|default:''|escapejs }}",
+        nom: "{{ donnees_init.nom|default:''|escapejs }}",
+        email: "{{ donnees_init.email|default:''|escapejs }}",
+        telephone: "{{ donnees_init.telephone|default:''|escapejs }}",
+        adresse: "{{ donnees_init.adresse|default:''|escapejs }}",
+        ville: "{{ donnees_init.ville|default:''|escapejs }}",
+        pays: "{{ donnees_init.pays|default:''|escapejs }}",
+        permis: "{{ donnees_init.permis|default:''|escapejs }}",
+        resume: "{{ donnees_init.resume|default:''|escapejs }}",
+        competences: "{{ donnees_init.competences|default:''|escapejs }}",
+        langues: "{{ donnees_init.langues|default:''|escapejs }}",
+        centres_interet: "{{ donnees_init.centres_interet|default:''|escapejs }}",
+        experiences: "{{ donnees_init.experiences|default:''|escapejs }}",
+        formations: "{{ donnees_init.formations|default:''|escapejs }}",
+        style: "{{ donnees_init.style|default:'moderne'|escapejs }}"
+    };
+    
+    // Remplir les champs
+    for (const [champ, valeur] of Object.entries(donnees)) {
+        const input = document.querySelector(`[name="${champ}"]`);
+        if (input && valeur && valeur !== 'None') {
+            input.value = valeur;
+            console.log(`✅ Champ ${champ} rempli`);
+        }
+    }
+    
+    // Sélectionner le style
+    const style = donnees.style;
+    const styleOption = document.querySelector(`.style-option[data-style="${style}"]`);
+    if (styleOption) {
+        styleOption.click();
+        console.log(`✅ Style ${style} sélectionné`);
+    }
+});
+{% endif %}
+
 function selectStyle(element, style, isPremium) {
     if (isPremium && !{{ user.is_authenticated|yesno:"true,false" }}) {
         alert('Ce style est réservé aux membres premium. Inscrivez-vous ou connectez-vous pour y accéder.');

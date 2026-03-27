@@ -1,15 +1,15 @@
- {% extends "base.html" %}
+{% extends "base.html" %}
 
- {% load static %}
+{% load static %}
 
- {% block extra_css %}
+{% block extra_css %}
 
- <style>
+<style>
         :root {
             --blue-main: #0056a2;
             --blue-light: #e3f2fd;
             --bg-gray: #f0f2f5;
-            --text-dark: #e3f2fd;
+            --text-dark: #010f1a;
         }
 
         body {
@@ -46,7 +46,7 @@
 
         /* COLONNES */
         .main-content { flex: 3; width: 100%; }
-        .sidebar { flex: 1; min-width: 300px; }
+        .sidebar { flex: 1; min-width: 320px; }
 
         /* CARTES D'OPPORTUNITÉ */
         .opportunity-card, .sidebar-widget {
@@ -56,6 +56,11 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             border-radius: 0 0 8px 8px;
             overflow: hidden;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .opportunity-card:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
 
         .card-header {
@@ -71,34 +76,254 @@
             text-transform: uppercase;
         }
 
-        table { width: 100%; border-collapse: collapse; }
-        td { padding: 15px 20px; border-bottom: 1px solid #f0f0f0; font-size: 14px; cursor: pointer; }
-        tr:hover td { background-color: #fcfcfc; }
-
-        .title-link { color: var(--text-dark); text-decoration: none; font-weight: 600; display: block; margin-bottom: 4px; }
-        .date-label { color: #888; font-size: 12px; }
-
-        .card-footer { padding: 15px; text-align: center; border-top: 1px dashed #ddd; }
-        .btn-more { color: var(--blue-main); text-decoration: none; font-weight: bold; font-size: 13px; cursor: pointer; }
-
-        /* SIDEBAR STYLES */
-        .sidebar-widget { padding: 20px; }
-        .sidebar-widget h3 { margin-top: 0; font-size: 1rem; }
-        .stat-box {
-            background: var(--blue-main);
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 25px;
+        /* TABLE AVEC OMBRE */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
-		.empty-message {
-        padding: 30px;
-        text-align: center;
-        color: #888;
-        font-style: italic;
-    	}
+        td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        tr:hover td {
+            background-color: #fcfcfc;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .title-link {
+            color: var(--text-dark);
+            text-decoration: none;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .date-label {
+            color: #888;
+            font-size: 12px;
+        }
+
+        .company-name {
+            color: #666;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .badge { 
+            display: inline-block; 
+            background: var(--blue-main); 
+            color: white; 
+            padding: 2px 8px; 
+            border-radius: 12px; 
+            font-size: 10px; 
+            margin-left: 8px;
+        }
+
+        .card-footer {
+            padding: 15px;
+            text-align: center;
+            border-top: 1px dashed #ddd;
+            background: #fafafa;
+        }
+
+        .btn-more {
+            color: var(--blue-main);
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-more:hover {
+            color: #003d7a;
+            text-decoration: underline;
+        }
+
+        /* SIDEBAR WIDGETS STYLES */
+        .sidebar-widget {
+            padding: 20px;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .sidebar-widget:hover {
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        .sidebar-widget h3 {
+            margin-top: 0;
+            font-size: 1rem;
+            color: var(--blue-main);
+            border-bottom: 2px solid var(--blue-main);
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+
+        /* STAT BOX */
+        .stat-box {
+            background: linear-gradient(135deg, var(--blue-main) 0%, #003d7a 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 25px;
+            box-shadow: 0 6px 15px rgba(0,86,162,0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,86,162,0.4);
+        }
+
+        .stat-box span:first-child {
+            font-size: 2.2rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        /* ALERTES EMPLOI */
+        .alert-box {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-box p {
+            margin: 0 0 5px 0;
+            font-size: 13px;
+        }
+
+        .alert-box .alert-title {
+            font-weight: bold;
+            color: #ff9800;
+        }
+
+        /* MINI CALENDRIER */
+        .mini-calendar {
+            text-align: center;
+        }
+
+        .calendar-month {
+            background: var(--blue-main);
+            color: white;
+            padding: 8px;
+            border-radius: 8px 8px 0 0;
+            font-weight: bold;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: white;
+            border: 1px solid #eee;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            overflow: hidden;
+        }
+
+        .calendar-day {
+            padding: 8px 4px;
+            text-align: center;
+            font-size: 12px;
+            border-right: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+        }
+
+        .calendar-day.weekday {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: var(--blue-main);
+        }
+
+        .calendar-day.today {
+            background: var(--blue-main);
+            color: white;
+            border-radius: 50%;
+            margin: 2px;
+        }
+
+        /* COMPTE À REBOURS */
+        .countdown-box {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .countdown-number {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        /* TENDANCES */
+        .trend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .trend-item:last-child {
+            border-bottom: none;
+        }
+
+        .trend-title {
+            font-size: 13px;
+            color: #555;
+        }
+
+        .trend-value {
+            font-weight: bold;
+            color: var(--blue-main);
+        }
+
+        /* PROGRESSION */
+        .progress-item {
+            margin-bottom: 15px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--blue-main);
+            border-radius: 3px;
+            width: 0%;
+        }
+
+        .empty-message {
+            padding: 30px;
+            text-align: center;
+            color: #888;
+            font-style: italic;
+        }
 
         /* RESPONSIVE */
         @media (max-width: 900px) {
@@ -125,25 +350,23 @@
             </div>
             <table id="tableAO">
                 {% for offre in dernieres_offres %}
-                <tr>
-                    <td>
-                        <a href="{% url 'myAppli:detail_offre' offre.id %}" class="title-link">
-                            {{ offre.description|truncatechars:80 }}
-                        </a>
+                  <tr>
+                      <td>
+                        <span class="title-link">{{ offre.description|truncatechars:300 }}</span>
                         <span class="ref-label">Réf: OFFRE-{{ offre.id }}</span>
                         {% if offre.date_limite %}
                         <span class="date-label">Échéance : {{ offre.date_limite|date:"d/m/Y" }}</span>
                         {% endif %}
-                    </td>
-                </tr>
+                      </td>
+                  </tr>
                 {% empty %}
-                <tr>
+                  <tr>
                     <td class="empty-message">Aucun appel d'offre disponible pour le moment</td>
-                </tr>
+                  </tr>
                 {% endfor %}
             </table>
             <div class="card-footer">
-                <a href="{% url 'myAppli:opportunites' %}" class="btn-more">VOIR TOUS LES APPELS D'OFFRES →</a>
+                <a href="{% url 'myAppli:opportunites' %}#offres" class="btn-more">VOIR TOUS LES APPELS D'OFFRES →</a>
             </div>
         </div>
 
@@ -154,98 +377,230 @@
             </div>
             <table id="tableAMI">
                 {% for ami in derniers_amis %}
-                <tr>
-                    <td>
-                        <a href="{% url 'myAppli:detail_ami' ami.id %}" class="title-link">
-                            {{ ami.description|truncatechars:80 }}
-                        </a>
+                  <tr>
+                      <td>
+                        <span class="title-link">{{ ami.description|truncatechars:300 }}</span>
                         <span class="ref-label">Réf: AMI-{{ ami.id }}</span>
                         {% if ami.date_limite %}
                         <span class="date-label">Échéance : {{ ami.date_limite|date:"d/m/Y" }}</span>
                         {% endif %}
-                    </td>
-                </tr>
+                      </td>
+                  </tr>
                 {% empty %}
-                <tr>
+                  <tr>
                     <td class="empty-message">Aucune manifestation d'intérêt disponible pour le moment</td>
-                </tr>
+                  </tr>
                 {% endfor %}
             </table>
             <div class="card-footer">
-                <a href="{% url 'myAppli:opportunites' %}" class="btn-more">VOIR TOUTES LES AMI →</a>
+                <a href="{% url 'myAppli:opportunites' %}#amis" class="btn-more">VOIR TOUTES LES AMI →</a>
             </div>
         </div>
+
+        <!-- Offres d'emploi -->
+        <div class="opportunity-card">
+            <div class="card-header">
+                <h2><i class="fa fa-briefcase"></i> Offres d'emploi ({{ derniers_emplois|length }})</h2>
+            </div>
+            <table id="tableEmplois">
+                {% for emploi in derniers_emplois %}
+                  <tr>
+                      <td>
+                        <span class="title-link">{{ emploi.titre }}</span>
+                        <div class="company-name">
+                            <i class="fa fa-building"></i> 
+                            {% if emploi.recruteur %}
+                                {{ emploi.recruteur.organisation }}
+                            {% else %}
+                                {{ emploi.entreprise_nom|default:"Entreprise partenaire" }}
+                            {% endif %}
+                            {% if emploi.type_contrat %}
+                                <span class="badge">{{ emploi.get_type_contrat_display }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="date-label">
+                            <i class="fa fa-map-marker"></i> {{ emploi.ville|default:emploi.localisation|default:"Non spécifiée" }}
+                            {% if emploi.date_limite %}
+                            <span style="margin-left: 12px;"><i class="fa fa-calendar"></i> Échéance : {{ emploi.date_limite|date:"d/m/Y" }}</span>
+                            {% endif %}
+                        </div>
+                      </td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td class="empty-message">
+                        <i class="fa fa-info-circle"></i> Aucune offre d'emploi disponible pour le moment
+                    </td>
+                  </tr>
+                {% endfor %}
+            </table>
+            {% if derniers_emplois %}
+            <div class="card-footer">
+                <a href="{% url 'myAppli:opportunites' %}#emplois" class="btn-more">VOIR TOUTES LES OFFRES D'EMPLOI →</a>
+            </div>
+            {% endif %}
+        </div>
+        
     </main>
 
     <aside class="sidebar">
+        <!-- Statistiques -->
         <div class="stat-box">
-            <span style="font-size: 2rem; font-weight: bold;">{{ total_opportunites }}</span><br>
+            <span>{{ total_opportunites }}</span>
             <span>Opportunités disponibles</span>
         </div>
+
+        <!-- Alerte Emploi -->
         <div class="sidebar-widget">
-            <h3>Assistance</h3>
-            <p style="font-size: 14px;">📞 +226 25 30 00 00<br>📧 contact@portail.gov.bf</p>
+            <h3><i class="fa fa-bell"></i> Alerte emploi</h3>
+            <div class="alert-box">
+                <p class="alert-title">📧 Recevez les nouvelles offres</p>
+                <p style="font-size: 12px;">Soyez informé dès qu'une opportunité correspond à votre profil</p>
+                <input type="email" placeholder="Votre email" style="width: 100%; padding: 8px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+                <button style="background: var(--blue-main); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; width: 100%;">S'abonner</button>
+            </div>
         </div>
+
+        <!-- Mini Calendrier -->
         <div class="sidebar-widget">
-            <h3>Liens utiles</h3>
-            <ul style="font-size: 13px; padding-left: 20px;">
-                <li><a href="#" style="color:var(--blue-main)">Code des Marchés 2026</a></li>
-                <li><a href="#" style="color:var(--blue-main)">Guide du soumissionnaire</a></li>
-                <li><a href="#" style="color:var(--blue-main)">Calendrier des publications</a></li>
+            <h3><i class="fa fa-calendar"></i> Calendrier</h3>
+            <div class="mini-calendar">
+                <div class="calendar-month">Mars 2026</div>
+                <div class="calendar-days">
+                    <div class="calendar-day weekday">L</div>
+                    <div class="calendar-day weekday">M</div>
+                    <div class="calendar-day weekday">M</div>
+                    <div class="calendar-day weekday">J</div>
+                    <div class="calendar-day weekday">V</div>
+                    <div class="calendar-day weekday">S</div>
+                    <div class="calendar-day weekday">D</div>
+                    <div class="calendar-day">1</div>
+                    <div class="calendar-day">2</div>
+                    <div class="calendar-day">3</div>
+                    <div class="calendar-day">4</div>
+                    <div class="calendar-day">5</div>
+                    <div class="calendar-day">6</div>
+                    <div class="calendar-day">7</div>
+                    <div class="calendar-day">8</div>
+                    <div class="calendar-day">9</div>
+                    <div class="calendar-day">10</div>
+                    <div class="calendar-day">11</div>
+                    <div class="calendar-day">12</div>
+                    <div class="calendar-day">13</div>
+                    <div class="calendar-day">14</div>
+                    <div class="calendar-day">15</div>
+                    <div class="calendar-day today">16</div>
+                    <div class="calendar-day">17</div>
+                    <div class="calendar-day">18</div>
+                    <div class="calendar-day">19</div>
+                    <div class="calendar-day">20</div>
+                    <div class="calendar-day">21</div>
+                    <div class="calendar-day">22</div>
+                    <div class="calendar-day">23</div>
+                    <div class="calendar-day">24</div>
+                    <div class="calendar-day">25</div>
+                    <div class="calendar-day">26</div>
+                    <div class="calendar-day">27</div>
+                    <div class="calendar-day">28</div>
+                    <div class="calendar-day">29</div>
+                    <div class="calendar-day">30</div>
+                    <div class="calendar-day">31</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compte à rebours (prochaine échéance) -->
+        <div class="sidebar-widget">
+            <h3><i class="fa fa-hourglass-half"></i> Prochaine échéance</h3>
+            <div class="countdown-box">
+                <div class="countdown-number">5 jours</div>
+                <div style="font-size: 12px;">avant la clôture de l'appel d'offres</div>
+                <div style="font-size: 11px; margin-top: 8px;">AO-2026-0042 - 31/03/2026</div>
+            </div>
+        </div>
+
+        <!-- Tendances du marché -->
+        <div class="sidebar-widget">
+            <h3><i class="fa fa-line-chart"></i> Tendances du marché</h3>
+            <div class="trend-item">
+                <span class="trend-title">📊 Secteurs les plus actifs</span>
+                <span class="trend-value">BTP (45%)</span>
+            </div>
+            <div class="trend-item">
+                <span class="trend-title">🏗️ Technologies</span>
+                <span class="trend-value">+28%</span>
+            </div>
+            <div class="trend-item">
+                <span class="trend-title">📈 Appels d'offres ce mois</span>
+                <span class="trend-value">124</span>
+            </div>
+            <div class="trend-item">
+                <span class="trend-title">🎯 Taux de participation</span>
+                <span class="trend-value">67%</span>
+            </div>
+        </div>
+
+        <!-- Progression de votre profil -->
+        <div class="sidebar-widget">
+            <h3><i class="fa fa-chart-simple"></i> Votre progression</h3>
+            <div class="progress-item">
+                <div class="progress-label">
+                    <span>Complétion du profil</span>
+                    <span>45%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 45%;"></div>
+                </div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-label">
+                    <span>CV complété</span>
+                    <span>60%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 60%; background: #ff9800;"></div>
+                </div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-label">
+                    <span>Candidatures envoyées</span>
+                    <span>3/10</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 30%;"></div>
+                </div>
+            </div>
+            <a href="{% url 'myAppli:profil' %}" style="display: block; text-align: center; margin-top: 10px; color: var(--blue-main); font-size: 12px;">Compléter mon profil →</a>
+        </div>
+
+        <!-- Liens rapides -->
+        <div class="sidebar-widget">
+            <h3><i class="fa fa-link"></i> Liens rapides</h3>
+            <ul style="list-style: none; padding: 0; margin: 0;">
+                <li style="margin-bottom: 10px;"><a href="{% url 'myAppli:generer_cv' %}" style="color: #555; text-decoration: none;"><i class="fa fa-file-pdf-o" style="color: var(--blue-main); width: 25px;"></i> Générateur de CV</a></li>
+                <li style="margin-bottom: 10px;"><a href="{% url 'myAppli:generer_lettre_motivation' %}" style="color: #555; text-decoration: none;"><i class="fa fa-envelope-o" style="color: var(--blue-main); width: 25px;"></i> Lettre de motivation</a></li>
+                <li style="margin-bottom: 10px;"><a href="#" style="color: #555; text-decoration: none;"><i class="fa fa-handshake-o" style="color: var(--blue-main); width: 25px;"></i> Préparation entretien</a></li>
+                <li style="margin-bottom: 10px;"><a href="#" style="color: #555; text-decoration: none;"><i class="fa fa-question-circle" style="color: var(--blue-main); width: 25px;"></i> FAQ</a></li>
             </ul>
+        </div>
+
+        <!-- Assistance -->
+        <div class="sidebar-widget">
+            <h3><i class="fa fa-headphones"></i> Assistance</h3>
+            <p style="font-size: 14px; margin: 0 0 8px 0;">
+                <i class="fa fa-phone"></i> 📞 +226 25 30 00 00
+            </p>
+            <p style="font-size: 14px; margin: 0;">
+                <i class="fa fa-envelope"></i> 📧 contact@fasoia.com
+            </p>
+            <hr style="margin: 15px 0;">
+            <p style="font-size: 12px; color: #888; text-align: center;">
+                <i class="fa fa-clock-o"></i> Lun-Ven: 8h-18h
+            </p>
         </div>
     </aside>
 </div>
 <!-- ===== FIN SECTION OPPORTUNITÉS DYNAMIQUE ===== -->
-
-
-
-<!-- divider section -->
-<div class="container">
-	<div class="row">
-		<div class="col-md-1 col-sm-1"></div>
-		<div class="col-md-10 col-sm-10">
-			<hr>
-		</div>
-		<div class="col-md-1 col-sm-1"></div>
-	</div>
-</div>
-
-
-<!-- divider section -->
-<div class="container">
-	<div class="row">
-		<div class="col-md-1 col-sm-1"></div>
-		<div class="col-md-10 col-sm-10">
-			<hr>
-		</div>
-		<div class="col-md-1 col-sm-1"></div>
-	</div>
-</div>
-
-
-<!-- divider section -->
-<div class="container">
-	<div class="row">
-		<div class="col-md-1 col-sm-1"></div>
-		<div class="col-md-10 col-sm-10">
-			<hr>
-		</div>
-		<div class="col-md-1 col-sm-1"></div>
-	</div>
-</div>
-	
-
-<!-- divider section -->
-<div class="container">
-	<div class="row">
-		<div class="col-md-1 col-sm-1"></div>
-		<div class="col-md-10 col-sm-10">
-			<hr>
-		</div>
-		<div class="col-md-1 col-sm-1"></div>
-	</div>
-</div>
 
 <!-- divider section -->
 <div class="container">
@@ -324,7 +679,5 @@
             }
         });
     }
-	
-
 </script>
 {% endblock %}

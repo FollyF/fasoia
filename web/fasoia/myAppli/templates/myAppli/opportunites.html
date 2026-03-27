@@ -289,7 +289,7 @@
     <button class="tab-btn active" onclick="openTab(event, 'offres')">
         <i class="fa fa-gavel"></i> Appels d'offres
     </button>
-    <button class="tab-btn" onclick="openTab(event, 'ami')">
+    <button class="tab-btn" onclick="openTab(event, 'amis')">
         <i class="fa fa-bullhorn"></i> Avis de manifestation
     </button>
     <button class="tab-btn" onclick="openTab(event, 'emplois')">
@@ -300,7 +300,6 @@
 <div class="content-container">
     <!-- ===== ONGLET APPELS D'OFFRES ===== -->
     <div id="offres" class="tab-panel active">
-        <h3>📄 Appels d'offres en cours</h3>
         <p>Liste des consultations publiques et privées :</p>
         <table>
             <thead>
@@ -312,7 +311,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for i in offre %}
+                {% for i in offres %}
                 <tr>
                     <td><strong>AO-2026-00{{ forloop.counter }}</strong></td>
                     <td>{{ i.description|truncatechars:80 }}</td>
@@ -386,8 +385,7 @@
     </div>
 
     <!-- ===== ONGLET AVIS DE MANIFESTATION ===== -->
-    <div id="ami" class="tab-panel">
-        <h3>📋 Avis de manifestation d'intérêt</h3>
+    <div id="amis" class="tab-panel">
         <p>AMI en cours et à venir :</p>
         <table>
             <thead>
@@ -399,7 +397,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for i in ami %}
+                {% for i in amis %}
                 <tr>
                     <td><strong>AMI-2026-{{ forloop.counter }}</strong></td>
                     <td>{{ i.description|truncatechars:80 }}</td>
@@ -468,13 +466,12 @@
             </tbody>
         </table>
         <div class="result-count">
-            <i class="fa fa-list"></i> Affichage de <span id="amiCount">{{ ami|length }}</span> résultat(s)
+            <i class="fa fa-list"></i> Affichage de <span id="amiCount">{{ amis|length }}</span> résultat(s)
         </div>
     </div>
 
     <!-- ===== ONGLET OFFRES D'EMPLOI ===== -->
     <div id="emplois" class="tab-panel">
-        <h3>💼 Offres d'emploi récentes</h3>
         <p>Découvrez les dernières opportunités professionnelles :</p>
         <table>
             <thead>
@@ -661,7 +658,7 @@
         // Mettre à jour les compteurs si besoin
         const counts = {
             offres: document.getElementById('offresCount'),
-            ami: document.getElementById('amiCount'),
+            amis: document.getElementById('amiCount'),
             emplois: document.getElementById('emploisCount')
         };
         
@@ -677,6 +674,30 @@
             e.preventDefault();
             document.getElementById('searchInput').focus();
         }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+    // Vérifier s'il y a une ancre dans l'URL
+        const hash = window.location.hash;
+        if (hash) {
+            const tabId = hash.substring(1); // enlève le #
+            const tabPanel = document.getElementById(tabId);
+            const tabButton = document.querySelector(`.tab-btn[onclick*="${tabId}"]`);
+            
+            if (tabPanel && tabButton) {
+                // Cacher tous les panneaux
+                document.querySelectorAll('.tab-panel').forEach(panel => {
+                    panel.classList.remove('active');
+                });
+                // Désactiver tous les boutons
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                // Activer le bon panneau et bouton
+                tabPanel.classList.add('active');
+                tabButton.classList.add('active');
+            }
+        }       
     });
 </script>
 {% endblock %}
