@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/6.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
+import dj_database_url
 import os
 from pathlib import Path
 from decouple import config
@@ -22,12 +23,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-n6iyh#cucsuh8bf#^9q$l^!)$x_n7af#!9fz#z8)s3$oqhbr(4'
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-n6iyh#cucsuh8bf#^9q$l^!)$x_n7af#!9fz#z8)s3$oqhbr(4')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-# Dans fasoia/settings.py
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 #Ajoute l'URL de ngrok aux origines de confiance pour le CSRF
 CSRF_TRUSTED_ORIGINS = [
@@ -37,7 +36,8 @@ CSRF_TRUSTED_ORIGINS = [
 ALLOWED_HOSTS = [
     '127.0.0.1',      # ← Important
     'localhost',      # ← Gardez-le aussi pour compatibilité
-    'barefacedly-phraseologic-ruby.ngrok-free.dev'
+    'barefacedly-phraseologic-ruby.ngrok-free.dev',
+    '.onrender.com',
 ]
 
 # Application definition
@@ -88,15 +88,22 @@ WSGI_APPLICATION = 'fasoia.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+#DATABASES = {
+#    'default': {
+#        'ENGINE': config('DB_ENGINE'),
+#       'NAME': config('DB_NAME'),
+#        'USER': config('DB_USER'),
+#        'PASSWORD': config('DB_PASSWORD'),
+#        'HOST': config('DB_HOST'),
+#        'PORT': config('DB_PORT'),
+#    }
+#}
+
 DATABASES = {
-    'default': {
-        'ENGINE': config('DB_ENGINE'),
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),
-    }
+    'default': dj_database_url.config(
+        default=f"postgres://{config('DB_USER')}:{config('DB_PASSWORD')}@{config('DB_HOST')}:{config('DB_PORT')}/{config('DB_NAME')}",
+        conn_max_age=600
+    )
 }
 
 
