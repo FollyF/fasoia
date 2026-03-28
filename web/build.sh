@@ -13,8 +13,8 @@ python fasoia/manage.py collectstatic --no-input
 python fasoia/manage.py migrate
 
 # 4. L'IMPORTATION UNIQUE
-if [ -f "fasoia/db_locale.json" ]; then
-    echo "--- DEBUT DE L'IMPORTATION DES DONNÉES ---"
-    python fasoia/manage.py loaddata fasoia/db_locale.json
-    echo "--- IMPORTATION REUSSIE ---"
-fi
+#if [ -f "fasoia/db_locale.json" ]; then
+#    echo "--- DEBUT DE L'IMPORTATION DES DONNÉES ---"
+#    python fasoia/manage.py loaddata fasoia/db_locale.json
+#    echo "--- IMPORTATION REUSSIE ---"
+#fi
