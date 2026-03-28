@@ -88,16 +88,6 @@ WSGI_APPLICATION = 'fasoia.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-#DATABASES = {
-#    'default': {
-#        'ENGINE': config('DB_ENGINE'),
-#       'NAME': config('DB_NAME'),
-#        'USER': config('DB_USER'),
-#        'PASSWORD': config('DB_PASSWORD'),
-#        'HOST': config('DB_HOST'),
-#        'PORT': config('DB_PORT'),
-#    }
-#}
 
 # Si on est sur Render, DATABASE_URL sera remplie
 if os.environ.get('DATABASE_URL'):
