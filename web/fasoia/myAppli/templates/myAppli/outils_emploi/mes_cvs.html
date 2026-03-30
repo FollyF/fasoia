@@ -634,7 +634,7 @@ function viewCV(cvId) {
     iframe.srcdoc = '<html><body style="background: white; padding: 20px; text-align: center;">Chargement de l\'aperçu...</body></html>';
     
     // Récupérer le HTML
-    fetch(`/cv/apercu/${cvId}/`)
+    fetch(`/cv/apercu/cv/${cvId}/`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);

@@ -664,5 +664,188 @@ window.addEventListener('load', function() {
         btn.innerHTML = '<i class="fa fa-magic"></i> Générer mon CV';
     }
 });
+// Fonction pour afficher l'aperçu d'un style de CV
+function showPreview(style) {
+    console.log("📄 Aperçu du style:", style);
+    
+    // Afficher le modal
+    $('#previewModal').modal('show');
+    const iframe = document.getElementById('previewIframe');
+    
+    // Afficher un message de chargement
+    iframe.srcdoc = `
+        <html>
+        <body style="background: white; padding: 20px; text-align: center; font-family: Arial;">
+            <div style="margin-top: 100px;">
+                <div style="border: 3px solid #1ed760; width: 50px; height: 50px; border-radius: 50%; border-top-color: transparent; margin: 0 auto 20px; animation: spin 1s linear infinite;"></div>
+                <p>Chargement de l'aperçu du style <strong>${style}</strong>...</p>
+            </div>
+            <style>
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            </style>
+        </body>
+        </html>
+    `;
+    
+    // Appeler l'URL d'aperçu
+    fetch(`/cv/apercu/style/${style}/`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP ${response.status}`);
+            }
+            return response.text();
+        })
+        .then(html => {
+            console.log("✅ Aperçu chargé avec succès");
+            iframe.srcdoc = html;
+        })
+        .catch(error => {
+            console.error("❌ Erreur lors du chargement de l'aperçu:", error);
+            
+            // Afficher un aperçu par défaut en cas d'erreur
+            iframe.srcdoc = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        padding: 40px;
+                        max-width: 800px;
+                        margin: 0 auto;
+                        background: #f5f5f5;
+                    }
+                    .cv-preview {
+                        background: white;
+                        border-radius: 10px;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                        overflow: hidden;
+                    }
+                    .header {
+                        background: linear-gradient(135deg, #1ed760, #15b050);
+                        color: white;
+                        padding: 30px;
+                        text-align: center;
+                    }
+                    .header h1 {
+                        margin: 0;
+                        font-size: 28px;
+                    }
+                    .header p {
+                        margin: 5px 0 0;
+                        opacity: 0.9;
+                    }
+                    .content {
+                        padding: 30px;
+                    }
+                    .section {
+                        margin-bottom: 25px;
+                    }
+                    .section-title {
+                        color: #1ed760;
+                        border-bottom: 2px solid #1ed760;
+                        padding-bottom: 5px;
+                        margin-bottom: 15px;
+                        font-size: 18px;
+                    }
+                    .experience-item {
+                        margin-bottom: 20px;
+                    }
+                    .experience-title {
+                        font-weight: bold;
+                        font-size: 16px;
+                    }
+                    .experience-date {
+                        color: #666;
+                        font-size: 12px;
+                        margin-bottom: 5px;
+                    }
+                    .skills {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 10px;
+                    }
+                    .skill-tag {
+                        background: #f0f0f0;
+                        padding: 5px 10px;
+                        border-radius: 20px;
+                        font-size: 14px;
+                    }
+                    .preview-notice {
+                        background: #fff3cd;
+                        border: 1px solid #ffc107;
+                        border-radius: 5px;
+                        padding: 10px;
+                        margin-top: 20px;
+                        text-align: center;
+                        font-size: 12px;
+                        color: #856404;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="cv-preview">
+                    <div class="header">
+                        <h1>Ramata TALL</h1>
+                        <p>Développeuse Full Stack</p>
+                    </div>
+                    <div class="content">
+                        <div class="section">
+                            <div class="section-title">Profil</div>
+                            <p>Professionnelle dynamique avec 5 ans d'expérience dans le développement web. Passionnée par les nouvelles technologies et le travail en équipe.</p>
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-title">Expériences</div>
+                            <div class="experience-item">
+                                <div class="experience-title">Développeuse Full Stack - TechCorp</div>
+                                <div class="experience-date">2021 - Présent</div>
+                                <p>Développement d'applications web avec Django et React. Gestion d'une équipe de 3 développeurs.</p>
+                            </div>
+                            <div class="experience-item">
+                                <div class="experience-title">Développeuse Junior - StartupIA</div>
+                                <div class="experience-date">2019 - 2021</div>
+                                <p>Maintenance et évolution d'applications existantes. Participation à la refonte du site principal.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-title">Formations</div>
+                            <div class="experience-item">
+                                <div class="experience-title">Master en Informatique - Université de Paris</div>
+                                <div class="experience-date">2019</div>
+                            </div>
+                            <div class="experience-item">
+                                <div class="experience-title">Licence en Mathématiques - Université de Lyon</div>
+                                <div class="experience-date">2017</div>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-title">Compétences</div>
+                            <div class="skills">
+                                <span class="skill-tag">Python</span>
+                                <span class="skill-tag">Django</span>
+                                <span class="skill-tag">JavaScript</span>
+                                <span class="skill-tag">React</span>
+                                <span class="skill-tag">SQL</span>
+                                <span class="skill-tag">Git</span>
+                            </div>
+                        </div>
+                        
+                        <div class="preview-notice">
+                            ⚡ Aperçu du style "${style}" - Les données réelles seront utilisées lors de la génération de votre CV
+                        </div>
+                    </div>
+                </div>
+            </body>
+            </html>
+            `;
+    });
+}
 </script>
 {% endblock %}
