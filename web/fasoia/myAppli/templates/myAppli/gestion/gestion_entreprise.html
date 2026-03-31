@@ -1,0 +1,1971 @@
+{% extends "base_app.html" %}
+{% load static %}
+
+{% block title %}Outils de Gestion — FasoIA{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+    --bg:        #0d0d0d;
+    --surface:   #161616;
+    --surface2:  #1f1f1f;
+    --border:    #2a2a2a;
+    --border2:   #333;
+    --green:     #1ed760;
+    --green-dim: rgba(30,215,96,.08);
+    --green-mid: rgba(30,215,96,.18);
+    --text:      #f0f0f0;
+    --muted:     #777;
+    --muted2:    #555;
+    --accent-blue:   #3b82f6;
+    --accent-purple: #8b5cf6;
+    --accent-orange: #f97316;
+    --accent-pink:   #ec4899;
+    --accent-cyan:   #06b6d4;
+    --accent-yellow: #eab308;
+    --r: 12px;
+    --r-sm: 8px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* ── PAGE WRAPPER ──────────────────────────────────── */
+.ge-wrap {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 36px 24px 80px;
+}
+
+/* ── HERO ──────────────────────────────────────────── */
+.ge-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+}
+.ge-hero-left h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    font-weight: 700;
+    line-height: 1.15;
+}
+.ge-hero-left h1 em {
+    font-style: normal;
+    color: var(--green);
+}
+.ge-hero-left p {
+    color: var(--muted);
+    margin-top: 8px;
+    max-width: 520px;
+}
+.ge-hero-stats {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.ge-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 16px 22px;
+    text-align: center;
+    min-width: 110px;
+}
+.ge-stat .val {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--green);
+    display: block;
+}
+.ge-stat .lbl {
+    color: var(--muted);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+/* ── SEARCH + FILTER BAR ──────────────────────────── */
+.ge-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.ge-search {
+    flex: 1;
+    min-width: 220px;
+    position: relative;
+}
+.ge-search input {
+    width: 100%;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 30px;
+    padding: 11px 16px 11px 42px;
+    color: var(--text);
+    font-size: 0.9rem;
+    font-family: 'DM Sans', sans-serif;
+    transition: border-color .2s;
+}
+.ge-search input:focus {
+    outline: none;
+    border-color: var(--green);
+}
+.ge-search svg {
+    position: absolute;
+    left: 14px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    pointer-events: none;
+}
+.ge-filter-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.ge-pill {
+    padding: 8px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 30px;
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all .2s;
+    white-space: nowrap;
+}
+.ge-pill:hover { border-color: var(--green); color: var(--text); }
+.ge-pill.active {
+    background: var(--green);
+    border-color: var(--green);
+    color: #000;
+    font-weight: 600;
+}
+
+/* ── SECTION TITLE ────────────────────────────────── */
+.ge-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    margin-top: 40px;
+}
+.ge-section-title h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text);
+}
+.ge-section-title .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.ge-section-title .count {
+    margin-left: auto;
+    font-size: 0.78rem;
+    color: var(--muted);
+}
+
+/* ── TOOL GRID ────────────────────────────────────── */
+.ge-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 16px;
+}
+
+/* ── TOOL CARD ────────────────────────────────────── */
+.ge-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r);
+    padding: 22px;
+    cursor: pointer;
+    transition: border-color .25s, transform .25s, box-shadow .25s;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.ge-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity .3s;
+    pointer-events: none;
+}
+.ge-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0,0,0,.4);
+}
+.ge-card:hover::before { opacity: 1; }
+
+/* accent colors per category */
+.ge-card[data-cat="finance"]   { --c: var(--green); }
+.ge-card[data-cat="finance"]::before   { background: radial-gradient(ellipse at top left, rgba(30,215,96,.06), transparent 70%); }
+.ge-card[data-cat="rh"]        { --c: var(--accent-blue); }
+.ge-card[data-cat="rh"]::before        { background: radial-gradient(ellipse at top left, rgba(59,130,246,.06), transparent 70%); }
+.ge-card[data-cat="projet"]    { --c: var(--accent-purple); }
+.ge-card[data-cat="projet"]::before    { background: radial-gradient(ellipse at top left, rgba(139,92,246,.06), transparent 70%); }
+.ge-card[data-cat="marketing"] { --c: var(--accent-orange); }
+.ge-card[data-cat="marketing"]::before { background: radial-gradient(ellipse at top left, rgba(249,115,22,.06), transparent 70%); }
+.ge-card[data-cat="marches"]   { --c: var(--accent-cyan); }
+.ge-card[data-cat="marches"]::before   { background: radial-gradient(ellipse at top left, rgba(6,182,212,.06), transparent 70%); }
+
+.ge-card:hover { border-color: var(--c); }
+
+.ge-card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+.ge-card-icon {
+    width: 46px; height: 46px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--border2);
+    transition: background .25s;
+}
+.ge-card:hover .ge-card-icon {
+    background: rgba(255,255,255,.08);
+}
+.ge-card-info { flex: 1; }
+.ge-card-info h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.96rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 4px;
+}
+.ge-card-info p {
+    color: var(--muted);
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+.ge-badge {
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    align-self: flex-start;
+    white-space: nowrap;
+}
+.ge-badge-new  { background: rgba(30,215,96,.15);  color: var(--green); }
+.ge-badge-pop  { background: rgba(249,115,22,.15);  color: var(--accent-orange); }
+.ge-badge-ia   { background: rgba(139,92,246,.15);  color: var(--accent-purple); }
+.ge-badge-free { background: rgba(6,182,212,.15);   color: var(--accent-cyan); }
+
+.ge-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+}
+.ge-card-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.ge-tag {
+    font-size: 0.7rem;
+    padding: 3px 9px;
+    border-radius: 20px;
+    background: var(--surface2);
+    color: var(--muted);
+}
+.ge-card-btn {
+    background: var(--c, var(--green));
+    color: #000;
+    border: none;
+    border-radius: 20px;
+    padding: 7px 16px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity .2s, transform .2s;
+    font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+}
+.ge-card-btn:hover { opacity: .85; transform: scale(1.04); }
+
+/* ── MODAL OVERLAY ────────────────────────────────── */
+.ge-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.75);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+}
+.ge-modal-overlay.open { display: flex; }
+
+.ge-modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 780px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp .25s ease;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+.ge-modal-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 24px 28px 18px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    z-index: 1;
+}
+.ge-modal-head .icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    font-size: 1.4rem;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    flex-shrink: 0;
+}
+.ge-modal-head h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    flex: 1;
+}
+.ge-modal-close {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1.4rem;
+    line-height: 1;
+    padding: 4px;
+    transition: color .2s;
+}
+.ge-modal-close:hover { color: var(--text); }
+
+.ge-modal-body { padding: 28px; }
+
+/* ── FORM ELEMENTS (INSIDE MODAL) ─────────────────── */
+.ge-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.ge-form-row.full { grid-template-columns: 1fr; }
+.ge-form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+
+.ge-form-group { display: flex; flex-direction: column; gap: 6px; }
+.ge-form-group label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.ge-input, .ge-select, .ge-textarea {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 0.9rem;
+    font-family: 'DM Sans', sans-serif;
+    transition: border-color .2s;
+    width: 100%;
+}
+.ge-input:focus, .ge-select:focus, .ge-textarea:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(30,215,96,.08);
+}
+.ge-textarea { resize: vertical; min-height: 90px; }
+.ge-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23777' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+}
+
+/* ── RESULT BOX ───────────────────────────────────── */
+.ge-result {
+    display: none;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--r);
+    padding: 22px;
+    margin-top: 20px;
+}
+.ge-result.visible { display: block; animation: fadeIn .3s ease; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.ge-result-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.ge-result-title::before {
+    content: '';
+    width: 4px; height: 14px;
+    background: var(--green);
+    border-radius: 2px;
+    display: block;
+}
+
+.ge-result-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.ge-kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 14px 16px;
+    text-align: center;
+}
+.ge-kpi .v {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    display: block;
+}
+.ge-kpi .l {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 2px;
+}
+.green  { color: var(--green); }
+.red    { color: #f87171; }
+.blue   { color: var(--accent-blue); }
+.orange { color: var(--accent-orange); }
+.purple { color: var(--accent-purple); }
+.cyan   { color: var(--accent-cyan); }
+.yellow { color: var(--accent-yellow); }
+
+.ge-result-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+.ge-result-table th {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border2);
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.ge-result-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+}
+.ge-result-table tr:last-child td { border-bottom: none; }
+.ge-result-table .total td { font-weight: 700; color: var(--green); border-top: 2px solid var(--border2); }
+
+.ge-action-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+}
+.ge-btn {
+    padding: 10px 22px;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    font-family: 'DM Sans', sans-serif;
+    border: none;
+}
+.ge-btn-primary { background: var(--green); color: #000; }
+.ge-btn-primary:hover { background: #17c050; }
+.ge-btn-outline {
+    background: transparent;
+    border: 1.5px solid var(--border2);
+    color: var(--muted);
+}
+.ge-btn-outline:hover { border-color: var(--green); color: var(--green); }
+
+/* ── GANTT ────────────────────────────────────────── */
+.ge-gantt {
+    overflow-x: auto;
+    margin-top: 14px;
+}
+.ge-gantt-table {
+    min-width: 600px;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+.ge-gantt-table th, .ge-gantt-table td {
+    border: 1px solid var(--border);
+    padding: 7px 10px;
+    white-space: nowrap;
+}
+.ge-gantt-table th {
+    background: var(--surface2);
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    font-size: 0.7rem;
+}
+.ge-gantt-bar {
+    height: 18px;
+    border-radius: 3px;
+    background: var(--green);
+    opacity: .7;
+    display: inline-block;
+}
+
+/* ── PROGRESS BAR ─────────────────────────────────── */
+.ge-progress-track {
+    width: 100%;
+    height: 8px;
+    background: var(--surface2);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 6px;
+}
+.ge-progress-bar {
+    height: 100%;
+    border-radius: 4px;
+    background: var(--green);
+    transition: width 0.8s ease;
+}
+
+/* ── CHECKLIST ────────────────────────────────────── */
+.ge-checklist { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.ge-checklist li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-radius: var(--r-sm);
+    border: 1px solid var(--border);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: border-color .2s;
+}
+.ge-checklist li:hover { border-color: var(--border2); }
+.ge-checklist li.checked { opacity: .6; text-decoration: line-through; color: var(--muted); }
+.ge-checklist li .cb {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border2);
+    border-radius: 4px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    transition: all .2s;
+    font-size: 0.7rem;
+}
+.ge-checklist li.checked .cb { background: var(--green); border-color: var(--green); color: #000; }
+
+/* ── KANBAN ───────────────────────────────────────── */
+.ge-kanban {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 14px;
+}
+.ge-kanban-col {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 14px;
+    min-height: 180px;
+}
+.ge-kanban-col h4 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.ge-kanban-col h4 .badge {
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 0.7rem;
+    color: var(--muted);
+}
+.ge-task {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    font-size: 0.8rem;
+    cursor: grab;
+    transition: box-shadow .2s;
+}
+.ge-task:hover { box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+.ge-task .t-title { font-weight: 600; margin-bottom: 3px; }
+.ge-task .t-due { color: var(--muted); font-size: 0.72rem; }
+.ge-task .t-prio {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    margin-right: 4px;
+}
+.t-prio.high   { background: #f87171; }
+.t-prio.medium { background: var(--accent-yellow); }
+.t-prio.low    { background: var(--green); }
+
+/* ── RESPONSIVE ───────────────────────────────────── */
+@media (max-width: 700px) {
+    .ge-form-row { grid-template-columns: 1fr; }
+    .ge-form-row.three { grid-template-columns: 1fr; }
+    .ge-kanban { grid-template-columns: 1fr; }
+    .ge-result-grid { grid-template-columns: 1fr 1fr; }
+    .ge-hero { flex-direction: column; }
+    .ge-hero-stats { width: 100%; }
+    .ge-stat { flex: 1; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ge-wrap">
+
+    <!-- ── HERO ─────────────────────────────────────────── -->
+    <div class="ge-hero-stats">
+        <div class="ge-stat">
+            <span class="val green">{{ stats.total_outils }}</span>
+            <span class="lbl">Outils</span>
+        </div>
+        <div class="ge-stat">
+            <span class="val green">{{ stats.categories }}</span>
+            <span class="lbl">Catégories</span>
+        </div>
+        <div class="ge-stat">
+            <span class="val green">{{ stats.ia_assistee }}</span>
+            <span class="lbl">IA Assistée</span>
+        </div>
+    </div>
+    <!-- ── SEARCH + FILTERS ──────────────────────────────── -->
+    <div class="ge-bar">
+        <div class="ge-search">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" id="searchInput" placeholder="Rechercher un outil…" oninput="filterTools()">
+        </div>
+        <div class="ge-filter-pills">
+            <div class="ge-pill active" data-filter="all"    onclick="filterPill(this)">Tous</div>
+            <div class="ge-pill" data-filter="finance"       onclick="filterPill(this)">💰 Finance</div>
+            <div class="ge-pill" data-filter="rh"            onclick="filterPill(this)">👥 RH</div>
+            <div class="ge-pill" data-filter="projet"        onclick="filterPill(this)">📋 Projets</div>
+            <div class="ge-pill" data-filter="marketing"     onclick="filterPill(this)">📢 Marketing</div>
+            <div class="ge-pill" data-filter="marches"       onclick="filterPill(this)">🏛️ Marchés</div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+         SECTION 1 — FINANCE & COMPTABILITÉ
+    ════════════════════════════════════════════════════ -->
+    <div class="ge-section-title" data-section="finance">
+        <div class="dot" style="background:var(--green)"></div>
+        <h2>💰 Finance &amp; Comptabilité</h2>
+        <span class="count">5 outils</span>
+    </div>
+    
+    <div class="ge-grid" id="grid-finance">
+            <div class="ge-card" data-cat="finance" data-name="marge" onclick="openModal('marge')">
+        <div class="ge-card-top">
+            <div class="ge-card-icon">📊</div>
+            <div class="ge-card-info">
+                <h3>Calculateur de Marge</h3>
+                <p>Calculez instantanément votre marge brute, nette et taux de profit.</p>
+            </div>
+            {% if today|date:"Y-m-d" > "2026-03-01" %}
+            <span class="ge-badge ge-badge-new">Nouveau</span>
+            {% endif %}
+        </div>
+        <div class="ge-card-footer">
+            <div class="ge-card-tags">
+                <span class="ge-tag">Calcul</span>
+                <span class="ge-tag">Rapide</span>
+            </div>
+            <button class="ge-card-btn">Ouvrir</button>
+        </div>
+    </div>
+
+        <div class="ge-card" data-cat="finance" data-name="marge" onclick="openModal('marge')">
+            <div class="ge-card-top">
+                <div class="ge-card-icon">📊</div>
+                <div class="ge-card-info">
+                    <h3>Calculateur de Marge</h3>
+                    <p>Calculez instantanément votre marge brute, nette et taux de profit.</p>
+                </div>
+            </div>
+            <div class="ge-card-footer">
+                <div class="ge-card-tags"><span class="ge-tag">Calcul</span><span class="ge-tag">Rapide</span></div>
+                <button class="ge-card-btn">Ouvrir</button>
+            </div>
+        </div>
+
+        <div class="ge-card" data-cat="finance" data-name="facture" onclick="openModal('facture')">
+            <div class="ge-card-top">
+                <div class="ge-card-icon">🧾</div>
+                <div class="ge-card-info">
+                    <h3>Générateur de Facture</h3>
+                    <p>Générez des factures professionnelles conformes aux normes locales.</p>
+                </div>
+                <span class="ge-badge ge-badge-new">Nouveau</span>
+            </div>
+            <div class="ge-card-footer">
+                <div class="ge-card-tags"><span class="ge-tag">PDF</span><span class="ge-tag">TVA</span></div>
+                <button class="ge-card-btn">Ouvrir</button>
+            </div>
+        </div>
+
+        <div class="ge-card" data-cat="finance" data-name="tva" onclick="openModal('tva')">
+            <div class="ge-card-top">
+                <div class="ge-card-icon">🏦</div>
+                <div class="ge-card-info">
+                    <h3>Simulateur TVA & Taxes</h3>
+                    <p>Calculez la TVA, l'IUTS et les charges fiscales burkinabè.</p>
+                </div>
+            </div>
+            <div class="ge-card-footer">
+                <div class="ge-card-tags"><span class="ge-tag">Fiscal</span><span class="ge-tag">BF</span></div>
+                <button class="ge-card-btn">Ouvrir</button>
+            </div>
+        </div>
+
+        <div class="ge-card" data-cat="finance" data-name="offre_cout" onclick="openModal('offre_cout')">
+            <div class="ge-card-top">
+                <div class="ge-card-icon">💡</div>
+                <div class="ge-card-info">
+                    <h3>Estimateur de Coût d'Offre</h3>
+                    <p>Chiffrez rapidement votre réponse à un appel d'offres.</p>
+                </div>
+                <span class="ge-badge ge-badge-ia">IA</span>
+            </div>
+            <div class="ge-card-footer">
+                <div class="ge-card-tags"><span class="ge-tag">Marchés</span><span class="ge-tag">Budget</span></div>
+                <button class="ge-card-btn">Ouvrir</button>
+            </div>
+        </div>
+
+    </div><!-- /grid-finance -->
+
+    <!-- ═══════════════════════════════════════════════════
+         SECTION 2 — RH
+    ════════════════════════════════════════════════════ -->
+    <div class="ge-section-title" data-section="rh">
+        <div class="dot" style="background:var(--accent-blue)"></div>
+        <h2>👥 Ressources Humaines</h2>
+        <span class="count">4 outils</span>
+    </div>
+    <div class="ge-grid" id="grid-rh">
+
+        <div class="ge-card" data-cat="rh" data-name="salaire" onclick="openModal('salaire')">
+            <div class="ge-card-top">
+                <div class="ge-card-icon">💼</div>
+                <div class="ge-card-info">
+                    <h3>Calculateur Salaire Net/Brut</h3>
+                    <p>Calcul CNSS, IUTS et charges patronales selon le droit burkinabè.</p>
+                </div>
+                <span class="ge-badge ge-badge-pop">Populaire</span>
+            </div>
+            <div class="ge-card-footer">
+                <div class="ge-card-tags"><span class="ge-tag">CNSS</span><span class="ge-tag">IUTS</span></div>
+                <button class="ge-card-btn" style="background:var(--accent-blue)">Ouvrir</button>
+            </div>
+        </div>
+
+        <div class="ge-card" data-cat="rh" data-name="contrat" onclick="openModal('contrat')">
+            <div class="ge-card-top">
+                <div class="ge-card-icon">📝</div>
+                <div class="ge-card-info">
+                    <h3>Générateur de Contrat</h3>
+                    <p>CDI, CDD, contrat de stage — conformes au Code du travail du BF.</p>
+                </div>
+                <span class="ge-badge ge-badge-ia">IA</span>
+            </div>
+            <div class="ge-card-footer">
+                <div class="ge-card-tags"><span class="ge-tag">CDI</span><span class="ge-tag">CDD</span><span class="ge-tag">Stage</span></div>
+                <button class="ge-card-btn" style="background:var(--accent-blue)">Ouvrir</button>
+            </div>
+        </div>
+
+        <div class="ge-card" data-cat="rh" data-name="fiche_poste" onclick="openModal('fiche_poste')">
+            <div class="ge-card-top">
+                <div class="ge-card-icon">📋</div>
+                <div class="ge-card-info">
+                    <h3>Générateur Fiche de Poste</h3>
+                    <p>Décrivez un poste, obtenez une fiche officielle prête à l'emploi.</p>
+                </div>
+                <span class="ge-badge ge-badge-new">Nouveau</span>
+            </div>
+            <div class="ge-card-footer">
+                <div class="ge-card-tags"><span class="ge-tag">RH</span><span class="ge-tag">Recrutement</span></div>
+                <button class="ge-card-btn" style="background:var(--accent-blue)">Ouvrir</button>
+            </div>
+        </div>
+
+        <div class="ge-card" data-cat="rh" data-name="paie" onclick="openModal('paie')">
+            <div class="ge-card-top">
+                <div class="ge-card-icon">🗂️</div>
+                <div class="ge-card-info">
+                    <h3>Bulletin de Paie Simplifié</h3>
+                    <p>Générez un bulletin de paie PDF pour vos employés en 2 minutes.</p>
+                </div>
+            </div>
+            <div class="ge-card-footer">
+                <div class="ge-card-tags"><span class="ge-tag">PDF</span><span class="ge-tag">Mensuel</span></div>
+                <button class="ge-card-btn" style="background:var(--accent-blue)">Ouvrir</button>
+            </div>
+        </div>
+
+    </div><!-- /grid-rh -->
+
+    <!-- ═══════════════════════════════════════════════════
+         SECTION 3 — PROJETS
+    ════════════════════════════════════════════════════ -->
+    <div class="ge-section-title" data-section="projet">
+        <div class="dot" style="background:var(--accent-purple)"></div>
+        <h2>📋 Suivi de Projets</h2>
+        <span class="count">4 outils</span>
+    </div>
+    <div class="ge-grid" id="grid-projet">
+
+        <div class="ge-card" data-cat="projet" data-name="gantt" onclick="openModal('gantt')">
+            <div class="ge-card-top">
+                <div class="ge-card-icon">📅</div>
+                <div class="ge-card-info">
+                    <h3>Planificateur Gantt</h3>
+                    <p>Créez votre planning projet visuel et exportez-le en PDF.</p>
+                </div>
+                <span class="ge-badge ge-badge-pop">Populaire</span>
+            </div>
+            <div class="ge-card-footer">
+                <div class="ge-card-tags"><span class="ge-tag">Planning</span><span class="ge-tag">Export</span></div>
+                <button class="ge-card-btn" style="background:var(--accent-purple)">Ouvrir</button>
+            </div>
+        </div>
+
+        <div class="ge-card" data-cat="projet" data-name="kanban" onclick="openModal('kanban')">
+            <div class="ge-card-top">
+                <div class="ge-card-icon">🗂️</div>
+                <div class="ge-card-info">
+                    <h3>Tableau Kanban</h3>
+                    <p>Gérez vos tâches en colonnes : À faire, En cours, Terminé.</p>
+                </div>
+            </div>
+            <div class="ge-card-footer">
+                <div class="ge-card-tags"><span class="ge-tag">Tâches</span><span class="ge-tag">Équipe</span></div>
+                <button class="ge-card-btn" style="background:var(--accent-purple)">Ouvrir</button>
+            </div>
+        </div>
+
+        <div class="ge-card" data-cat="projet" data-name="rapport" onclick="openModal('rapport')">
+            <div class="ge-card-top">
+                <div class="ge-card-icon">📊</div>
+                <div class="ge-card-info">
+                    <h3>Rapport d'Activité</h3>
+                    <p>Remplissez un formulaire et obtenez votre rapport mensuel en PDF.</p>
+                </div>
+                <span class="ge-badge ge-badge-ia">IA</span>
+            </div>
+            <div class="ge-card-footer">
+                <div class="ge-card-tags"><span class="ge-tag">Rapport</span><span class="ge-tag">Mensuel</span></div>
+                <button class="ge-card-btn" style="background:var(--accent-purple)">Ouvrir</button>
+            </div>
+        </div>
+
+        <div class="ge-card" data-cat="projet" data-name="pv" onclick="openModal('pv')">
+            <div class="ge-card-top">
+                <div class="ge-card-icon">📄</div>
+                <div class="ge-card-info">
+                    <h3>Modèles de PV de Réunion</h3>
+                    <p>Saisissez vos notes, obtenez un PV officiel structuré.</p>
+                </div>
+            </div>
+            <div class="ge-card-footer">
+                <div class="ge-card-tags"><span class="ge-tag">PV</span><span class="ge-tag">Réunion</span></div>
+                <button class="ge-card-btn" style="background:var(--accent-purple)">Ouvrir</button>
+            </div>
+        </div>
+
+    </div><!-- /grid-projet -->
+
+    <!-- ═══════════════════════════════════════════════════
+         SECTION 4 — MARKETING
+    ════════════════════════════════════════════════════ -->
+    <div class="ge-section-title" data-section="marketing">
+        <div class="dot" style="background:var(--accent-orange)"></div>
+        <h2>📢 Marketing &amp; Communication</h2>
+        <span class="count">4 outils</span>
+    </div>
+    <div class="ge-grid" id="grid-marketing">
+
+        <div class="ge-card" data-cat="marketing" data-name="pitch" onclick="openModal('pitch')">
+            <div class="ge-card-top">
+                <div class="ge-card-icon">🎯</div>
+                <div class="ge-card-info">
+                    <h3>Générateur de Pitch Deck</h3>
+                    <p>Créez la trame de présentation de votre entreprise pour les investisseurs.</p>
+                </div>
+                <span class="ge-badge ge-badge-ia">IA</span>
+            </div>
+            <div class="ge-card-footer">
+                <div class="ge-card-tags"><span class="ge-tag">Présentation</span><span class="ge-tag">Investisseurs</span></div>
+                <button class="ge-card-btn" style="background:var(--accent-orange)">Ouvrir</button>
+            </div>
+        </div>
+
+        <div class="ge-card" data-cat="marketing" data-name="communique" onclick="openModal('communique')">
+            <div class="ge-card-top">
+                <div class="ge-card-icon">📰</div>
+                <div class="ge-card-info">
+                    <h3>Communiqué de Presse</h3>
+                    <p>Rédigez un communiqué professionnel prêt à diffuser.</p>
+                </div>
+                <span class="ge-badge ge-badge-ia">IA</span>
+            </div>
+            <div class="ge-card-footer">
+                <div class="ge-card-tags"><span class="ge-tag">Presse</span><span class="ge-tag">Com</span></div>
+                <button class="ge-card-btn" style="background:var(--accent-orange)">Ouvrir</button>
+            </div>
+        </div>
+
+        <div class="ge-card" data-cat="marketing" data-name="plan_com" onclick="openModal('plan_com')">
+            <div class="ge-card-top">
+                <div class="ge-card-icon">🗺️</div>
+                <div class="ge-card-info">
+                    <h3>Plan de Communication</h3>
+                    <p>Générez un plan de com structuré selon vos objectifs.</p>
+                </div>
+            </div>
+            <div class="ge-card-footer">
+                <div class="ge-card-tags"><span class="ge-tag">Stratégie</span><span class="ge-tag">Annuel</span></div>
+                <button class="ge-card-btn" style="background:var(--accent-orange)">Ouvrir</button>
+            </div>
+        </div>
+
+        <div class="ge-card" data-cat="marketing" data-name="profil_ent" onclick="openModal('profil_ent')">
+            <div class="ge-card-top">
+                <div class="ge-card-icon">🏢</div>
+                <div class="ge-card-info">
+                    <h3>Rédacteur Profil Entreprise</h3>
+                    <p>Générez un profil d'entreprise pour vos soumissions et dossiers.</p>
+                </div>
+                <span class="ge-badge ge-badge-ia">IA</span>
+            </div>
+            <div class="ge-card-footer">
+                <div class="ge-card-tags"><span class="ge-tag">Profil</span><span class="ge-tag">Soumission</span></div>
+                <button class="ge-card-btn" style="background:var(--accent-orange)">Ouvrir</button>
+            </div>
+        </div>
+
+    </div><!-- /grid-marketing -->
+
+    <!-- ═══════════════════════════════════════════════════
+         SECTION 5 — MARCHÉS PUBLICS
+    ════════════════════════════════════════════════════ -->
+    <div class="ge-section-title" data-section="marches">
+        <div class="dot" style="background:var(--accent-cyan)"></div>
+        <h2>🏛️ Aide aux Marchés Publics</h2>
+        <span class="count">4 outils</span>
+    </div>
+    <div class="ge-grid" id="grid-marches">
+
+        <div class="ge-card" data-cat="marches" data-name="checklist_ao" onclick="openModal('checklist_ao')">
+            <div class="ge-card-top">
+                <div class="ge-card-icon">✅</div>
+                <div class="ge-card-info">
+                    <h3>Checklist Conformité Dossier</h3>
+                    <p>Vérifiez que votre dossier est complet avant soumission.</p>
+                </div>
+                <span class="ge-badge ge-badge-pop">Populaire</span>
+            </div>
+            <div class="ge-card-footer">
+                <div class="ge-card-tags"><span class="ge-tag">ARCOP</span><span class="ge-tag">Conformité</span></div>
+                <button class="ge-card-btn" style="background:var(--accent-cyan)">Ouvrir</button>
+            </div>
+        </div>
+
+        <div class="ge-card" data-cat="marches" data-name="delai" onclick="openModal('delai')">
+            <div class="ge-card-top">
+                <div class="ge-card-icon">⏱️</div>
+                <div class="ge-card-info">
+                    <h3>Calculateur de Délai</h3>
+                    <p>Calculez le temps restant et planifiez votre soumission.</p>
+                </div>
+            </div>
+            <div class="ge-card-footer">
+                <div class="ge-card-tags"><span class="ge-tag">Deadline</span><span class="ge-tag">Alerte</span></div>
+                <button class="ge-card-btn" style="background:var(--accent-cyan)">Ouvrir</button>
+            </div>
+        </div>
+
+        <div class="ge-card" data-cat="marches" data-name="note_meth" onclick="openModal('note_meth')">
+            <div class="ge-card-top">
+                <div class="ge-card-icon">📑</div>
+                <div class="ge-card-info">
+                    <h3>Note Méthodologique</h3>
+                    <p>Générez une note méthodologique structurée pour vos offres techniques.</p>
+                </div>
+                <span class="ge-badge ge-badge-ia">IA</span>
+            </div>
+            <div class="ge-card-footer">
+                <div class="ge-card-tags"><span class="ge-tag">Technique</span><span class="ge-tag">Offre</span></div>
+                <button class="ge-card-btn" style="background:var(--accent-cyan)">Ouvrir</button>
+            </div>
+        </div>
+
+        <div class="ge-card" data-cat="marches" data-name="biblio_doc" onclick="openModal('biblio_doc')">
+            <div class="ge-card-top">
+                <div class="ge-card-icon">📚</div>
+                <div class="ge-card-info">
+                    <h3>Bibliothèque de Modèles</h3>
+                    <p>Attestations, déclarations et formulaires types prêts à compléter.</p>
+                </div>
+                <span class="ge-badge ge-badge-free">Gratuit</span>
+            </div>
+            <div class="ge-card-footer">
+                <div class="ge-card-tags"><span class="ge-tag">Formulaires</span><span class="ge-tag">Modèles</span></div>
+                <button class="ge-card-btn" style="background:var(--accent-cyan)">Ouvrir</button>
+            </div>
+        </div>
+
+    </div><!-- /grid-marches -->
+
+</div><!-- /ge-wrap -->
+
+<!-- ═══════════════════════════════════════════════════════
+     MODALS
+════════════════════════════════════════════════════════ -->
+
+<!-- ── MODAL : CALCULATEUR DE MARGE ─────────────────────── -->
+<div class="ge-modal-overlay" id="modal-marge">
+  <div class="ge-modal">
+    <div class="ge-modal-head">
+        <div class="icon">📊</div>
+        <h2>Calculateur de Marge Bénéficiaire</h2>
+        <button class="ge-modal-close" onclick="closeModal('marge')">×</button>
+    </div>
+    <div class="ge-modal-body">
+        <div class="ge-form-row three">
+            <div class="ge-form-group">
+                <label>Prix de vente HT (FCFA)</label>
+                <input class="ge-input" type="number" id="m-vente" placeholder="250 000" oninput="calcMarge()">
+            </div>
+            <div class="ge-form-group">
+                <label>Coût de revient (FCFA)</label>
+                <input class="ge-input" type="number" id="m-cout" placeholder="150 000" oninput="calcMarge()">
+            </div>
+            <div class="ge-form-group">
+                <label>Taux TVA (%)</label>
+                <select class="ge-select" id="m-tva" onchange="calcMarge()">
+                    <option value="18">18% (standard BF)</option>
+                    <option value="0">0% (exonéré)</option>
+                    <option value="10">10% (réduit)</option>
+                </select>
+            </div>
+        </div>
+        <div class="ge-result visible" id="result-marge">
+            <div class="ge-result-title">Résultats</div>
+            <div class="ge-result-grid">
+                <div class="ge-kpi"><span class="v green" id="r-marge-brute">—</span><span class="l">Marge brute</span></div>
+                <div class="ge-kpi"><span class="v blue"  id="r-taux-marge">—</span><span class="l">Taux de marge</span></div>
+                <div class="ge-kpi"><span class="v orange" id="r-taux-markup">—</span><span class="l">Markup</span></div>
+                <div class="ge-kpi"><span class="v purple" id="r-ttc">—</span><span class="l">Prix TTC</span></div>
+            </div>
+            <div class="ge-progress-track"><div class="ge-progress-bar" id="r-marge-bar" style="width:0%"></div></div>
+            <small style="color:var(--muted); font-size:.75rem;">Barre de progression = taux de marge (max 100%)</small>
+        </div>
+        <div class="ge-action-row">
+            <button class="ge-btn ge-btn-outline" onclick="closeModal('marge')">Fermer</button>
+        </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL : SIMULATEUR TVA ────────────────────────────── -->
+<div class="ge-modal-overlay" id="modal-tva">
+  <div class="ge-modal">
+    <div class="ge-modal-head">
+        <div class="icon">🏦</div>
+        <h2>Simulateur TVA &amp; Taxes — Burkina Faso</h2>
+        <button class="ge-modal-close" onclick="closeModal('tva')">×</button>
+    </div>
+    <div class="ge-modal-body">
+        <div class="ge-form-row">
+            <div class="ge-form-group">
+                <label>Montant HT (FCFA)</label>
+                <input class="ge-input" type="number" id="tva-ht" placeholder="1 000 000" oninput="calcTVA()">
+            </div>
+            <div class="ge-form-group">
+                <label>Type de TVA</label>
+                <select class="ge-select" id="tva-type" onchange="calcTVA()">
+                    <option value="18">18% — Taux normal</option>
+                    <option value="10">10% — Taux réduit (eau, électricité…)</option>
+                    <option value="0">0% — Exonéré (exportations, santé…)</option>
+                </select>
+            </div>
+        </div>
+        <div class="ge-form-row">
+            <div class="ge-form-group">
+                <label>Inclure IUTS retenu à la source (%)</label>
+                <select class="ge-select" id="tva-iuts" onchange="calcTVA()">
+                    <option value="0">Non applicable</option>
+                    <option value="3">3% (prestations de service)</option>
+                    <option value="5">5% (marchés publics)</option>
+                    <option value="10">10% (revenus fonciers)</option>
+                </select>
+            </div>
+            <div class="ge-form-group">
+                <label>Taxe patronale CNSS (%)</label>
+                <select class="ge-select" id="tva-cnss" onchange="calcTVA()">
+                    <option value="0">Non applicable</option>
+                    <option value="16">16% (part patronale)</option>
+                </select>
+            </div>
+        </div>
+        <div class="ge-result visible" id="result-tva">
+            <div class="ge-result-title">Décomposition fiscale</div>
+            <table class="ge-result-table">
+                <tr><th>Élément</th><th>Taux</th><th>Montant (FCFA)</th></tr>
+                <tr><td>Montant HT</td><td>—</td><td id="tv-ht">—</td></tr>
+                <tr><td>TVA</td><td id="tv-taux-tva">—</td><td id="tv-tva">—</td></tr>
+                <tr><td>IUTS retenu</td><td id="tv-taux-iuts">—</td><td id="tv-iuts">—</td></tr>
+                <tr><td>CNSS patronal</td><td id="tv-taux-cnss">—</td><td id="tv-cnss">—</td></tr>
+                <tr class="total"><td colspan="2">TOTAL TTC</td><td id="tv-ttc">—</td></tr>
+            </table>
+        </div>
+        <div class="ge-action-row">
+            <button class="ge-btn ge-btn-outline" onclick="closeModal('tva')">Fermer</button>
+        </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL : SALAIRE NET/BRUT ──────────────────────────── -->
+<div class="ge-modal-overlay" id="modal-salaire">
+  <div class="ge-modal">
+    <div class="ge-modal-head">
+        <div class="icon">💼</div>
+        <h2>Calculateur Salaire Net / Brut — BF</h2>
+        <button class="ge-modal-close" onclick="closeModal('salaire')">×</button>
+    </div>
+    <div class="ge-modal-body">
+        <div class="ge-form-row">
+            <div class="ge-form-group">
+                <label>Salaire brut mensuel (FCFA)</label>
+                <input class="ge-input" type="number" id="sal-brut" placeholder="300 000" oninput="calcSalaire()">
+            </div>
+            <div class="ge-form-group">
+                <label>Catégorie professionnelle</label>
+                <select class="ge-select" id="sal-cat" onchange="calcSalaire()">
+                    <option value="1">Cadre</option>
+                    <option value="2">Agent de maîtrise</option>
+                    <option value="3">Employé / Ouvrier</option>
+                </select>
+            </div>
+        </div>
+        <div class="ge-form-row">
+            <div class="ge-form-group">
+                <label>Nombre d'enfants à charge</label>
+                <input class="ge-input" type="number" id="sal-enfants" value="0" min="0" max="12" oninput="calcSalaire()">
+            </div>
+            <div class="ge-form-group">
+                <label>Statut matrimonial</label>
+                <select class="ge-select" id="sal-statut" onchange="calcSalaire()">
+                    <option value="celibataire">Célibataire</option>
+                    <option value="marie">Marié(e)</option>
+                </select>
+            </div>
+        </div>
+        <div class="ge-result visible" id="result-salaire">
+            <div class="ge-result-title">Bulletin de salaire simplifié</div>
+            <div class="ge-result-grid">
+                <div class="ge-kpi"><span class="v green" id="s-net">—</span><span class="l">Salaire NET</span></div>
+                <div class="ge-kpi"><span class="v red"   id="s-cnss-sal">—</span><span class="l">CNSS salarié (5,5%)</span></div>
+                <div class="ge-kpi"><span class="v red"   id="s-iuts">—</span><span class="l">IUTS</span></div>
+                <div class="ge-kpi"><span class="v orange" id="s-cnss-pat">—</span><span class="l">CNSS patronal (16%)</span></div>
+                <div class="ge-kpi"><span class="v blue"  id="s-cout-total">—</span><span class="l">Coût total employeur</span></div>
+            </div>
+        </div>
+        <div class="ge-action-row">
+            <button class="ge-btn ge-btn-primary" onclick="printSalaire()">Imprimer</button>
+            <button class="ge-btn ge-btn-outline" onclick="closeModal('salaire')">Fermer</button>
+        </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL : GANTT ─────────────────────────────────────── -->
+<div class="ge-modal-overlay" id="modal-gantt">
+  <div class="ge-modal" style="max-width:900px">
+    <div class="ge-modal-head">
+        <div class="icon">📅</div>
+        <h2>Planificateur Gantt</h2>
+        <button class="ge-modal-close" onclick="closeModal('gantt')">×</button>
+    </div>
+    <div class="ge-modal-body">
+        <div class="ge-form-row">
+            <div class="ge-form-group">
+                <label>Nom du projet</label>
+                <input class="ge-input" type="text" id="g-nom" placeholder="Ex: Construction siège social">
+            </div>
+            <div class="ge-form-group">
+                <label>Date de début</label>
+                <input class="ge-input" type="date" id="g-debut">
+            </div>
+        </div>
+        <div id="gantt-tasks">
+            <div class="ge-form-row" style="margin-bottom:8px" data-task="1">
+                <div class="ge-form-group"><label>Tâche 1</label><input class="ge-input" type="text" placeholder="Ex: Étude préalable"></div>
+                <div class="ge-form-group"><label>Durée (semaines)</label><input class="ge-input" type="number" min="1" value="2"></div>
+            </div>
+            <div class="ge-form-row" style="margin-bottom:8px" data-task="2">
+                <div class="ge-form-group"><label>Tâche 2</label><input class="ge-input" type="text" placeholder="Ex: Conception"></div>
+                <div class="ge-form-group"><label>Durée (semaines)</label><input class="ge-input" type="number" min="1" value="3"></div>
+            </div>
+            <div class="ge-form-row" style="margin-bottom:8px" data-task="3">
+                <div class="ge-form-group"><label>Tâche 3</label><input class="ge-input" type="text" placeholder="Ex: Réalisation"></div>
+                <div class="ge-form-group"><label>Durée (semaines)</label><input class="ge-input" type="number" min="1" value="6"></div>
+            </div>
+        </div>
+        <button class="ge-btn ge-btn-outline" style="margin-bottom:16px" onclick="addGanttTask()">+ Ajouter une tâche</button>
+        <button class="ge-btn ge-btn-primary" onclick="genGantt()">Générer le Gantt</button>
+        <div class="ge-result" id="result-gantt">
+            <div class="ge-result-title">Diagramme de Gantt</div>
+            <div class="ge-gantt" id="gantt-output"></div>
+        </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL : KANBAN ────────────────────────────────────── -->
+<div class="ge-modal-overlay" id="modal-kanban">
+  <div class="ge-modal" style="max-width:900px">
+    <div class="ge-modal-head">
+        <div class="icon">🗂️</div>
+        <h2>Tableau Kanban</h2>
+        <button class="ge-modal-close" onclick="closeModal('kanban')">×</button>
+    </div>
+    <div class="ge-modal-body">
+        <div class="ge-form-row" style="margin-bottom:18px">
+            <div class="ge-form-group">
+                <label>Nouvelle tâche</label>
+                <input class="ge-input" type="text" id="k-new-task" placeholder="Ex: Préparer le dossier de soumission">
+            </div>
+            <div class="ge-form-group">
+                <label>Priorité</label>
+                <select class="ge-select" id="k-prio">
+                    <option value="high">🔴 Haute</option>
+                    <option value="medium">🟡 Moyenne</option>
+                    <option value="low">🟢 Basse</option>
+                </select>
+            </div>
+            <div class="ge-form-group">
+                <label>Échéance</label>
+                <input class="ge-input" type="date" id="k-due">
+            </div>
+        </div>
+        <button class="ge-btn ge-btn-primary" style="margin-bottom:18px" onclick="addKanbanTask()">+ Ajouter</button>
+        <div class="ge-kanban" id="kanban-board">
+            <div class="ge-kanban-col" id="col-todo" ondragover="event.preventDefault()" ondrop="dropTask(event,'todo')">
+                <h4>À FAIRE <span class="badge" id="count-todo">0</span></h4>
+            </div>
+            <div class="ge-kanban-col" id="col-doing" ondragover="event.preventDefault()" ondrop="dropTask(event,'doing')">
+                <h4>EN COURS <span class="badge" id="count-doing">0</span></h4>
+            </div>
+            <div class="ge-kanban-col" id="col-done" ondragover="event.preventDefault()" ondrop="dropTask(event,'done')">
+                <h4>TERMINÉ <span class="badge" id="count-done">0</span></h4>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL : CHECKLIST AO ──────────────────────────────── -->
+<div class="ge-modal-overlay" id="modal-checklist_ao">
+  <div class="ge-modal">
+    <div class="ge-modal-head">
+        <div class="icon">✅</div>
+        <h2>Checklist Conformité Dossier ARCOP</h2>
+        <button class="ge-modal-close" onclick="closeModal('checklist_ao')">×</button>
+    </div>
+    <div class="ge-modal-body">
+        <div class="ge-form-row" style="margin-bottom:18px">
+            <div class="ge-form-group">
+                <label>Type d'appel d'offres</label>
+                <select class="ge-select" id="ao-type" onchange="loadChecklist()">
+                    <option value="fournitures">Fournitures / Équipements</option>
+                    <option value="travaux">Travaux / BTP</option>
+                    <option value="services">Services / Consultance</option>
+                    <option value="ami">Avis à manifestation d'intérêt (AMI)</option>
+                </select>
+            </div>
+        </div>
+        <div id="checklist-progress-wrap" style="margin-bottom:16px">
+            <div style="display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:6px">
+                <span>Progression</span><span id="cl-pct">0%</span>
+            </div>
+            <div class="ge-progress-track"><div class="ge-progress-bar" id="cl-bar" style="width:0%"></div></div>
+        </div>
+        <ul class="ge-checklist" id="checklist-items"></ul>
+        <div class="ge-action-row" style="margin-top:18px">
+            <button class="ge-btn ge-btn-primary" onclick="resetChecklist()">Réinitialiser</button>
+            <button class="ge-btn ge-btn-outline" onclick="closeModal('checklist_ao')">Fermer</button>
+        </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL : CALCULATEUR DÉLAI ────────────────────────── -->
+<div class="ge-modal-overlay" id="modal-delai">
+  <div class="ge-modal">
+    <div class="ge-modal-head">
+        <div class="icon">⏱️</div>
+        <h2>Calculateur de Délai de Soumission</h2>
+        <button class="ge-modal-close" onclick="closeModal('delai')">×</button>
+    </div>
+    <div class="ge-modal-body">
+        <div class="ge-form-row">
+            <div class="ge-form-group">
+                <label>Date limite de soumission</label>
+                <input class="ge-input" type="datetime-local" id="d-limite" onchange="calcDelai()">
+            </div>
+            <div class="ge-form-group">
+                <label>Date de prise en connaissance</label>
+                <input class="ge-input" type="date" id="d-debut" onchange="calcDelai()">
+            </div>
+        </div>
+        <div class="ge-result visible" id="result-delai">
+            <div class="ge-result-title">Analyse du délai</div>
+            <div class="ge-result-grid">
+                <div class="ge-kpi"><span class="v" id="d-jours" style="color:#f0f0f0">—</span><span class="l">Jours restants</span></div>
+                <div class="ge-kpi"><span class="v" id="d-heures" style="color:#f0f0f0">—</span><span class="l">Heures restantes</span></div>
+                <div class="ge-kpi"><span class="v" id="d-ouvrables" style="color:#f0f0f0">—</span><span class="l">Jours ouvrables</span></div>
+            </div>
+            <div id="d-alerte" style="padding:14px;border-radius:8px;margin-top:12px;font-size:.88rem;display:none"></div>
+            <div style="margin-top:16px">
+                <div class="ge-result-title" style="font-size:.78rem">Recommandations de planning</div>
+                <div id="d-recommandations" style="color:var(--muted);font-size:.83rem;line-height:1.7"></div>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODALS SIMPLIFIÉS (structure + coming soon) ─────── -->
+{% for tool_id, tool_icon, tool_name in forloop_tools|default:'' %}{% endfor %}
+
+<!-- Générateur de devis -->
+<div class="ge-modal-overlay" id="modal-devis">
+  <div class="ge-modal">
+    <div class="ge-modal-head"><div class="icon">📄</div><h2>Générateur de Devis</h2><button class="ge-modal-close" onclick="closeModal('devis')">×</button></div>
+    <div class="ge-modal-body">
+        <div class="ge-form-row"><div class="ge-form-group"><label>Nom du client</label><input class="ge-input" type="text" id="dv-client" placeholder="Ex: SONABHY"></div><div class="ge-form-group"><label>Date du devis</label><input class="ge-input" type="date" id="dv-date"></div></div>
+        <div class="ge-form-row full"><div class="ge-form-group"><label>Description de la prestation</label><textarea class="ge-textarea" id="dv-desc" placeholder="Décrivez les prestations ou fournitures…"></textarea></div></div>
+        <div class="ge-form-row three"><div class="ge-form-group"><label>Quantité</label><input class="ge-input" type="number" id="dv-qte" value="1" oninput="calcDevis()"></div><div class="ge-form-group"><label>Prix unitaire HT (FCFA)</label><input class="ge-input" type="number" id="dv-pu" placeholder="50 000" oninput="calcDevis()"></div><div class="ge-form-group"><label>TVA (%)</label><select class="ge-select" id="dv-tva" onchange="calcDevis()"><option value="18">18%</option><option value="0">0%</option></select></div></div>
+        <div class="ge-result visible" id="result-devis">
+            <div class="ge-result-title">Récapitulatif</div>
+            <div class="ge-result-grid">
+                <div class="ge-kpi"><span class="v green" id="dv-ht">—</span><span class="l">Montant HT</span></div>
+                <div class="ge-kpi"><span class="v orange" id="dv-tva-mont">—</span><span class="l">TVA</span></div>
+                <div class="ge-kpi"><span class="v blue" id="dv-ttc">—</span><span class="l">Total TTC</span></div>
+            </div>
+        </div>
+        <div class="ge-action-row"><button class="ge-btn ge-btn-primary" onclick="genDevis()">Générer PDF</button><button class="ge-btn ge-btn-outline" onclick="closeModal('devis')">Fermer</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modals "À venir" pour outils non encore implémentés -->
+{% for mid in tools_in_development %}
+<div class="ge-modal-overlay" id="modal-{{ mid }}">
+  <div class="ge-modal" style="max-width:500px">
+    <div class="ge-modal-head">
+        <div class="icon">🚧</div>
+        <h2>Outil en développement</h2>
+        <button class="ge-modal-close" onclick="closeModal('{{ mid }}')">×</button>
+    </div>
+    <div class="ge-modal-body" style="text-align:center;padding:50px 28px">
+        <div style="font-size:3rem;margin-bottom:16px">🚧</div>
+        <h3 style="font-family:'Space Grotesk',sans-serif;margin-bottom:10px">Bientôt disponible</h3>
+        <p style="color:var(--muted);margin-bottom:24px">
+            Cet outil est en cours de développement et sera disponible très prochainement sur FasoIA.
+            {% if mid == 'facture' %}
+            <br><br>🔜 Fonctionnalités prévues : Génération PDF, envoi par email, suivi des paiements
+            {% elif mid == 'contrat' %}
+            <br><br>🔜 Fonctionnalités prévues : Templates CDI/CDD, signature électronique
+            {% elif mid == 'paie' %}
+            <br><br>🔜 Fonctionnalités prévues : Bulletin PDF, export Excel, calcul automatique
+            {% endif %}
+        </p>
+        <button class="ge-btn ge-btn-primary" onclick="closeModal('{{ mid }}')">Compris</button>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+// ════════════════════════════════════════════════════════
+// MODAL OPEN / CLOSE
+// ════════════════════════════════════════════════════════
+function openModal(id) {
+    const el = document.getElementById('modal-' + id);
+    if (el) {
+        el.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        // Init auto-calculs
+        if (id === 'checklist_ao') loadChecklist();
+        if (id === 'salaire')      calcSalaire();
+    }
+}
+function closeModal(id) {
+    const el = document.getElementById('modal-' + id);
+    if (el) {
+        el.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+}
+// Fermer en cliquant sur l'overlay
+document.querySelectorAll('.ge-modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            overlay.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+    });
+});
+// Fermer avec Escape
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.ge-modal-overlay.open').forEach(m => {
+            m.classList.remove('open');
+            document.body.style.overflow = '';
+        });
+    }
+});
+
+// ════════════════════════════════════════════════════════
+// SEARCH + FILTER
+// ════════════════════════════════════════════════════════
+let activeFilter = 'all';
+
+function filterPill(el) {
+    document.querySelectorAll('.ge-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    activeFilter = el.dataset.filter;
+    filterTools();
+}
+
+function filterTools() {
+    const q = (document.getElementById('searchInput').value || '').toLowerCase();
+    document.querySelectorAll('.ge-card').forEach(card => {
+        const cat   = card.dataset.cat;
+        const name  = (card.querySelector('h3')?.textContent || '').toLowerCase();
+        const desc  = (card.querySelector('p')?.textContent  || '').toLowerCase();
+        const catOk = activeFilter === 'all' || cat === activeFilter;
+        const txtOk = !q || name.includes(q) || desc.includes(q);
+        card.style.display = (catOk && txtOk) ? '' : 'none';
+    });
+    // Cacher les sections vides
+    ['finance','rh','projet','marketing','marches'].forEach(sec => {
+        const visible = [...document.querySelectorAll(`.ge-card[data-cat="${sec}"]`)]
+            .some(c => c.style.display !== 'none');
+        const title = document.querySelector(`[data-section="${sec}"]`);
+        const grid  = document.getElementById(`grid-${sec}`);
+        if (title) title.style.display = visible ? '' : 'none';
+        if (grid)  grid.style.display  = visible ? '' : 'none';
+    });
+}
+
+// ════════════════════════════════════════════════════════
+// FORMATAGE FCFA
+// ════════════════════════════════════════════════════════
+function fcfa(n) {
+    if (isNaN(n) || n === null) return '—';
+    return Math.round(n).toLocaleString('fr-FR') + ' FCFA';
+}
+function pct(n) {
+    if (isNaN(n) || n === null) return '—';
+    return n.toFixed(1) + ' %';
+}
+
+// ════════════════════════════════════════════════════════
+// CALCULATEUR DE MARGE
+// ════════════════════════════════════════════════════════
+function calcMarge() {
+    const vente = parseFloat(document.getElementById('m-vente').value) || 0;
+    const cout  = parseFloat(document.getElementById('m-cout').value)  || 0;
+    const tva   = parseFloat(document.getElementById('m-tva').value)   || 18;
+
+    const margeBrute = vente - cout;
+    const tauxMarge  = vente > 0 ? (margeBrute / vente) * 100 : 0;
+    const tauxMarkup = cout  > 0 ? (margeBrute / cout)  * 100 : 0;
+    const ttc        = vente * (1 + tva / 100);
+
+    document.getElementById('r-marge-brute').textContent = fcfa(margeBrute);
+    document.getElementById('r-taux-marge').textContent  = pct(tauxMarge);
+    document.getElementById('r-taux-markup').textContent = pct(tauxMarkup);
+    document.getElementById('r-ttc').textContent         = fcfa(ttc);
+
+    const barW = Math.max(0, Math.min(100, tauxMarge));
+    document.getElementById('r-marge-bar').style.width  = barW + '%';
+    document.getElementById('r-marge-bar').style.background =
+        tauxMarge >= 30 ? 'var(--green)' : tauxMarge >= 15 ? 'var(--accent-yellow)' : '#f87171';
+}
+
+// ════════════════════════════════════════════════════════
+// CALCULATEUR DEVIS
+// ════════════════════════════════════════════════════════
+function calcDevis() {
+    const qte = parseFloat(document.getElementById('dv-qte').value) || 0;
+    const pu  = parseFloat(document.getElementById('dv-pu').value)  || 0;
+    const tva = parseFloat(document.getElementById('dv-tva').value) || 18;
+    const ht  = qte * pu;
+    const tvaMont = ht * tva / 100;
+    document.getElementById('dv-ht').textContent      = fcfa(ht);
+    document.getElementById('dv-tva-mont').textContent = fcfa(tvaMont);
+    document.getElementById('dv-ttc').textContent     = fcfa(ht + tvaMont);
+}
+function genDevis() {
+    alert('📄 Génération PDF du devis — Cette fonctionnalité sera connectée à votre backend Django pour générer le PDF.');
+}
+
+// ════════════════════════════════════════════════════════
+// SIMULATEUR TVA
+// ════════════════════════════════════════════════════════
+function calcTVA() {
+    const ht   = parseFloat(document.getElementById('tva-ht').value)   || 0;
+    const tva  = parseFloat(document.getElementById('tva-type').value) || 0;
+    const iuts = parseFloat(document.getElementById('tva-iuts').value) || 0;
+    const cnss = parseFloat(document.getElementById('tva-cnss').value) || 0;
+
+    const montTVA  = ht * tva  / 100;
+    const montIUTS = ht * iuts / 100;
+    const montCNSS = ht * cnss / 100;
+    const ttc      = ht + montTVA + montCNSS;
+
+    document.getElementById('tv-ht').textContent        = fcfa(ht);
+    document.getElementById('tv-taux-tva').textContent  = tva  + ' %';
+    document.getElementById('tv-tva').textContent       = fcfa(montTVA);
+    document.getElementById('tv-taux-iuts').textContent = iuts + ' %';
+    document.getElementById('tv-iuts').textContent      = fcfa(montIUTS);
+    document.getElementById('tv-taux-cnss').textContent = cnss + ' %';
+    document.getElementById('tv-cnss').textContent      = fcfa(montCNSS);
+    document.getElementById('tv-ttc').textContent       = fcfa(ttc);
+}
+
+// ════════════════════════════════════════════════════════
+// CALCULATEUR SALAIRE
+// ════════════════════════════════════════════════════════
+function calcSalaire() {
+    const brut    = parseFloat(document.getElementById('sal-brut').value)     || 0;
+    const enfants = parseInt(document.getElementById('sal-enfants').value)     || 0;
+    const statut  = document.getElementById('sal-statut').value;
+
+    // CNSS salarié : 5,5% du brut (plafonné à 4 150 000 FCFA/an = 345 833/mois)
+    const plafondCNSS = 345833;
+    const baseCNSS    = Math.min(brut, plafondCNSS);
+    const cnsssal     = baseCNSS * 0.055;
+
+    // Base imposable IUTS
+    const baseIUTS = brut - cnsssal;
+
+    // Abattements familiaux (forfait simplifié)
+    const abattementFamille = (statut === 'marie' ? 10000 : 0) + enfants * 5000;
+    const revenuImposable   = Math.max(0, baseIUTS - abattementFamille);
+
+    // Barème IUTS simplifié Burkina Faso
+    let iuts = 0;
+    if (revenuImposable <= 30000)        iuts = 0;
+    else if (revenuImposable <= 50000)   iuts = (revenuImposable - 30000) * 0.11;
+    else if (revenuImposable <= 80000)   iuts = 2200 + (revenuImposable - 50000) * 0.185;
+    else if (revenuImposable <= 120000)  iuts = 7750 + (revenuImposable - 80000) * 0.23;
+    else if (revenuImposable <= 200000)  iuts = 16950 + (revenuImposable - 120000) * 0.28;
+    else                                  iuts = 39350 + (revenuImposable - 200000) * 0.315;
+
+    const net       = brut - cnsssal - iuts;
+    const cnsspat   = baseCNSS * 0.16;
+    const coutTotal = brut + cnsspat;
+
+    document.getElementById('s-net').textContent       = fcfa(net);
+    document.getElementById('s-cnss-sal').textContent  = fcfa(cnsssal);
+    document.getElementById('s-iuts').textContent      = fcfa(iuts);
+    document.getElementById('s-cnss-pat').textContent  = fcfa(cnsspat);
+    document.getElementById('s-cout-total').textContent = fcfa(coutTotal);
+}
+function printSalaire() {
+    alert('🖨️ Impression du bulletin de paie — Cette fonctionnalité sera connectée à votre backend Django.');
+}
+
+// ════════════════════════════════════════════════════════
+// GANTT
+// ════════════════════════════════════════════════════════
+let ganttTaskCount = 3;
+
+function addGanttTask() {
+    ganttTaskCount++;
+    const container = document.getElementById('gantt-tasks');
+    const row = document.createElement('div');
+    row.className = 'ge-form-row';
+    row.style.marginBottom = '8px';
+    row.dataset.task = ganttTaskCount;
+    row.innerHTML = `
+        <div class="ge-form-group"><label>Tâche ${ganttTaskCount}</label><input class="ge-input" type="text" placeholder="Ex: Livraison"></div>
+        <div class="ge-form-group"><label>Durée (semaines)</label><input class="ge-input" type="number" min="1" value="2"></div>
+    `;
+    container.appendChild(row);
+}
+
+function genGantt() {
+    const tasks = document.querySelectorAll('#gantt-tasks .ge-form-row');
+    const mois = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+    let tableHTML = '<table class="ge-gantt-table"><thead><tr><th style="min-width:180px">Tâche</th>';
+    
+    // Générer 12 semaines d'en-têtes
+    let debutDate = document.getElementById('g-debut').value 
+        ? new Date(document.getElementById('g-debut').value) 
+        : new Date();
+    
+    for (let s = 1; s <= 12; s++) {
+        tableHTML += `<th>S${s}</th>`;
+    }
+    tableHTML += '</tr></thead><tbody>';
+
+    let cumul = 0;
+    tasks.forEach((row, i) => {
+        const nom    = row.querySelector('input[type="text"]')?.value  || `Tâche ${i+1}`;
+        const duree  = parseInt(row.querySelector('input[type="number"]')?.value) || 2;
+        const debut  = cumul;
+        const fin    = cumul + duree;
+        cumul        = fin;
+
+        tableHTML += `<tr><td>${nom}</td>`;
+        for (let s = 1; s <= 12; s++) {
+            if (s > debut && s <= fin) {
+                const colors = ['var(--green)','var(--accent-blue)','var(--accent-purple)',
+                                'var(--accent-orange)','var(--accent-cyan)','var(--accent-pink)'];
+                const c = colors[i % colors.length];
+                tableHTML += `<td style="padding:4px"><div class="ge-gantt-bar" style="width:100%;background:${c}"></div></td>`;
+            } else {
+                tableHTML += '<td></td>';
+            }
+        }
+        tableHTML += '</tr>';
+    });
+
+    tableHTML += '</tbody></table>';
+    document.getElementById('gantt-output').innerHTML = tableHTML;
+    document.getElementById('result-gantt').classList.add('visible');
+}
+
+// ════════════════════════════════════════════════════════
+// KANBAN
+// ════════════════════════════════════════════════════════
+let kanbanTasks = [];
+let draggedTask = null;
+
+function addKanbanTask() {
+    const title = document.getElementById('k-new-task').value.trim();
+    if (!title) return;
+    const prio = document.getElementById('k-prio').value;
+    const due  = document.getElementById('k-due').value;
+    const id   = 'task-' + Date.now();
+    kanbanTasks.push({ id, title, prio, due, col: 'todo' });
+    document.getElementById('k-new-task').value = '';
+    renderKanban();
+}
+
+function renderKanban() {
+    ['todo','doing','done'].forEach(col => {
+        const colEl   = document.getElementById('col-' + col);
+        const countEl = document.getElementById('count-' + col);
+        const tasks   = kanbanTasks.filter(t => t.col === col);
+        countEl.textContent = tasks.length;
+        // Vider la colonne (garder le h4)
+        while (colEl.children.length > 1) colEl.removeChild(colEl.lastChild);
+        tasks.forEach(t => {
+            const div = document.createElement('div');
+            div.className = 'ge-task';
+            div.draggable = true;
+            div.dataset.id = t.id;
+            div.innerHTML = `
+                <div class="t-title"><span class="t-prio ${t.prio}"></span>${t.title}</div>
+                ${t.due ? `<div class="t-due">📅 ${new Date(t.due).toLocaleDateString('fr-FR')}</div>` : ''}
+            `;
+            div.addEventListener('dragstart', () => { draggedTask = t.id; });
+            colEl.appendChild(div);
+        });
+    });
+}
+
+function dropTask(event, col) {
+    event.preventDefault();
+    if (!draggedTask) return;
+    const task = kanbanTasks.find(t => t.id === draggedTask);
+    if (task) task.col = col;
+    draggedTask = null;
+    renderKanban();
+}
+
+// ════════════════════════════════════════════════════════
+// CHECKLIST AO
+// ════════════════════════════════════════════════════════
+const checklistData = {
+    fournitures: [
+        "Lettre de soumission signée et cachetée",
+        "Formulaire de soumission complété (formulaire ARCOP)",
+        "Déclaration sur l'honneur de non-exclusion",
+        "Copie du registre de commerce (RCCM)",
+        "Copie de l'attestation fiscale (IFU) en cours de validité",
+        "Attestation CNSS à jour",
+        "Caution de soumission (garantie bancaire ou chèque certifié)",
+        "Références similaires (au moins 3 marchés comparables)",
+        "Proposition technique (fiches techniques, catalogues)",
+        "Proposition financière dans enveloppe scellée séparée",
+        "Plan de livraison et délai d'exécution",
+        "Attestation de capacité financière (bilan 3 dernières années)",
+    ],
+    travaux: [
+        "Lettre de soumission signée et cachetée",
+        "Formulaire de soumission ARCOP",
+        "RCCM (mentionnant les activités BTP)",
+        "Agrément technique du Ministère des Infrastructures",
+        "IFU en cours de validité",
+        "Attestation CNSS à jour",
+        "Caution de soumission (2 à 5% du montant estimé)",
+        "Liste du matériel et équipements disponibles",
+        "Liste du personnel clé avec CV et diplômes",
+        "Méthodologie d'exécution détaillée",
+        "Planning d'exécution (diagramme de Gantt)",
+        "Proposition financière (bordereau de prix + devis estimatif)",
+        "Attestations de bonne exécution (marchés similaires)",
+        "Déclaration de capacité financière",
+    ],
+    services: [
+        "Lettre de soumission signée",
+        "Note de présentation du consultant / cabinet",
+        "Proposition technique (compréhension TDR, méthodologie, plan de travail)",
+        "CV détaillés des experts proposés",
+        "Copies des diplômes et certifications des experts",
+        "Références de missions similaires (3 minimum)",
+        "Proposition financière dans enveloppe séparée",
+        "RCCM",
+        "IFU en cours de validité",
+        "Attestation CNSS",
+        "Déclaration sur l'honneur",
+    ],
+    ami: [
+        "Lettre de manifestation d'intérêt (1 à 2 pages)",
+        "Note de présentation de la structure",
+        "Références techniques similaires (tableaux récapitulatifs)",
+        "CV des experts principaux",
+        "RCCM",
+        "IFU à jour",
+        "Attestation CNSS",
+    ]
+};
+
+let checklistState = {};
+
+function loadChecklist() {
+    const type  = document.getElementById('ao-type').value;
+    const items = checklistData[type] || [];
+    checklistState = {};
+    items.forEach((_, i) => checklistState[i] = false);
+    
+    const ul = document.getElementById('checklist-items');
+    ul.innerHTML = items.map((item, i) => `
+        <li id="cl-item-${i}" onclick="toggleCheck(${i})">
+            <div class="cb" id="cl-cb-${i}"></div>
+            <span>${item}</span>
+        </li>
+    `).join('');
+    updateChecklistProgress();
+}
+
+function toggleCheck(i) {
+    checklistState[i] = !checklistState[i];
+    const li = document.getElementById('cl-item-' + i);
+    const cb = document.getElementById('cl-cb-' + i);
+    li.classList.toggle('checked', checklistState[i]);
+    cb.textContent = checklistState[i] ? '✓' : '';
+    updateChecklistProgress();
+}
+
+function updateChecklistProgress() {
+    const total   = Object.keys(checklistState).length;
+    const checked = Object.values(checklistState).filter(Boolean).length;
+    const pct     = total > 0 ? Math.round(checked / total * 100) : 0;
+    document.getElementById('cl-pct').textContent    = pct + '%';
+    document.getElementById('cl-bar').style.width    = pct + '%';
+    document.getElementById('cl-bar').style.background =
+        pct === 100 ? 'var(--green)' : pct >= 70 ? 'var(--accent-yellow)' : 'var(--accent-blue)';
+}
+
+function resetChecklist() {
+    Object.keys(checklistState).forEach(k => checklistState[k] = false);
+    document.querySelectorAll('#checklist-items li').forEach(li => li.classList.remove('checked'));
+    document.querySelectorAll('#checklist-items .cb').forEach(cb => cb.textContent = '');
+    updateChecklistProgress();
+}
+
+// ════════════════════════════════════════════════════════
+// CALCULATEUR DÉLAI
+// ════════════════════════════════════════════════════════
+function calcDelai() {
+    const limite = document.getElementById('d-limite').value;
+    const debut  = document.getElementById('d-debut').value;
+    if (!limite) return;
+
+    const now    = debut ? new Date(debut) : new Date();
+    const target = new Date(limite);
+    const diffMs = target - now;
+
+    if (diffMs <= 0) {
+        document.getElementById('d-jours').textContent  = '0';
+        document.getElementById('d-heures').textContent = '0';
+        document.getElementById('d-ouvrables').textContent = '0';
+        document.getElementById('d-jours').className    = 'v red';
+        const alerte = document.getElementById('d-alerte');
+        alerte.style.display = 'block';
+        alerte.style.background = 'rgba(248,113,113,.1)';
+        alerte.style.border = '1px solid rgba(248,113,113,.3)';
+        alerte.style.color  = '#f87171';
+        alerte.innerHTML = '⚠️ <strong>Date dépassée !</strong> La date limite de soumission est passée.';
+        return;
+    }
+
+    const jours   = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const heures  = Math.floor(diffMs / (1000 * 60 * 60));
+
+    // Jours ouvrables (exclure week-ends)
+    let ouvrables = 0;
+    const d = new Date(now);
+    while (d < target) {
+        const dow = d.getDay();
+        if (dow !== 0 && dow !== 6) ouvrables++;
+        d.setDate(d.getDate() + 1);
+    }
+
+    document.getElementById('d-jours').textContent      = jours;
+    document.getElementById('d-heures').textContent     = heures;
+    document.getElementById('d-ouvrables').textContent  = ouvrables;
+
+    const colorClass = jours <= 3 ? 'red' : jours <= 7 ? 'orange' : 'green';
+    document.getElementById('d-jours').className    = 'v ' + colorClass;
+    document.getElementById('d-heures').className   = 'v ' + colorClass;
+    document.getElementById('d-ouvrables').className = 'v ' + colorClass;
+
+    // Alerte urgence
+    const alerte = document.getElementById('d-alerte');
+    if (jours <= 3) {
+        alerte.style.display = 'block';
+        alerte.style.background = 'rgba(248,113,113,.1)';
+        alerte.style.border = '1px solid rgba(248,113,113,.3)';
+        alerte.style.color  = '#f87171';
+        alerte.innerHTML    = '🚨 <strong>Urgence !</strong> Moins de 3 jours. Accélérez la préparation de votre dossier.';
+    } else if (jours <= 7) {
+        alerte.style.display = 'block';
+        alerte.style.background = 'rgba(234,179,8,.1)';
+        alerte.style.border = '1px solid rgba(234,179,8,.3)';
+        alerte.style.color  = 'var(--accent-yellow)';
+        alerte.innerHTML    = '⚠️ <strong>Attention !</strong> Moins d\'une semaine. Vérifiez que tous vos documents sont prêts.';
+    } else {
+        alerte.style.display = 'none';
+    }
+
+    // Recommandations
+    const reco = document.getElementById('d-recommandations');
+    const phases = [];
+    if (ouvrables >= 10) phases.push(`📅 Jours 1-${Math.floor(ouvrables*0.3)} : Collecte des documents administratifs`);
+    if (ouvrables >= 7)  phases.push(`📝 Jours ${Math.floor(ouvrables*0.3)+1}-${Math.floor(ouvrables*0.7)} : Rédaction de l'offre technique`);
+    if (ouvrables >= 4)  phases.push(`💰 Jours ${Math.floor(ouvrables*0.7)+1}-${Math.floor(ouvrables*0.85)} : Élaboration de l'offre financière`);
+    if (ouvrables >= 2)  phases.push(`✅ Jours ${Math.floor(ouvrables*0.85)+1}-${ouvrables} : Vérification finale et dépôt`);
+    reco.innerHTML = phases.join('<br>') || '<em>Délai trop court pour planifier.</em>';
+}
+
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function() {
+    // Date par défaut = aujourd'hui
+    const today = new Date().toISOString().split('T')[0];
+    const debutInput = document.getElementById('g-debut');
+    if (debutInput) debutInput.value = today;
+    const dDebutInput = document.getElementById('d-debut');
+    if (dDebutInput) dDebutInput.value = today;
+
+    // Kanban par défaut
+    kanbanTasks = [
+        { id: 'k1', title: 'Préparer le dossier ARCOP', prio: 'high',   due: '', col: 'todo'  },
+        { id: 'k2', title: 'Rédiger la proposition technique', prio: 'high', due: '', col: 'doing' },
+        { id: 'k3', title: 'Collecter les attestations', prio: 'medium', due: '', col: 'done'  },
+    ];
+    renderKanban();
+});
+</script>
+{% endblock %}

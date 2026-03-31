@@ -1,0 +1,35 @@
+def gestion_entreprise(request):
+    context = {
+        'today': timezone.now(),
+        
+        # Simulateur de charges
+        'simulateur_charges': {
+            'ca_mensuel': 0,
+            'charges_fixes': 0,
+            'resultat_net': 0
+        },
+        
+        # Alertes importantes
+        'alertes': [
+            {'type': 'warning', 'message': 'Déclaration URSSAF dans 5 jours'},
+            {'type': 'info', 'message': 'Entretien annuel à planifier pour 3 employés'},
+        ],
+        
+        # KPIs simplifiés
+        'kpis': {
+            'chiffre_affaire_mois': 24500,
+            'objectif_mensuel': 30000,
+            'taux_realisation': 82,
+            'nb_candidats_mois': 12,
+            'nb_entretiens_realises': 8
+        },
+        
+        # Templates disponibles
+        'templates_disponibles': [
+            {'nom': 'Fiche de paie', 'url': '#'},
+            {'nom': 'Contrat CDI', 'url': '#'},
+            {'nom': 'Avenant contrat', 'url': '#'},
+            {'nom': 'Attestation employeur', 'url': '#'}
+        ]
+    }
+    return render(request, 'myAppli/gestion/gestion_entreprise.html', context)

@@ -1614,9 +1614,6 @@ def trouver_emploi(request):
     
     return render(request, 'myAppli/outils_emploi/trouver_emploi.html', context)
 
-def gestion_entreprise(request):
-    return
-
 def generer_cv(request):
     """
     Générateur de CV accessible à tous
@@ -1764,12 +1761,6 @@ def generer_cv(request):
         'is_edit_mode': is_edit_mode,
     })
 
-def generer_lettre_motivation(request):
-    """
-    Outil de génération de lettre de motivation
-    """
-    return render(request, 'myAppli/outils_emploi/generer_lettre.html')
-
 @login_required
 def preparer_entretien(request):
     """
@@ -1818,23 +1809,6 @@ def apercu_cv(request, cv_id):
     
     return HttpResponse(html)
 
-def faq(request):
-    return
-
-def contact(request):
-    return
-
-def guide(request):
-    return
-
-def parametres(request):
-    return
-
-def mes_offres(request):
-    return
-
-def mes_candidatures(request):
-    return
 
 @login_required
 def mes_cvs(request):
@@ -2070,3 +2044,354 @@ def publier_offre_emploi(request):
     
     return redirect('myAppli:dashboard_recruteur')
 
+# myAppli/views.py - Ajouter ces fonctions
+
+def generer_lettre_motivation(request):
+    """
+    Générateur de lettre de motivation personnalisable
+    """
+    # Récupérer les données du candidat si connecté
+    user_data = {}
+    if request.user.is_authenticated and hasattr(request.user, 'particulier'):
+        particulier = request.user.particulier
+        if hasattr(particulier, 'candidat'):
+            candidat = particulier.candidat
+            user_data = {
+                'nom': particulier.nom,
+                'prenom': particulier.prenom,
+                'email': particulier.email,
+                'telephone': str(particulier.telephone),
+                'adresse': particulier.adresse,
+                'ville': particulier.ville,
+                'competences': candidat.competences,
+                'niveauEtude': candidat.niveauEtude,
+                'experiences': candidat.anneesExperiences,
+            }
+    
+    # Récupérer les offres d'emploi pour le select
+    offres = OffreEmploi.objects.filter(statut='PUBLIEE', est_active=True).order_by('-date_publication')[:20]
+    
+    context = {
+        'user_data': user_data,
+        'offres': offres,
+    }
+    return render(request, 'myAppli/outils_emploi/generer_lettre_motivation.html', context)
+
+
+#@login_required
+@require_http_methods(["POST"])
+def generer_lettre_pdf(request):
+    """
+    Génère le PDF de la lettre de motivation
+    """
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import mm
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from reportlab.pdfgen import canvas
+    import io
+    from django.http import HttpResponse
+    
+    # Récupérer les données du formulaire
+    data = request.POST
+    prenom = data.get('prenom', '')
+    nom = data.get('nom', '')
+    email = data.get('email', '')
+    telephone = data.get('telephone', '')
+    adresse = data.get('adresse', '')
+    ville = data.get('ville', '')
+    
+    entreprise_nom = data.get('entreprise_nom', '')
+    poste = data.get('poste', '')
+    offre_reference = data.get('offre_reference', '')
+    
+    # Sections personnalisées
+    presentation = data.get('presentation', '')
+    competences = data.get('competences', '')
+    motivations = data.get('motivations', '')
+    disponibilite = data.get('disponibilite', '')
+    
+    # Style choisi
+    style = data.get('style', 'classique')
+    
+    # Créer le PDF
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    styles = getSampleStyleSheet()
+    story = []
+    
+    # Styles personnalisés
+    style_title = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        textColor=colors.HexColor('#1ed760'),
+        alignment=TA_CENTER,
+        spaceAfter=30,
+    )
+    
+    style_subtitle = ParagraphStyle(
+        'CustomSubtitle',
+        parent=styles['Heading2'],
+        fontSize=14,
+        textColor=colors.grey,
+        alignment=TA_CENTER,
+        spaceAfter=20,
+    )
+    
+    style_normal = ParagraphStyle(
+        'CustomNormal',
+        parent=styles['Normal'],
+        fontSize=11,
+        alignment=TA_JUSTIFY,
+        spaceAfter=10,
+    )
+    
+    style_signature = ParagraphStyle(
+        'Signature',
+        parent=styles['Normal'],
+        fontSize=11,
+        alignment=TA_LEFT,
+        spaceBefore=30,
+    )
+    
+    # En-tête selon le style
+    if style == 'moderne':
+        # En-tête moderne avec cadre
+        header_data = [[
+            Paragraph(f"<b>{prenom} {nom}</b>", style_title),
+        ]]
+        header_table = Table(header_data, colWidths=[doc.width])
+        header_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#1ed760')),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 15),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+        ]))
+        story.append(header_table)
+        story.append(Spacer(1, 20))
+        
+        # Coordonnées
+        contact_text = f"{adresse}<br/>{ville}<br/>{telephone}<br/>{email}"
+        story.append(Paragraph(contact_text, styles['Normal']))
+        
+    else:  # classique
+        # En-tête classique
+        story.append(Paragraph(f"{prenom} {nom}", style_title))
+        story.append(Paragraph(f"{adresse}", styles['Normal']))
+        story.append(Paragraph(f"{ville}", styles['Normal']))
+        story.append(Paragraph(f"Tél: {telephone} | Email: {email}", styles['Normal']))
+    
+    story.append(Spacer(1, 30))
+    
+    # Date
+    from datetime import datetime
+    date_obj = datetime.now()
+    story.append(Paragraph(f"Le {date_obj.strftime('%d/%m/%Y')}", styles['Normal']))
+    story.append(Spacer(1, 20))
+    
+    # Destinataire
+    story.append(Paragraph(f"À l'attention du recruteur", styles['Normal']))
+    story.append(Paragraph(f"{entreprise_nom}", styles['Normal']))
+    story.append(Spacer(1, 20))
+    
+    # Objet
+    story.append(Paragraph(f"<b>Objet : Candidature pour le poste de {poste}</b>", styles['Normal']))
+    story.append(Spacer(1, 20))
+    
+    # Corps de la lettre
+    story.append(Paragraph("Madame, Monsieur,", styles['Normal']))
+    story.append(Spacer(1, 10))
+    
+    # Introduction
+    intro = f"Actuellement à la recherche d'un nouveau défi professionnel, j'ai l'honneur de vous présenter ma candidature pour le poste de <b>{poste}</b> au sein de votre structure."
+    if offre_reference:
+        intro += f" Suite à votre offre d'emploi référencée <b>{offre_reference}</b>, je me permets de vous adresser ma candidature."
+    story.append(Paragraph(intro, style_normal))
+    story.append(Spacer(1, 10))
+    
+    # Présentation
+    if presentation:
+        story.append(Paragraph(presentation, style_normal))
+        story.append(Spacer(1, 10))
+    else:
+        story.append(Paragraph(f"Titulaire d'un {user_data.get('niveauEtude', 'diplôme')}, je dispose d'une expérience de {user_data.get('experiences', 0)} ans dans le domaine.", style_normal))
+        story.append(Spacer(1, 10))
+    
+    # Compétences
+    if competences:
+        story.append(Paragraph("<b>Mes compétences clés :</b>", styles['Normal']))
+        story.append(Paragraph(competences, style_normal))
+    else:
+        story.append(Paragraph("<b>Mes atouts :</b>", styles['Normal']))
+        story.append(Paragraph(f"• {user_data.get('competences', 'Rigueur, autonomie et esprit d\'équipe')}", style_normal))
+    story.append(Spacer(1, 10))
+    
+    # Motivations
+    if motivations:
+        story.append(Paragraph("<b>Mes motivations :</b>", styles['Normal']))
+        story.append(Paragraph(motivations, style_normal))
+    else:
+        story.append(Paragraph("<b>Pourquoi me rejoindre ?</b>", styles['Normal']))
+        story.append(Paragraph("Je suis convaincu que mon profil correspond aux valeurs et aux besoins de votre entreprise. Dynamique et passionné, je saurai m'investir pleinement dans les missions qui me seront confiées.", style_normal))
+    story.append(Spacer(1, 10))
+    
+    # Disponibilité
+    if disponibilite:
+        story.append(Paragraph(f"Je suis disponible à compter du {disponibilite}.", styles['Normal']))
+    else:
+        story.append(Paragraph("Je me tiens à votre disposition pour un entretien à votre convenance.", styles['Normal']))
+    story.append(Spacer(1, 20))
+    
+    # Formule de politesse
+    story.append(Paragraph("Je vous remercie de l'attention que vous porterez à ma candidature et vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.", style_normal))
+    story.append(Spacer(1, 30))
+    
+    # Signature
+    story.append(Paragraph(f"{prenom} {nom}", style_signature))
+    
+    # Générer le PDF
+    doc.build(story)
+    pdf = buffer.getvalue()
+    buffer.close()
+    
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="lettre_motivation_{nom}_{prenom}.pdf"'
+    return response
+
+
+def telecharger_modele_lettre(request):
+    """
+    Télécharge un modèle de lettre de motivation au format DOCX
+    """
+    from docx import Document
+    from docx.shared import Inches, Pt
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    import io
+    
+    buffer = io.BytesIO()
+    doc = Document()
+    
+    # Style du document
+    style = doc.styles['Normal']
+    style.font.name = 'Arial'
+    style.font.size = Pt(11)
+    
+    # En-tête
+    title = doc.add_heading('LETTRE DE MOTIVATION', 0)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    doc.add_paragraph()
+    
+    # Coordonnées
+    doc.add_paragraph('[Votre Nom et Prénom]')
+    doc.add_paragraph('[Votre Adresse]')
+    doc.add_paragraph('[Code Postal, Ville]')
+    doc.add_paragraph('[Téléphone]')
+    doc.add_paragraph('[Email]')
+    
+    doc.add_paragraph()
+    doc.add_paragraph(f"Le [Date]")
+    doc.add_paragraph()
+    
+    # Destinataire
+    doc.add_paragraph("À l'attention du service recrutement")
+    doc.add_paragraph("[Nom de l'entreprise]")
+    doc.add_paragraph("[Adresse de l'entreprise]")
+    
+    doc.add_paragraph()
+    doc.add_paragraph("Objet : Candidature pour le poste de [Intitulé du poste]")
+    doc.add_paragraph()
+    
+    # Corps
+    doc.add_paragraph("Madame, Monsieur,")
+    doc.add_paragraph()
+    
+    p = doc.add_paragraph("Actuellement à la recherche d'un nouveau défi professionnel, j'ai l'honneur de vous présenter ma candidature pour le poste de [Intitulé du poste] au sein de votre structure.")
+    doc.add_paragraph()
+    
+    doc.add_paragraph("[Décrivez votre parcours et vos compétences]")
+    doc.add_paragraph()
+    
+    doc.add_paragraph("Je reste à votre disposition pour un entretien afin de vous exposer plus en détail ma motivation et mes compétences.")
+    doc.add_paragraph()
+    
+    doc.add_paragraph("Je vous remercie de l'attention que vous porterez à ma candidature et vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.")
+    doc.add_paragraph()
+    
+    doc.add_paragraph("[Signature]")
+    
+    doc.save(buffer)
+    buffer.seek(0)
+    
+    response = HttpResponse(buffer, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+    response['Content-Disposition'] = 'attachment; filename="modele_lettre_motivation.docx"'
+    return response
+
+def apercu_style_lettre(request, style):
+    """Génère un aperçu HTML d'un style de lettre"""
+    # Données d'exemple pour l'aperçu
+    contexte = {
+        'style': style,
+        'prenom': 'Juste',
+        'nom': 'KABORE',
+        'email': 'juste.kabore@email.com',
+        'telephone': '01 23 45 67',
+        'adresse': '123 rue de l\'Exemple',
+        'ville': 'Bobo',
+        'entreprise_nom': 'Entreprise ABC',
+        'poste': 'Développeur Web',
+        'date': datetime.now().strftime('%d/%m/%Y')
+    }
+    
+    return render(request, f'lettre/aperçu_{style}.html', contexte)
+
+def gestion_entreprise(request):
+    # Liste des outils en développement
+    tools_in_development = [
+        'facture', 'offre_cout', 'contrat', 'fiche_poste', 'paie', 
+        'rapport', 'pv', 'pitch', 'communique', 'plan_com', 
+        'profil_ent', 'note_meth', 'biblio_doc'
+    ]
+    
+    # Statistiques pour le hero
+    stats = {
+        'total_outils': 21,
+        'categories': 5,
+        'ia_assistee': 6
+    }
+    
+    # Données de démonstration pour le tableau de bord
+    dashboard_data = {
+        'kpis': {
+            'chiffre_affaire_mois': 24500,
+            'objectif_mensuel': 30000,
+            'taux_realisation': 82,
+            'nb_candidats_mois': 12,
+            'nb_entretiens_realises': 8,
+            'projets_en_cours': 3,
+            'taux_activite': 75
+        },
+        'alertes': [
+            {'type': 'warning', 'message': 'Déclaration URSSAF dans 5 jours'},
+            {'type': 'info', 'message': 'Entretien annuel à planifier pour 3 employés'},
+            {'type': 'success', 'message': 'Votre proposition pour le marché SONABHY a été retenue !'}
+        ]
+    }
+    
+    # Date du jour pour les calculs
+    today = timezone.now().date()
+    
+    context = {
+        'today': today,
+        'tools_in_development': tools_in_development,
+        'stats': stats,
+        'dashboard': dashboard_data,
+        'annee_courante': today.year,
+    }
+    
+    return render(request, 'myAppli/gestion/gestion_entreprise.html', context)
