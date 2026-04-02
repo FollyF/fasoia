@@ -12,11 +12,6 @@ from django.core.files.base import ContentFile
 
 
 class GenerateurCVPublic:
-    """
-    Service de génération de CV accessible à tous.
-    Gère les 6 styles : executive, geometric, diagonal, dark, swiss, splitcard
-    """
-
 
     def __init__(self):
         self.templates_dir = 'cv/'
