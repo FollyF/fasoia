@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CV – {{ prenom }} {{ nom }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1b2d4f; --blue: #2456a4; --sky: #4a90d9;
+    --pale: #eef3fa; --silver: #8a9ab5; --text: #2c3e50;
+    --white: #ffffff; --bg: #f0f4f9;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Source Sans 3', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 40px 20px; min-height: 100vh; }
+  .cv { width: 900px; background: var(--white); box-shadow: 0 20px 60px rgba(27,45,79,0.15); display: grid; grid-template-columns: 260px 1fr; overflow: hidden; position: relative; }
+  .cv::before { content: ''; position: absolute; top: 0; left: 260px; right: 0; height: 180px; background: var(--navy); clip-path: polygon(0 0, 100% 0, 100% 70%, 0 100%); z-index: 0; }
+  .left { background: var(--navy); padding: 0 0 40px; position: relative; z-index: 1; }
+  .photo-wrap { width: 100%; aspect-ratio: 1; position: relative; overflow: hidden; }
+  .photo-wrap img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-placeholder { width: 100%; height: 100%; min-height: 260px; background: linear-gradient(180deg, #1b2d4f 0%, #243d6a 100%); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 64px; font-weight: 400; color: rgba(74,144,217,0.3); letter-spacing: 4px; }
+  .name-overlay { background: var(--blue); padding: 18px 24px; text-align: center; }
+  .n-full { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--white); letter-spacing: 1px; }
+  .n-title { font-size: 11px; color: rgba(255,255,255,0.65); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; font-weight: 300; }
+  .left-section { padding: 22px 22px 0; }
+  .ls-title { font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--sky); font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .ls-title::after { content: ''; flex: 1; height: 1px; background: rgba(74,144,217,0.25); }
+  .c-info { font-size: 12px; color: rgba(255,255,255,0.72); line-height: 1.6; margin-bottom: 7px; }
+  .c-info-icon { color: var(--sky); margin-right: 6px; font-size: 11px; }
+  .skill-item { margin-bottom: 10px; }
+  .skill-name { font-size: 12px; color: rgba(255,255,255,0.8); margin-bottom: 5px; }
+  .skill-track { height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
+  .skill-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--sky), #7abff5); }
+  .lang-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px; color: rgba(255,255,255,0.78); }
+  .lang-badge { font-size: 9.5px; letter-spacing: 0.5px; color: var(--sky); border: 1px solid rgba(74,144,217,0.35); padding: 1px 6px; }
+  .interest-cloud { display: flex; flex-wrap: wrap; gap: 5px; }
+  .int-chip { font-size: 11px; color: rgba(255,255,255,0.65); background: rgba(74,144,217,0.12); border: 1px solid rgba(74,144,217,0.2); padding: 4px 10px; border-radius: 20px; }
+  .right { padding: 0; position: relative; z-index: 1; }
+  .right-header { height: 180px; display: flex; align-items: flex-end; padding: 0 40px 28px; position: relative; }
+  .rh-content { position: relative; z-index: 2; }
+  .rh-greeting { font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(255,255,255,0.55); font-weight: 300; margin-bottom: 4px; }
+  .rh-name { font-family: 'Playfair Display', serif; font-size: 34px; font-weight: 700; color: var(--white); line-height: 1.1; letter-spacing: 0.5px; }
+  .right-body { padding: 32px 40px; display: flex; flex-direction: column; gap: 28px; }
+  .summary-box { background: var(--pale); border-left: 3px solid var(--blue); padding: 16px 20px; font-size: 13px; color: var(--text); line-height: 1.75; font-style: italic; font-family: 'Playfair Display', serif; font-weight: 400; }
+  .r-section-title { font-size: 13px; font-weight: 600; color: var(--blue); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .r-section-title::before { content: ''; width: 30px; height: 2px; background: var(--blue); flex-shrink: 0; }
+  .exp-block { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--pale); display: grid; grid-template-columns: 1fr auto; gap: 0 12px; }
+  .exp-block:last-child { border-bottom: none; margin-bottom: 0; }
+  .eb-role { font-size: 14.5px; font-weight: 600; color: var(--text); grid-column: 1; }
+  .eb-period { font-size: 11px; color: var(--blue); font-weight: 600; text-align: right; white-space: nowrap; margin-top: 2px; }
+  .eb-company { font-size: 12.5px; color: var(--silver); grid-column: 1 / 3; margin: 3px 0 8px; }
+  .eb-desc { font-size: 12.5px; color: #4a5568; line-height: 1.65; grid-column: 1 / 3; }
+  .edu-flex { display: flex; flex-direction: column; gap: 14px; }
+  .edu-line { display: flex; gap: 16px; align-items: flex-start; }
+  .edu-yr { font-size: 11px; color: var(--sky); font-weight: 600; white-space: nowrap; min-width: 80px; padding-top: 2px; }
+  .edu-deg { font-size: 13.5px; font-weight: 600; color: var(--text); }
+  .edu-sch { font-size: 12px; color: var(--silver); margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="cv">
+  <aside class="left">
+    <div class="photo-wrap">
+      {% if photo_src %}
+        <img src="{{ photo_src }}" alt="Photo de profil" />
+      {% else %}
+        <div class="photo-placeholder">{{ prenom|slice:":1" }}{{ nom|slice:":1" }}</div>
+      {% endif %}
+    </div>
+    <div class="name-overlay">
+      <div class="n-full">{{ prenom }} {{ nom }}</div>
+    </div>
+
+    <div class="left-section" style="margin-top:22px;">
+      <div class="ls-title">Contact</div>
+      {% if email %}<div class="c-info"><span class="c-info-icon">✉</span>{{ email }}</div>{% endif %}
+      {% if telephone %}<div class="c-info"><span class="c-info-icon">☏</span>{{ telephone }}</div>{% endif %}
+      {% if adresse %}<div class="c-info"><span class="c-info-icon">⊙</span>{{ adresse }}{% if ville %}, {{ ville }}{% endif %}</div>{% endif %}
+      {% if permis %}<div class="c-info"><span class="c-info-icon">🚗</span>Permis {{ permis }}</div>{% endif %}
+    </div>
+
+    {% if competences %}
+    <div class="left-section" style="margin-top:22px;">
+      <div class="ls-title">Compétences</div>
+      {% for competence in competences %}
+      <div class="skill-item">
+        <div class="skill-name">{{ competence }}</div>
+        <div class="skill-track"><div class="skill-fill" style="width:80%"></div></div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if langues %}
+    <div class="left-section" style="margin-top:22px;">
+      <div class="ls-title">Langues</div>
+      {% for langue in langues %}
+      <div class="lang-row"><span>{{ langue }}</span><span class="lang-badge">●●●</span></div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if centres_interet %}
+    <div class="left-section" style="margin-top:22px;">
+      <div class="ls-title">Intérêts</div>
+      <div class="interest-cloud">
+        {% for interet in centres_interet %}<span class="int-chip">{{ interet }}</span>{% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </aside>
+
+  <main class="right">
+    <div class="right-header">
+      <div class="rh-content">
+        <div class="rh-greeting">Bonjour, je suis</div>
+        <div class="rh-name">{{ prenom }}<br>{{ nom }}</div>
+      </div>
+    </div>
+    <div class="right-body">
+      {% if resume %}<div class="summary-box">{{ resume }}</div>{% endif %}
+
+      {% if experiences %}
+      <div>
+        <div class="r-section-title">Expériences</div>
+        {% for exp in experiences %}
+        <div class="exp-block">
+          <div class="eb-role">{{ exp.titre }}</div>
+          <div class="eb-period">{{ exp.date_debut }}{% if exp.date_fin %} – {{ exp.date_fin }}{% endif %}</div>
+          <div class="eb-company">{{ exp.entreprise }}</div>
+          {% if exp.description %}<div class="eb-desc">{{ exp.description }}</div>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if formations %}
+      <div>
+        <div class="r-section-title">Formation</div>
+        <div class="edu-flex">
+          {% for formation in formations %}
+          <div class="edu-line">
+            <div class="edu-yr">{{ formation.annee }}</div>
+            <div><div class="edu-deg">{{ formation.diplome }}</div><div class="edu-sch">{{ formation.etablissement }}</div></div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </main>
+</div>
+</body>
+</html>

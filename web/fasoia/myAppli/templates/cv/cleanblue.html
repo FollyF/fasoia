@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CV – {{ prenom }} {{ nom }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { --blue: #1e40af; --lightblue: #dbeafe; --text: #1e2937; --gray: #64748b; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Roboto', sans-serif; background:#f0f7ff; padding:40px 20px; }
+  .cv { width:900px; margin:auto; background:white; box-shadow:0 20px 60px rgba(30,64,175,0.12); }
+  
+  .top { height:12px; background:linear-gradient(90deg, var(--blue), #60a5fa); }
+  .header { padding:45px 60px; background:var(--blue); color:white; }
+  .name { font-size:42px; font-weight:700; letter-spacing:-0.5px; }
+  
+  .main { display:grid; grid-template-columns: 290px 1fr; }
+  .left { padding:45px 50px; background:var(--lightblue); }
+  .right { padding:45px 55px; }
+  
+  .photo-wrap { width:140px; height:140px; border-radius:8px; overflow:hidden; margin-bottom:25px; border:4px solid white; }
+  .photo-placeholder { width:100%; height:100%; background:#1e40af; color:white; display:flex; align-items:center; justify-content:center; font-size:48px; }
+</style>
+</head>
+<body>
+<div class="cv">
+  <div class="top"></div>
+  <div class="header">
+    <div class="name">{{ prenom }} {{ nom }}</div>
+  </div>
+  <div class="main">
+    <aside class="left">
+      <div class="photo-wrap">
+        {% if photo_src %}
+          <img src="{{ photo_src }}" alt="Photo">
+        {% else %}
+          <div class="photo-placeholder">{{ prenom|slice:":1" }}{{ nom|slice:":1" }}</div>
+        {% endif %}
+      </div>
+      
+      <div style="margin-top:30px;">
+        <div style="font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--blue); margin-bottom:12px;">Contact</div>
+        {% if email %}<div style="margin-bottom:8px;">{{ email }}</div>{% endif %}
+        {% if telephone %}<div style="margin-bottom:8px;">{{ telephone }}</div>{% endif %}
+        {% if adresse %}<div>{{ adresse }}{% if ville %}, {{ ville }}{% endif %}</div>{% endif %}
+      </div>
+
+      {% if competences %}
+      <div style="margin-top:40px;">
+        <div style="font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--blue); margin-bottom:12px;">Compétences</div>
+        {% for competence in competences %}
+        <div style="margin-bottom:8px;">• {{ competence }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </aside>
+    
+    <main class="right">
+      {% if resume %}<p style="font-size:14.5px; line-height:1.75; margin-bottom:35px;">{{ resume }}</p>{% endif %}
+      
+      {% if experiences %}
+      <div style="margin-bottom:35px;">
+        <div style="font-size:16px; font-weight:700; color:var(--blue); margin-bottom:15px;">Expériences professionnelles</div>
+        {% for exp in experiences %}
+        <div style="margin-bottom:22px;">
+          <strong>{{ exp.titre }}</strong><br>
+          <span style="color:#1e40af;">{{ exp.entreprise }}</span> — <small>{{ exp.date_debut }}{% if exp.date_fin %} – {{ exp.date_fin }}{% endif %}</small>
+          {% if exp.description %}<p style="margin-top:8px; font-size:13.5px;">{{ exp.description }}</p>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      
+      {% if formations %}
+      <div>
+        <div style="font-size:16px; font-weight:700; color:var(--blue); margin-bottom:15px;">Formation</div>
+        {% for formation in formations %}
+        <div style="margin-bottom:18px;">
+          <strong>{{ formation.diplome }}</strong><br>
+          <span style="color:#555;">{{ formation.etablissement }} — {{ formation.annee }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </main>
+  </div>
+</div>
+</body>
+</html>

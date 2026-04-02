@@ -1,34 +1,131 @@
-{% extends "cv/base_cv.html" %}
-
-{% block extra_css %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CV – {{ prenom }} {{ nom }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
 <style>
-    /* Style moderne - couleurs vives, design épuré */
-    body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        border-left: 5px solid #1ed760;
-        padding-left: 25px;
-    }
-    
-    h1 {
-        color: #1ed760;
-        font-weight: 600;
-    }
-    
-    h2 {
-        border-bottom-color: #1ed760;
-        color: #333;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    
-    .skill-tag {
-        background: #1ed760;
-        color: white;
-    }
-    
-    .experience-item, .formation-item {
-        border-left: 3px solid #1ed760;
-        padding-left: 15px;
-    }
+  :root {
+    --primary: #0a84ff; --dark: #111827; --gray: #6b7280; --light: #f8fafc; --accent: #e0f2fe;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Manrope', sans-serif; background:#f1f5f9; padding:40px 20px; display:flex; justify-content:center; min-height:100vh; }
+  .cv { width: 920px; background:white; border-radius:16px; overflow:hidden; box-shadow:0 25px 70px rgba(10,132,255,0.15); }
+  
+  .header { background:var(--dark); color:white; padding:60px 70px 40px; position:relative; }
+  .header::after { content:''; position:absolute; bottom:0; left:0; right:0; height:6px; background:linear-gradient(90deg, var(--primary), #60a5fa); }
+  
+  .name { font-family:'Space Grotesk', sans-serif; font-size:48px; font-weight:600; line-height:1.05; letter-spacing:-1px; }
+  .title { font-size:15px; color:#94a3b8; margin-top:8px; letter-spacing:2px; text-transform:uppercase; }
+  
+  .main { display:grid; grid-template-columns: 300px 1fr; }
+  
+  .left { background:var(--light); padding:50px 55px; }
+  .photo-wrap { width:170px; height:170px; border-radius:12px; overflow:hidden; margin-bottom:30px; box-shadow:0 15px 35px rgba(0,0,0,0.1); }
+  .photo-wrap img { width:100%; height:100%; object-fit:cover; }
+  .photo-placeholder { width:100%; height:100%; background:linear-gradient(#1e2937, #334155); display:flex; align-items:center; justify-content:center; font-size:52px; color:rgba(255,255,255,0.25); font-weight:600; }
+  
+  .ls-title { font-size:11.5px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:var(--primary); margin-bottom:16px; }
+  
+  .right { padding:55px 65px; }
+  .summary { font-size:14.5px; line-height:1.75; color:#374151; margin-bottom:35px; }
+  .r-section-title { font-size:15px; font-weight:600; color:var(--dark); margin-bottom:18px; padding-bottom:8px; border-bottom:2px solid var(--primary); }
+  
+  .exp-block { margin-bottom:26px; }
+  .eb-role { font-size:15.5px; font-weight:600; color:var(--dark); }
+  .eb-period { font-size:13px; color:var(--primary); margin-top:2px; }
+  .eb-company { color:var(--gray); font-size:14px; margin:4px 0 8px; }
+  .eb-desc { font-size:13.5px; line-height:1.65; color:#4b5563; }
+  
+  .edu-line { display:flex; gap:25px; margin-bottom:18px; }
+  .edu-yr { min-width:75px; font-weight:600; color:var(--primary); }
 </style>
-{% endblock %}
+</head>
+<body>
+<div class="cv">
+  <div class="header">
+    <div class="name">{{ prenom }} {{ nom }}</div>
+    <div class="title">Curriculum Vitae</div>
+  </div>
+  
+  <div class="main">
+    <aside class="left">
+      <div class="photo-wrap">
+        {% if photo_src %}
+          <img src="{{ photo_src }}" alt="Photo de profil">
+        {% else %}
+          <div class="photo-placeholder">{{ prenom|slice:":1" }}{{ nom|slice:":1" }}</div>
+        {% endif %}
+      </div>
+      
+      <div class="ls-title">Contact</div>
+      {% if email %}<div style="margin-bottom:9px; font-size:13.5px;">{{ email }}</div>{% endif %}
+      {% if telephone %}<div style="margin-bottom:9px; font-size:13.5px;">{{ telephone }}</div>{% endif %}
+      {% if adresse %}<div style="font-size:13.5px;">{{ adresse }}{% if ville %}, {{ ville }}{% endif %}</div>{% endif %}
+      {% if permis %}<div style="margin-top:8px; font-size:13px;">🚗 Permis {{ permis }}</div>{% endif %}
+      
+      {% if competences %}
+      <div style="margin-top:45px;">
+        <div class="ls-title">Compétences</div>
+        {% for competence in competences %}
+        <div style="margin-bottom:11px; font-size:14px;">• {{ competence }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      
+      {% if langues %}
+      <div style="margin-top:40px;">
+        <div class="ls-title">Langues</div>
+        {% for langue in langues %}
+        <div style="margin-bottom:8px; font-size:14px;">{{ langue }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      
+      {% if centres_interet %}
+      <div style="margin-top:40px;">
+        <div class="ls-title">Intérêts</div>
+        <div style="font-size:13.5px; line-height:1.7; color:#475569;">
+          {% for interet in centres_interet %}{{ interet }}{% if not loop.last %} • {% endif %}{% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </aside>
+    
+    <main class="right">
+      {% if resume %}<div class="summary">{{ resume }}</div>{% endif %}
+      
+      {% if experiences %}
+      <div>
+        <div class="r-section-title">Expériences professionnelles</div>
+        {% for exp in experiences %}
+        <div class="exp-block">
+          <div class="eb-role">{{ exp.titre }}</div>
+          <div class="eb-period">{{ exp.date_debut }}{% if exp.date_fin %} – {{ exp.date_fin }}{% endif %}</div>
+          <div class="eb-company">{{ exp.entreprise }}</div>
+          {% if exp.description %}<div class="eb-desc">{{ exp.description }}</div>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      
+      {% if formations %}
+      <div style="margin-top:40px;">
+        <div class="r-section-title">Formation</div>
+        {% for formation in formations %}
+        <div class="edu-line">
+          <div class="edu-yr">{{ formation.annee }}</div>
+          <div>
+            <div style="font-weight:600; font-size:14.5px;">{{ formation.diplome }}</div>
+            <div style="color:var(--gray); font-size:13.5px;">{{ formation.etablissement }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </main>
+  </div>
+</div>
+</body>
+</html>

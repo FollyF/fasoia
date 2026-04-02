@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CV – {{ prenom }} {{ nom }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@200;400;600;700;900&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --deep: #0c2461; --blue: #1e4db7; --mid: #3273dc;
+    --sky: #74b0ff; --pale: #ebf2ff; --silver: #607897;
+    --text: #2d3e50; --rule: #dae4f5; --white: #ffffff; --offwhite: #f7f9fd;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Open Sans', sans-serif; background: linear-gradient(135deg, #b8cae0 0%, #d4e2f0 100%); display: flex; justify-content: center; padding: 40px 20px; min-height: 100vh; }
+  .cv-shell { width: 900px; display: flex; flex-direction: column; box-shadow: 0 40px 100px rgba(12,36,97,0.25); background: var(--white); overflow: hidden; position: relative; }
+  .top-stripe { height: 6px; background: linear-gradient(90deg, var(--deep), var(--mid), var(--sky)); }
+  .header-split { display: grid; grid-template-columns: 280px 1fr; min-height: 240px; }
+  .hs-left { background: var(--deep); position: relative; overflow: hidden; display: flex; flex-direction: column; }
+  .hs-left::after { content: ''; position: absolute; top: 0; bottom: 0; right: -30px; width: 60px; background: var(--deep); transform: skewX(-5deg); z-index: 1; }
+  .photo-ring { width: 140px; height: 140px; border-radius: 50%; border: 4px solid rgba(115,176,255,0.4); overflow: hidden; margin: 36px auto 0; flex-shrink: 0; position: relative; z-index: 2; background: linear-gradient(135deg, #1a3a7a, #0c2461); }
+  .photo-ring img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .photo-initials { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-family: 'Raleway', sans-serif; font-size: 44px; font-weight: 200; color: rgba(115,176,255,0.5); letter-spacing: 2px; }
+  .hs-name-under { text-align: center; padding: 14px 20px 20px; position: relative; z-index: 2; }
+  .hun-full { font-family: 'Raleway', sans-serif; font-size: 16px; font-weight: 700; color: var(--white); letter-spacing: 1px; }
+  .hs-right { background: var(--offwhite); padding: 36px 44px; display: flex; flex-direction: column; justify-content: center; border-bottom: 1px solid var(--rule); }
+  .hr-hello { font-family: 'Raleway', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 4px; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
+  .hr-bigname { font-family: 'Raleway', sans-serif; line-height: 1; }
+  .hr-bigname .hn-first { font-size: 46px; font-weight: 200; color: var(--deep); letter-spacing: -1px; }
+  .hr-bigname .hn-last { font-size: 46px; font-weight: 900; color: var(--deep); letter-spacing: -1px; text-transform: uppercase; }
+  .hr-summary { font-size: 13px; color: var(--silver); line-height: 1.72; margin-top: 14px; font-weight: 300; border-top: 1px solid var(--rule); padding-top: 14px; }
+  .body-split { display: grid; grid-template-columns: 280px 1fr; flex: 1; }
+  .bs-left { background: var(--deep); padding: 0 0 36px; }
+  .bl-section { padding: 24px 22px 0; }
+  .bl-title { font-family: 'Raleway', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--sky); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid rgba(115,176,255,0.15); }
+  .bl-contact-item { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 9px; }
+  .bci-icon { width: 22px; height: 22px; background: rgba(115,176,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--sky); flex-shrink: 0; }
+  .bci-text { font-size: 11.5px; color: rgba(255,255,255,0.72); line-height: 1.5; padding-top: 2px; word-break: break-word; }
+  .skill-block { margin-bottom: 9px; }
+  .sb-name { font-size: 12px; color: rgba(255,255,255,0.82); margin-bottom: 5px; }
+  .sb-bar-bg { height: 4px; background: rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; }
+  .sb-bar-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--mid), var(--sky)); }
+  .lang-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 9px; font-size: 12px; color: rgba(255,255,255,0.8); }
+  .bs-right { padding: 32px 40px; display: flex; flex-direction: column; gap: 28px; border-left: 1px solid var(--rule); }
+  .r-title { font-family: 'Raleway', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--deep); padding-bottom: 10px; border-bottom: 2px solid var(--pale); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .r-title-num { font-size: 22px; color: var(--pale); font-weight: 900; font-family: 'Raleway', sans-serif; line-height: 1; }
+  .exp-entry { display: flex; gap: 16px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px dashed var(--rule); align-items: flex-start; }
+  .exp-entry:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .ee-bullet { width: 40px; height: 40px; background: var(--pale); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; border: 1px solid var(--rule); }
+  .ee-bullet-inner { width: 10px; height: 10px; background: var(--mid); border-radius: 2px; transform: rotate(45deg); }
+  .ee-content { flex: 1; }
+  .ee-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .ee-role { font-size: 14px; font-weight: 600; color: var(--text); }
+  .ee-date { font-size: 11px; color: var(--mid); font-weight: 600; white-space: nowrap; }
+  .ee-company { font-size: 12px; color: var(--silver); margin: 3px 0 8px; font-style: italic; }
+  .ee-desc { font-size: 12.5px; color: #4a5568; line-height: 1.65; font-weight: 300; }
+  .edu-entry { display: flex; gap: 14px; margin-bottom: 12px; align-items: flex-start; }
+  .edu-yr { font-family: 'Raleway', sans-serif; font-size: 11px; font-weight: 700; color: var(--mid); white-space: nowrap; min-width: 70px; padding-top: 2px; }
+  .edu-divider { width: 2px; align-self: stretch; background: var(--rule); flex-shrink: 0; }
+  .edu-deg { font-size: 13px; font-weight: 600; color: var(--text); }
+  .edu-sch { font-size: 12px; color: var(--silver); margin-top: 2px; }
+  .int-chip { font-size: 10.5px; color: rgba(255,255,255,0.65); background: rgba(115,176,255,0.12); border: 1px solid rgba(115,176,255,0.2); padding: 4px 10px; border-radius: 20px; display: inline-block; margin: 2px; }
+</style>
+</head>
+<body>
+<div class="cv-shell">
+  <div class="top-stripe"></div>
+
+  <div class="header-split">
+    <div class="hs-left">
+      <div class="photo-ring">
+        {% if photo_src %}
+          <img src="{{ photo_src }}" alt="Photo de profil" />
+        {% else %}
+          <div class="photo-initials">{{ prenom|slice:":1" }}{{ nom|slice:":1" }}</div>
+        {% endif %}
+      </div>
+      <div class="hs-name-under">
+        <div class="hun-full">{{ prenom }} {{ nom }}</div>
+      </div>
+    </div>
+    <div class="hs-right">
+      <div class="hr-hello">Bonjour, je suis</div>
+      <div class="hr-bigname">
+        <div class="hn-first">{{ prenom }}</div>
+        <div class="hn-last">{{ nom }}</div>
+      </div>
+      {% if resume %}<p class="hr-summary">{{ resume }}</p>{% endif %}
+    </div>
+  </div>
+
+  <div class="body-split">
+    <aside class="bs-left">
+      <div class="bl-section">
+        <div class="bl-title">Contact</div>
+        {% if email %}<div class="bl-contact-item"><div class="bci-icon">✉</div><div class="bci-text">{{ email }}</div></div>{% endif %}
+        {% if telephone %}<div class="bl-contact-item"><div class="bci-icon">☏</div><div class="bci-text">{{ telephone }}</div></div>{% endif %}
+        {% if adresse %}<div class="bl-contact-item"><div class="bci-icon">⊙</div><div class="bci-text">{{ adresse }}{% if ville %}, {{ ville }}{% endif %}</div></div>{% endif %}
+        {% if permis %}<div class="bl-contact-item"><div class="bci-icon">🚗</div><div class="bci-text">Permis {{ permis }}</div></div>{% endif %}
+      </div>
+
+      {% if competences %}
+      <div class="bl-section" style="margin-top:22px;">
+        <div class="bl-title">Compétences</div>
+        {% for competence in competences %}
+        <div class="skill-block">
+          <div class="sb-name">{{ competence }}</div>
+          <div class="sb-bar-bg"><div class="sb-bar-fill" style="width:80%"></div></div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if langues %}
+      <div class="bl-section" style="margin-top:22px;">
+        <div class="bl-title">Langues</div>
+        {% for langue in langues %}<div class="lang-item"><span>{{ langue }}</span></div>{% endfor %}
+      </div>
+      {% endif %}
+
+      {% if centres_interet %}
+      <div class="bl-section" style="margin-top:22px;">
+        <div class="bl-title">Intérêts</div>
+        {% for interet in centres_interet %}<span class="int-chip">{{ interet }}</span>{% endfor %}
+      </div>
+      {% endif %}
+    </aside>
+
+    <main class="bs-right">
+      {% if experiences %}
+      <div>
+        <div class="r-title"><span class="r-title-num">01</span> Expériences</div>
+        {% for exp in experiences %}
+        <div class="exp-entry">
+          <div class="ee-bullet"><div class="ee-bullet-inner"></div></div>
+          <div class="ee-content">
+            <div class="ee-top">
+              <div class="ee-role">{{ exp.titre }}</div>
+              <div class="ee-date">{{ exp.date_debut }}{% if exp.date_fin %} – {{ exp.date_fin }}{% endif %}</div>
+            </div>
+            <div class="ee-company">{{ exp.entreprise }}</div>
+            {% if exp.description %}<div class="ee-desc">{{ exp.description }}</div>{% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if formations %}
+      <div>
+        <div class="r-title"><span class="r-title-num">02</span> Formation</div>
+        {% for formation in formations %}
+        <div class="edu-entry">
+          <div class="edu-yr">{{ formation.annee }}</div>
+          <div class="edu-divider"></div>
+          <div><div class="edu-deg">{{ formation.diplome }}</div><div class="edu-sch">{{ formation.etablissement }}</div></div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </main>
+  </div>
+</div>
+</body>
+</html>

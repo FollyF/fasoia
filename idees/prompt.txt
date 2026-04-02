@@ -1,0 +1,8 @@
+"Génère-moi un template de CV moderne en HTML/CSS avec :
+- Une photo de profil
+- Une barre latérale gauche pour les contacts et compétences
+- Une section principale pour expériences et formations
+- Utilise des variables comme {{nom}}, {{email}}, etc.
+- Style professionnel avec couleurs bleu et gris"
+
+tu peux apporter tes ameliorations et genere 6

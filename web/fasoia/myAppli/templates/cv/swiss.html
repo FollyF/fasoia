@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CV – {{ prenom }} {{ nom }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Mulish:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0d1b2a; --blue: #1852b4; --bright: #2563eb;
+    --steel: #4a6fa5; --fog: #e8edf4; --mist: #f5f7fa;
+    --rule: #d0d9e8; --white: #ffffff; --body: #3c4b5c;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Mulish', sans-serif; background: #d4dce8; display: flex; justify-content: center; padding: 40px 20px; min-height: 100vh; }
+  .cv { width: 900px; background: var(--white); box-shadow: 0 24px 70px rgba(13,27,42,0.18); }
+  .mega-header { display: grid; grid-template-columns: 4px 1fr; background: var(--white); border-bottom: 1px solid var(--rule); }
+  .mh-stripe { background: var(--blue); }
+  .mh-inner { display: grid; grid-template-columns: 1fr 240px; border-left: 1px solid var(--rule); }
+  .mh-name-area { padding: 40px 44px; border-right: 1px solid var(--rule); }
+  .mh-number { font-family: 'Syne', sans-serif; font-size: 11px; letter-spacing: 3px; color: var(--steel); text-transform: uppercase; margin-bottom: 20px; }
+  .mh-firstname { font-family: 'Syne', sans-serif; font-size: 56px; font-weight: 400; color: var(--fog); line-height: 1; letter-spacing: -2px; -webkit-text-stroke: 1px var(--ink); }
+  .mh-lastname { font-family: 'Syne', sans-serif; font-size: 56px; font-weight: 800; color: var(--ink); line-height: 1; letter-spacing: -2px; }
+  .mh-summary { margin-top: 16px; font-size: 13px; color: var(--body); line-height: 1.75; font-weight: 300; max-width: 440px; }
+  .mh-photo-area { position: relative; overflow: hidden; }
+  .mh-photo-area img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mh-photo-placeholder { width: 100%; height: 100%; min-height: 260px; background: var(--fog); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-size: 56px; font-weight: 800; color: var(--rule); letter-spacing: -2px; }
+  .mh-photo-caption { position: absolute; bottom: 0; left: 0; right: 0; background: var(--blue); padding: 8px 14px; font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,0.7); text-transform: uppercase; }
+  .cv-body { display: grid; grid-template-columns: 4px 240px 1fr; }
+  .body-stripe { background: var(--blue); }
+  .sidebar { border-right: 1px solid var(--rule); }
+  .s-block { padding: 24px 22px; border-bottom: 1px solid var(--rule); }
+  .s-block:last-child { border-bottom: none; }
+  .s-heading { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--blue); margin-bottom: 14px; }
+  .c-entry { margin-bottom: 10px; }
+  .c-key { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--steel); margin-bottom: 2px; font-weight: 700; }
+  .c-val { font-size: 12px; color: var(--body); word-break: break-word; line-height: 1.5; }
+  .skill-entry { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--rule); font-size: 12px; color: var(--body); }
+  .skill-entry:last-child { border-bottom: none; }
+  .skill-score { display: flex; gap: 3px; }
+  .ss { width: 6px; height: 6px; border-radius: 50%; background: var(--rule); }
+  .ss.f { background: var(--blue); }
+  .lang-entry { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dotted var(--rule); font-size: 12px; }
+  .lang-entry:last-child { border-bottom: none; }
+  .ln { color: var(--body); }
+  .int-chip { display: inline-block; font-size: 10.5px; color: var(--blue); background: var(--fog); padding: 3px 9px; margin: 3px 3px 0 0; font-weight: 500; border: 1px solid var(--rule); }
+  .main { padding: 0; border-left: 1px solid var(--rule); }
+  .m-block { padding: 28px 36px; border-bottom: 1px solid var(--rule); }
+  .m-block:last-child { border-bottom: none; }
+  .m-heading { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 3.5px; text-transform: uppercase; color: var(--ink); margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+  .m-heading-num { font-size: 20px; color: var(--rule); font-weight: 800; line-height: 1; font-family: 'Syne', sans-serif; }
+  .exp-row { display: grid; grid-template-columns: 100px 1fr; gap: 0 20px; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid var(--rule); }
+  .exp-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .er-period { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700; color: var(--blue); letter-spacing: 0.5px; line-height: 1.4; text-align: right; padding-right: 20px; border-right: 1px solid var(--rule); padding-top: 2px; }
+  .er-role { font-family: 'Syne', sans-serif; font-size: 14.5px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
+  .er-org { font-size: 12px; color: var(--steel); margin-bottom: 8px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+  .er-desc { font-size: 12.5px; color: var(--body); line-height: 1.68; font-weight: 300; }
+  .edu-row { display: grid; grid-template-columns: 100px 1fr; gap: 0 20px; margin-bottom: 14px; }
+  .edu-row:last-child { margin-bottom: 0; }
+  .edu-yr { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700; color: var(--blue); text-align: right; padding-right: 20px; border-right: 1px solid var(--rule); padding-top: 2px; }
+  .edu-deg { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+  .edu-sch { font-size: 12px; color: var(--steel); margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="cv">
+  <div class="mega-header">
+    <div class="mh-stripe"></div>
+    <div class="mh-inner">
+      <div class="mh-name-area">
+        <div class="mh-number">Profil · {{ date_generation }}</div>
+        <div class="mh-firstname">{{ prenom }}</div>
+        <div class="mh-lastname">{{ nom }}</div>
+        {% if resume %}<p class="mh-summary">{{ resume }}</p>{% endif %}
+      </div>
+      <div class="mh-photo-area">
+        {% if photo_src %}
+          <img src="{{ photo_src }}" alt="Photo de profil" />
+        {% else %}
+          <div class="mh-photo-placeholder">{{ prenom|slice:":1" }}{{ nom|slice:":1" }}</div>
+        {% endif %}
+        <div class="mh-photo-caption">{{ prenom }} {{ nom }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cv-body">
+    <div class="body-stripe"></div>
+
+    <aside class="sidebar">
+      <div class="s-block">
+        <div class="s-heading">Contact</div>
+        {% if email %}<div class="c-entry"><div class="c-key">Email</div><div class="c-val">{{ email }}</div></div>{% endif %}
+        {% if telephone %}<div class="c-entry"><div class="c-key">Téléphone</div><div class="c-val">{{ telephone }}</div></div>{% endif %}
+        {% if adresse %}<div class="c-entry"><div class="c-key">Adresse</div><div class="c-val">{{ adresse }}{% if ville %}, {{ ville }}{% endif %}{% if pays %}, {{ pays }}{% endif %}</div></div>{% endif %}
+        {% if permis %}<div class="c-entry"><div class="c-key">Permis</div><div class="c-val">{{ permis }}</div></div>{% endif %}
+      </div>
+
+      {% if competences %}
+      <div class="s-block">
+        <div class="s-heading">Compétences</div>
+        {% for competence in competences %}
+        <div class="skill-entry">
+          <span>{{ competence }}</span>
+          <div class="skill-score"><div class="ss f"></div><div class="ss f"></div><div class="ss f"></div><div class="ss f"></div><div class="ss"></div></div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if langues %}
+      <div class="s-block">
+        <div class="s-heading">Langues</div>
+        {% for langue in langues %}<div class="lang-entry"><span class="ln">{{ langue }}</span></div>{% endfor %}
+      </div>
+      {% endif %}
+
+      {% if centres_interet %}
+      <div class="s-block">
+        <div class="s-heading">Intérêts</div>
+        {% for interet in centres_interet %}<span class="int-chip">{{ interet }}</span>{% endfor %}
+      </div>
+      {% endif %}
+    </aside>
+
+    <main class="main">
+      {% if experiences %}
+      <div class="m-block">
+        <div class="m-heading"><span class="m-heading-num">01</span> Expériences</div>
+        {% for exp in experiences %}
+        <div class="exp-row">
+          <div class="er-period">{{ exp.date_debut }}{% if exp.date_fin %}<br>{{ exp.date_fin }}{% endif %}</div>
+          <div>
+            <div class="er-role">{{ exp.titre }}</div>
+            <div class="er-org">{{ exp.entreprise }}</div>
+            {% if exp.description %}<div class="er-desc">{{ exp.description }}</div>{% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if formations %}
+      <div class="m-block">
+        <div class="m-heading"><span class="m-heading-num">02</span> Formation</div>
+        {% for formation in formations %}
+        <div class="edu-row">
+          <div class="edu-yr">{{ formation.annee }}</div>
+          <div><div class="edu-deg">{{ formation.diplome }}</div><div class="edu-sch">{{ formation.etablissement }}</div></div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </main>
+  </div>
+</div>
+</body>
+</html>

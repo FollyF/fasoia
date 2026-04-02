@@ -1,88 +1,78 @@
-{% extends "cv/base_cv.html" %}
-
-{% block extra_css %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CV – {{ prenom }} {{ nom }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-    body {
-        font-family: 'Helvetica', 'Arial', sans-serif;
-        max-width: 650px;
-        margin: 0 auto;
-        padding: 30px;
-        color: #222;
-    }
-    
-    h1 {
-        font-size: 28px;
-        font-weight: 300;
-        letter-spacing: 1px;
-        margin-bottom: 5px;
-    }
-    
-    h2 {
-        font-size: 16px;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        border: none;
-        margin: 25px 0 15px 0;
-        color: #555;
-    }
-    
-    .contact-info {
-        color: #777;
-        font-size: 14px;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 15px;
-    }
-    
-    .experience-item, .formation-item {
-        margin-bottom: 20px;
-    }
-    
-    .item-header {
-        font-weight: 500;
-        margin-bottom: 3px;
-    }
-    
-    .date {
-        color: #999;
-        font-size: 13px;
-        font-weight: normal;
-    }
-    
-    .company, .institution {
-        color: #666;
-        font-size: 14px;
-        margin-bottom: 5px;
-    }
-    
-    .description {
-        color: #444;
-        font-size: 14px;
-        line-height: 1.5;
-    }
-    
-    .skills {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-    
-    .skill-tag {
-        background: #f5f5f5;
-        color: #333;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 13px;
-    }
-    
-    ul {
-        list-style-type: none;
-        padding: 0;
-    }
-    
-    li {
-        margin-bottom: 5px;
-        font-size: 14px;
-    }
+  :root { --text:#1a1a1a; --gray:#555; --light:#f8f8f8; --accent:#0066cc; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter', sans-serif; background:#fafafa; padding:60px 20px; display:flex; justify-content:center; }
+  .cv { width:800px; background:white; padding:70px 80px; box-shadow:0 15px 50px rgba(0,0,0,0.06); }
+  
+  .name { font-size:38px; font-weight:600; letter-spacing:-0.5px; color:var(--text); margin-bottom:4px; }
+  .contact-bar { font-size:13.5px; color:var(--gray); margin-bottom:40px; }
+  .contact-bar span { margin-right:25px; }
+  
+  .section-title { font-size:11.5px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin:35px 0 14px; font-weight:600; }
+  
+  .exp-item { margin-bottom:26px; }
+  .exp-role { font-weight:600; font-size:15.5px; }
+  .exp-meta { color:var(--gray); font-size:13px; margin:3px 0 8px; }
+  
+  .edu-item { margin-bottom:20px; }
 </style>
-{% endblock %}
+</head>
+<body>
+<div class="cv">
+  <div class="name">{{ prenom }} {{ nom }}</div>
+  <div class="contact-bar">
+    {% if email %}<span>{{ email }}</span>{% endif %}
+    {% if telephone %}<span>{{ telephone }}</span>{% endif %}
+    {% if adresse %}<span>{{ adresse }}{% if ville %}, {{ ville }}{% endif %}</span>{% endif %}
+  </div>
+
+  {% if resume %}<p style="font-size:15px; line-height:1.75; color:#333; margin-bottom:35px;">{{ resume }}</p>{% endif %}
+
+  {% if experiences %}
+  <div class="section-title">Expériences</div>
+  {% for exp in experiences %}
+  <div class="exp-item">
+    <div class="exp-role">{{ exp.titre }}</div>
+    <div class="exp-meta">{{ exp.entreprise }} • {{ exp.date_debut }}{% if exp.date_fin %} – {{ exp.date_fin }}{% endif %}</div>
+    {% if exp.description %}<div style="font-size:14px; line-height:1.7; color:#444;">{{ exp.description }}</div>{% endif %}
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  {% if formations %}
+  <div class="section-title">Formation</div>
+  {% for formation in formations %}
+  <div class="edu-item">
+    <strong>{{ formation.diplome }}</strong><br>
+    <span style="color:#666;">{{ formation.etablissement }} — {{ formation.annee }}</span>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  {% if competences or langues %}
+  <div class="section-title" style="margin-top:40px;">Compétences & Langues</div>
+  <div style="display:flex; gap:60px; font-size:14px;">
+    {% if competences %}
+    <div>
+      <strong>Compétences</strong><br>
+      {% for c in competences %}- {{ c }}<br>{% endfor %}
+    </div>
+    {% endif %}
+    {% if langues %}
+    <div>
+      <strong>Langues</strong><br>
+      {% for l in langues %}- {{ l }}<br>{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+</body>
+</html>
