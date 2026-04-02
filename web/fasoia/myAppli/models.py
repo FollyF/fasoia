@@ -476,12 +476,6 @@ class DocumentSoumission(models.Model):
         return self.nom_document
     
 
-from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
-from django.utils import timezone
-from phonenumber_field.modelfields import PhoneNumberField
-import uuid
-
 class OffreEmploi(models.Model):
     """
     Modèle pour les offres d'emploi avec support multi-sources

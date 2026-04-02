@@ -5,7 +5,6 @@
 
 {% block extra_css %}
 <style>
-    /* Vos styles existants... */
     :root {
         --primary-color: #1ed760;
         --secondary-color: #121212;
@@ -13,18 +12,11 @@
         --text-primary: #ffffff;
         --text-secondary: #b3b3b3;
     }
-    
-    body {
-        background-color: var(--secondary-color);
-        color: var(--text-primary);
-    }
-    
-    .cv-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 30px 20px;
-    }
-    
+
+    body { background-color: var(--secondary-color); color: var(--text-primary); }
+
+    .cv-container { max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
+
     .info-message {
         background-color: rgba(30, 215, 96, 0.1);
         border: 1px solid #1ed760;
@@ -34,293 +26,157 @@
         color: white;
         text-align: center;
     }
-    
-    .style-selector {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
-    }
-    
+
+    .style-selector { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+
     .style-option {
-        flex: 1;
-        min-width: 120px;
-        padding: 15px;
-        border: 1px solid #333;
-        border-radius: 8px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        background: #2a2a2a;
-        color: white;
+        flex: 1; min-width: 120px; padding: 15px;
+        border: 1px solid #333; border-radius: 8px;
+        text-align: center; cursor: pointer;
+        transition: all 0.3s ease; background: #2a2a2a; color: white;
     }
-    
-    .style-option:hover {
-        border-color: var(--primary-color);
-        transform: translateY(-2px);
-    }
-    
-    .style-option.selected {
-        background: var(--primary-color);
-        border-color: var(--primary-color);
-        color: black;
-    }
-    
+    .style-option:hover { border-color: var(--primary-color); transform: translateY(-2px); }
+    .style-option.selected { background: var(--primary-color); border-color: var(--primary-color); color: black; }
+
     .preview-btn {
-        margin-top: 5px;
-        font-size: 0.9rem;
-        color: var(--primary-color);
-        cursor: pointer;
+        margin-top: 5px; font-size: 0.9rem;
+        color: var(--primary-color); cursor: pointer;
         background: rgba(30, 215, 96, 0.1);
-        padding: 4px 8px;
-        border-radius: 5px;
-        display: inline-block;
+        padding: 4px 8px; border-radius: 5px; display: inline-block;
     }
-    
-    .preview-btn:hover {
-        background: var(--primary-color);
-        color: black;
-    }
-    
-    .cv-form {
-        background: var(--card-bg);
-        border-radius: 15px;
-        padding: 30px;
-    }
-    
-    .form-section {
-        margin-bottom: 30px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid #333;
-    }
-    
-    .form-section h3 {
-        color: var(--primary-color);
-        margin-bottom: 20px;
-    }
-    
-    .form-group {
-        margin-bottom: 20px;
-    }
-    
-    .form-group label {
-        display: block;
-        color: white;
-        margin-bottom: 8px;
-        font-weight: 500;
-    }
-    
+    .preview-btn:hover { background: var(--primary-color); color: black; }
+
+    .cv-form { background: var(--card-bg); border-radius: 15px; padding: 30px; }
+
+    .form-section { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #333; }
+    .form-section h3 { color: var(--primary-color); margin-bottom: 20px; }
+
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; color: white; margin-bottom: 8px; font-weight: 500; }
+
     .form-control {
-        width: 100%;
-        background-color: #2a2a2a;
-        border: 1px solid #333;
-        border-radius: 5px;
-        padding: 12px;
-        color: white;
+        width: 100%; background-color: #2a2a2a;
+        border: 1px solid #333; border-radius: 5px;
+        padding: 12px; color: white;
     }
-    
-    .form-control:focus {
-        border-color: var(--primary-color);
-        outline: none;
-    }
-    
-    textarea.form-control {
-        resize: vertical;
-        min-height: 100px;
-    }
-    
-    .format-selector {
-        display: flex;
-        gap: 10px;
-        margin: 20px 0;
-    }
-    
-    .format-btn {
-        flex: 1;
-        padding: 12px;
-        border: 1px solid #333;
-        border-radius: 8px;
-        background: #2a2a2a;
-        color: white;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-align: center;
-    }
-    
-    .format-btn:hover {
-        border-color: var(--primary-color);
-    }
-    
-    .format-btn.selected {
-        background: var(--primary-color);
-        color: black;
-    }
-    
-    .btn-generate {
-        background-color: var(--primary-color);
-        color: black;
-        border: none;
-        border-radius: 25px;
-        padding: 15px 40px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        width: 100%;
-    }
-    
-    .btn-generate:hover:not(:disabled) {
-        background-color: #15b050;
-        transform: scale(1.02);
-    }
-    
-    .btn-generate:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-    
-    .modal-content {
-        background: var(--card-bg);
-        color: white;
-        border: 1px solid #333;
-    }
-    
-    .modal-header {
-        border-bottom: 1px solid #333;
-        padding: 15px 20px;
-    }
-    
-    .modal-header .close {
-        color: white;
-        font-size: 28px;
-        opacity: 0.8;
-        background: none;
-        border: none;
-        float: right;
-    }
-    
-    .modal-header .close:hover {
-        color: var(--primary-color);
-        opacity: 1;
-    }
-    
-    .modal-title {
-        color: var(--primary-color);
-    }
-    
-    .modal-body {
+    .form-control:focus { border-color: var(--primary-color); outline: none; }
+    textarea.form-control { resize: vertical; min-height: 100px; }
+
+    /* ── Photo ── */
+    .photo-upload-area {
+        border: 2px dashed #333;
+        border-radius: 10px;
         padding: 20px;
-    }
-    
-    .preview-iframe {
-        width: 100%;
-        height: 500px;
-        border: none;
-        background: white;
-        border-radius: 5px;
-    }
-    
-    /* LOADER - masqué par défaut */
-    .loading {
-        display: none;
-        position: fixed;
-        z-index: 2000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.8);
-        align-items: center;
-        justify-content: center;
-    }
-
-    .loading-content {
         text-align: center;
-        color: white;
-        max-width: 400px;
-        padding: 30px;
-        background: var(--card-bg);
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        transition: border-color 0.3s;
+        cursor: pointer;
     }
+    .photo-upload-area:hover { border-color: var(--primary-color); }
+    .photo-upload-area input[type="file"] { display: none; }
 
-    .spinner {
-        border: 5px solid #f3f3f3;
-        border-top: 5px solid var(--primary-color);
-        border-radius: 50%;
-        width: 60px;
-        height: 60px;
-        animation: spin 1s linear infinite;
-        margin: 20px auto;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    
-    .badge-premium {
-        background: gold;
-        color: black;
-        font-size: 10px;
-        padding: 2px 6px;
-        border-radius: 10px;
-        margin-left: 5px;
-    }
-    
-    .badge-populaire {
-        background: #ff4444;
-        color: white;
-        font-size: 10px;
-        padding: 2px 6px;
-        border-radius: 10px;
-        margin-left: 5px;
-    }
-    
-    .style-option.premium-verrouille {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-    
-    .row {
-        display: flex;
-        flex-wrap: wrap;
+    .photo-preview-wrap {
+        display: none;
+        justify-content: center;
+        align-items: center;
         gap: 15px;
+        margin-top: 12px;
     }
-    
-    .col-md-6 {
-        flex: 0 0 calc(50% - 15px);
+    .photo-preview-wrap.visible { display: flex; }
+
+    .photo-preview-img {
+        width: 90px; height: 90px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--primary-color);
     }
-    
+
+    .photo-remove-btn {
+        background: #e74c3c; color: white;
+        border: none; border-radius: 20px;
+        padding: 6px 14px; cursor: pointer;
+        font-size: 12px;
+    }
+    .photo-remove-btn:hover { background: #c0392b; }
+
+    .photo-label-btn {
+        display: inline-block;
+        background: rgba(30, 215, 96, 0.1);
+        color: var(--primary-color);
+        border: 1px solid var(--primary-color);
+        border-radius: 20px;
+        padding: 10px 20px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+    .photo-label-btn:hover { background: var(--primary-color); color: black; }
+
+    /* ── Format ── */
+    .format-selector { display: flex; gap: 10px; margin: 20px 0; }
+    .format-btn {
+        flex: 1; padding: 12px; border: 1px solid #333;
+        border-radius: 8px; background: #2a2a2a; color: white;
+        cursor: pointer; transition: all 0.3s; text-align: center;
+    }
+    .format-btn:hover { border-color: var(--primary-color); }
+    .format-btn.selected { background: var(--primary-color); color: black; }
+
+    /* ── Bouton générer ── */
+    .btn-generate {
+        background-color: var(--primary-color); color: black;
+        border: none; border-radius: 25px; padding: 15px 40px;
+        font-size: 16px; font-weight: 600; cursor: pointer;
+        transition: all 0.3s; width: 100%;
+    }
+    .btn-generate:hover:not(:disabled) { background-color: #15b050; transform: scale(1.02); }
+    .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Modal ── */
+    .modal-content { background: var(--card-bg); color: white; border: 1px solid #333; }
+    .modal-header { border-bottom: 1px solid #333; padding: 15px 20px; }
+    .modal-header .close { color: white; font-size: 28px; opacity: 0.8; background: none; border: none; float: right; }
+    .modal-header .close:hover { color: var(--primary-color); }
+    .modal-title { color: var(--primary-color); }
+    .modal-body { padding: 20px; }
+    .preview-iframe { width: 100%; height: 500px; border: none; background: white; border-radius: 5px; }
+
+    /* ── Loader ── */
+    .loading {
+        display: none; position: fixed; z-index: 2000;
+        left: 0; top: 0; width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.8);
+        align-items: center; justify-content: center;
+    }
+    .loading-content {
+        text-align: center; color: white; max-width: 400px;
+        padding: 30px; background: var(--card-bg);
+        border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .spinner {
+        border: 5px solid #f3f3f3; border-top: 5px solid var(--primary-color);
+        border-radius: 50%; width: 60px; height: 60px;
+        animation: spin 1s linear infinite; margin: 20px auto;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .badge-premium { background: gold; color: black; font-size: 10px; padding: 2px 6px; border-radius: 10px; margin-left: 5px; }
+    .badge-populaire { background: #ff4444; color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; margin-left: 5px; }
+    .style-option.premium-verrouille { opacity: 0.6; cursor: not-allowed; }
+
+    .row { display: flex; flex-wrap: wrap; gap: 15px; }
+    .col-md-6 { flex: 0 0 calc(50% - 15px); }
     @media (max-width: 768px) {
-        .col-md-6 {
-            flex: 0 0 100%;
-        }
-        
-        .cv-form {
-            padding: 20px;
-        }
+        .col-md-6 { flex: 0 0 100%; }
+        .cv-form { padding: 20px; }
     }
-
-    .btn-generate:hover {
-        background-color: #15b050;
-        transform: scale(1.02);
-    }
-    .btn-secondary:hover {
-        background-color: #5a6268 !important;
-        transform: scale(1.02);
-    }
-    .btn-warning:hover {
-        background-color: #e0a800 !important;
-        transform: scale(1.02);
-    }
-
-
+    .btn-secondary:hover { background-color: #5a6268 !important; transform: scale(1.02); }
+    .btn-warning:hover { background-color: #e0a800 !important; transform: scale(1.02); }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="cv-container">
+
     <div class="info-message">
         {% if user.is_authenticated %}
             <span style="color: #1ed760;">
@@ -328,44 +184,49 @@
             </span>
         {% else %}
             <i class="fa fa-info-circle"></i>
-            Vous n'avez pas besoin de compte pour générer votre CV. 
-            <a href="{% url 'myAppli:inscription' %}" style="color: #1ed760; text-decoration: underline;">Inscrivez-vous</a> 
+            Vous n'avez pas besoin de compte pour générer votre CV.
+            <a href="{% url 'myAppli:inscription' %}" style="color: #1ed760; text-decoration: underline;">Inscrivez-vous</a>
             pour sauvegarder vos CV et postuler aux offres.
         {% endif %}
     </div>
-    
-    <form method="POST" class="cv-form" id="cvForm" target="_blank">
+
+    <!-- ✅ enctype="multipart/form-data" obligatoire pour la photo -->
+    <form method="POST" class="cv-form" id="cvForm"
+          enctype="multipart/form-data" target="_blank">
         {% csrf_token %}
 
         {% if is_edit_mode %}
-            <div class="alert alert-warning" style="background: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-                <i class="fa fa-edit"></i> <strong>Mode édition</strong> - Vous modifiez le CV : {{ cv_a_modifier.titre }}
-            </div>
+        <div class="alert alert-warning"
+             style="background: rgba(255,193,7,0.1); border: 1px solid #ffc107; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+            <i class="fa fa-edit"></i> <strong>Mode édition</strong> — Vous modifiez : {{ cv_a_modifier.titre }}
+            <input type="hidden" name="cv_id" value="{{ cv_a_modifier.id }}">
+        </div>
         {% endif %}
-        
+
+        <!-- 1. STYLE -->
         <div class="form-section">
             <h3>1. Choisissez un style</h3>
             <div class="style-selector">
                 {% for modele in modeles_cv %}
-                <div class="style-option 
+                <div class="style-option
                     {% if forloop.first %}selected{% endif %}
                     {% if modele.est_premium and not user.is_authenticated %}premium-verrouille{% endif %}"
                     data-style="{{ modele.categorie }}"
                     onclick="selectStyle(this, '{{ modele.categorie }}', {{ modele.est_premium|yesno:'true,false' }})">
                     {{ modele.nom }}
-                    {% if modele.est_populaire %}
-                        <span class="badge-populaire">🔥 Populaire</span>
-                    {% endif %}
-                    {% if modele.est_premium %}
-                        <span class="badge-premium">⭐ Premium</span>
-                    {% endif %}
-                    <div class="preview-btn" onclick="showPreview('{{ modele.categorie }}'); event.stopPropagation();">👁️ Aperçu</div>
+                    {% if modele.est_populaire %}<span class="badge-populaire">🔥 Populaire</span>{% endif %}
+                    {% if modele.est_premium %}<span class="badge-premium">⭐ Premium</span>{% endif %}
+                    <div class="preview-btn"
+                         onclick="showPreview('{{ modele.categorie }}'); event.stopPropagation();">
+                        👁️ Aperçu
+                    </div>
                 </div>
                 {% endfor %}
             </div>
-            <input type="hidden" name="style" id="styleInput" value="moderne">
+            <input type="hidden" name="style" id="styleInput" value="executive">
         </div>
-        
+
+        <!-- 2. INFOS PERSONNELLES + PHOTO -->
         <div class="form-section">
             <h3>2. Informations personnelles</h3>
             <div class="row">
@@ -417,60 +278,92 @@
                         <input type="text" name="permis" class="form-control" placeholder="Ex: B">
                     </div>
                 </div>
+
+                <!-- ── PHOTO DE PROFIL ── -->
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Photo de profil <span style="color:var(--text-secondary);font-weight:300;">(optionnelle)</span></label>
+                        <div class="photo-upload-area" onclick="document.getElementById('photoInput').click()">
+                            <input type="file" id="photoInput" name="photo"
+                                   accept="image/jpeg,image/png,image/webp"
+                                   onchange="handlePhotoChange(this)">
+                            <div id="photoPlaceholder">
+                                <div style="font-size:36px;margin-bottom:8px;">📷</div>
+                                <label class="photo-label-btn">Choisir une photo</label>
+                                <p style="color:var(--text-secondary);font-size:12px;margin-top:8px;">
+                                    JPG, PNG ou WEBP · Max 5 Mo
+                                </p>
+                            </div>
+                        </div>
+                        <!-- Prévisualisation -->
+                        <div class="photo-preview-wrap" id="photoPreviewWrap">
+                            <img id="photoPreviewImg" class="photo-preview-img" src="" alt="Aperçu">
+                            <div>
+                                <p style="color:white;margin-bottom:8px;font-size:13px;">Photo sélectionnée ✅</p>
+                                <button type="button" class="photo-remove-btn" onclick="removePhoto()">
+                                    ✕ Supprimer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
-        
+
+        <!-- 3. PROFIL -->
         <div class="form-section">
             <h3>3. Profil professionnel</h3>
             <div class="form-group">
                 <label>Résumé / Objectif</label>
-                <textarea name="resume" class="form-control" rows="3" 
+                <textarea name="resume" class="form-control" rows="3"
                           placeholder="Décrivez votre profil en quelques lignes..."></textarea>
             </div>
-            
             <div class="form-group">
-                <label>Compétences (séparées par des virgules)</label>
-                <input type="text" name="competences" class="form-control" 
+                <label>Compétences <span style="color:var(--text-secondary)">(séparées par des virgules)</span></label>
+                <input type="text" name="competences" class="form-control"
                        placeholder="Ex: Python, Django, JavaScript, Gestion de projet">
             </div>
-            
             <div class="form-group">
-                <label>Langues (séparées par des virgules)</label>
-                <input type="text" name="langues" class="form-control" 
+                <label>Langues <span style="color:var(--text-secondary)">(séparées par des virgules)</span></label>
+                <input type="text" name="langues" class="form-control"
                        placeholder="Ex: Français (courant), Anglais (professionnel)">
             </div>
-            
             <div class="form-group">
-                <label>Centres d'intérêt (séparés par des virgules)</label>
-                <input type="text" name="centres_interet" class="form-control" 
+                <label>Centres d'intérêt <span style="color:var(--text-secondary)">(séparés par des virgules)</span></label>
+                <input type="text" name="centres_interet" class="form-control"
                        placeholder="Ex: Sport, Lecture, Voyages">
             </div>
         </div>
-        
+
+        <!-- 4. EXPÉRIENCES -->
         <div class="form-section">
             <h3>4. Expériences professionnelles</h3>
-            <p class="text-secondary">
-                <i class="fa fa-info-circle"></i> 
-                Format: Poste | Entreprise | Date début | Date fin | Description (une ligne par expérience)
+            <p style="color:var(--text-secondary);margin-bottom:10px;">
+                <i class="fa fa-info-circle"></i>
+                Format : <strong>Poste | Entreprise | Date début | Date fin | Description</strong>
+                (une ligne par expérience)
             </p>
             <div class="form-group">
-                <textarea name="experiences" class="form-control" rows="5" 
+                <textarea name="experiences" class="form-control" rows="5"
                           placeholder="Ex: Développeur Python | TechCorp | 2020 | 2023 | Développement d'applications web..."></textarea>
             </div>
         </div>
-        
+
+        <!-- 5. FORMATIONS -->
         <div class="form-section">
             <h3>5. Formations</h3>
-            <p class="text-secondary">
-                <i class="fa fa-info-circle"></i> 
-                Format: Diplôme | Établissement | Année (une ligne par formation)
+            <p style="color:var(--text-secondary);margin-bottom:10px;">
+                <i class="fa fa-info-circle"></i>
+                Format : <strong>Diplôme | Établissement | Année</strong> (une ligne par formation)
             </p>
             <div class="form-group">
-                <textarea name="formations" class="form-control" rows="4" 
+                <textarea name="formations" class="form-control" rows="4"
                           placeholder="Ex: Master en Informatique | Université de Ouagadougou | 2020"></textarea>
             </div>
         </div>
-        
+
+        <!-- 6. FORMAT -->
         <div class="form-section">
             <h3>6. Choisissez le format</h3>
             <div class="format-selector">
@@ -479,18 +372,20 @@
             </div>
             <input type="hidden" name="format" id="formatInput" value="pdf">
         </div>
-        
-       <!-- Boutons d'action -->
-        <div class="d-flex justify-content-center gap-3 mt-4" style="display: flex; justify-content: center; gap: 15px;">
+
+        <!-- BOUTONS -->
+        <div style="display:flex;justify-content:center;gap:15px;margin-top:20px;">
             {% if is_edit_mode %}
-                <a href="{% url 'myAppli:mes_cvs' %}" class="btn btn-secondary" style="background: #6c757d; color: white; border-radius: 25px; padding: 12px 30px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                <a href="{% url 'myAppli:mes_cvs' %}"
+                   style="background:#6c757d;color:white;border-radius:25px;padding:12px 30px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;">
                     <i class="fa fa-times"></i> Annuler
                 </a>
-                <button type="submit" class="btn btn-warning" style="background: #ffc107; color: black; border-radius: 25px; padding: 12px 30px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                <button type="submit"
+                        style="background:#ffc107;color:black;border-radius:25px;padding:12px 30px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-weight:600;">
                     <i class="fa fa-save"></i> Mettre à jour
                 </button>
             {% else %}
-                <button type="submit" class="btn-generate" style="background-color: #1ed760; color: black; border: none; border-radius: 25px; padding: 12px 40px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+                <button type="submit" id="generateBtn" class="btn-generate">
                     <i class="fa fa-magic"></i> Générer mon CV
                 </button>
             {% endif %}
@@ -499,14 +394,12 @@
     </form>
 </div>
 
-<!-- Modal d'aperçu -->
+<!-- Modal aperçu -->
 <div class="modal fade" id="previewModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
                 <h4 class="modal-title">Aperçu du style</h4>
             </div>
             <div class="modal-body">
@@ -521,331 +414,153 @@
     <div class="loading-content">
         <div class="spinner"></div>
         <h3>Génération de votre CV...</h3>
-        <p style="color: var(--text-secondary);">Cela ne prendra que quelques secondes</p>
+        <p style="color:var(--text-secondary);">Cela ne prendra que quelques secondes</p>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
-
 <script>
-
-// Pré-remplir le formulaire avec les données existantes
-// Pré-remplir le formulaire avec les données existantes
+// ── Pré-remplissage en mode édition ──────────────────────────────────────────
 {% if donnees_init %}
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("📝 Pré-remplissage du formulaire");
-    
-    // Données à pré-remplir
     const donnees = {
-        prenom: "{{ donnees_init.prenom|default:''|escapejs }}",
-        nom: "{{ donnees_init.nom|default:''|escapejs }}",
-        email: "{{ donnees_init.email|default:''|escapejs }}",
-        telephone: "{{ donnees_init.telephone|default:''|escapejs }}",
-        adresse: "{{ donnees_init.adresse|default:''|escapejs }}",
-        ville: "{{ donnees_init.ville|default:''|escapejs }}",
-        pays: "{{ donnees_init.pays|default:''|escapejs }}",
-        permis: "{{ donnees_init.permis|default:''|escapejs }}",
-        resume: "{{ donnees_init.resume|default:''|escapejs }}",
-        competences: "{{ donnees_init.competences|default:''|escapejs }}",
-        langues: "{{ donnees_init.langues|default:''|escapejs }}",
+        prenom:          "{{ donnees_init.prenom|default:''|escapejs }}",
+        nom:             "{{ donnees_init.nom|default:''|escapejs }}",
+        email:           "{{ donnees_init.email|default:''|escapejs }}",
+        telephone:       "{{ donnees_init.telephone|default:''|escapejs }}",
+        adresse:         "{{ donnees_init.adresse|default:''|escapejs }}",
+        ville:           "{{ donnees_init.ville|default:''|escapejs }}",
+        pays:            "{{ donnees_init.pays|default:''|escapejs }}",
+        permis:          "{{ donnees_init.permis|default:''|escapejs }}",
+        resume:          "{{ donnees_init.resume|default:''|escapejs }}",
+        competences:     "{{ donnees_init.competences|default:''|escapejs }}",
+        langues:         "{{ donnees_init.langues|default:''|escapejs }}",
         centres_interet: "{{ donnees_init.centres_interet|default:''|escapejs }}",
-        experiences: "{{ donnees_init.experiences|default:''|escapejs }}",
-        formations: "{{ donnees_init.formations|default:''|escapejs }}",
-        style: "{{ donnees_init.style|default:'moderne'|escapejs }}"
+        experiences:     "{{ donnees_init.experiences|default:''|escapejs }}",
+        formations:      "{{ donnees_init.formations|default:''|escapejs }}",
+        style:           "{{ donnees_init.style|default:'executive'|escapejs }}"
     };
-    
-    // Remplir les champs
+
     for (const [champ, valeur] of Object.entries(donnees)) {
         const input = document.querySelector(`[name="${champ}"]`);
         if (input && valeur && valeur !== 'None') {
             input.value = valeur;
-            console.log(`✅ Champ ${champ} rempli`);
         }
     }
-    
-    // Sélectionner le style
-    const style = donnees.style;
-    const styleOption = document.querySelector(`.style-option[data-style="${style}"]`);
-    if (styleOption) {
-        styleOption.click();
-        console.log(`✅ Style ${style} sélectionné`);
-    }
+
+    const styleOption = document.querySelector(`.style-option[data-style="${donnees.style}"]`);
+    if (styleOption) styleOption.click();
 });
 {% endif %}
 
+// ── Sélection style ───────────────────────────────────────────────────────────
 function selectStyle(element, style, isPremium) {
     if (isPremium && !{{ user.is_authenticated|yesno:"true,false" }}) {
-        alert('Ce style est réservé aux membres premium. Inscrivez-vous ou connectez-vous pour y accéder.');
+        alert('Ce style est réservé aux membres premium. Inscrivez-vous pour y accéder.');
         return;
     }
-    
-    document.querySelectorAll('.style-option').forEach(opt => {
-        opt.classList.remove('selected');
-    });
+    document.querySelectorAll('.style-option').forEach(opt => opt.classList.remove('selected'));
     element.classList.add('selected');
     document.getElementById('styleInput').value = style;
 }
 
+// ── Sélection format ──────────────────────────────────────────────────────────
 function selectFormat(format) {
     document.querySelectorAll('.format-btn').forEach(btn => {
-        if(btn.dataset.format === format) {
-            btn.classList.add('selected');
-        } else {
-            btn.classList.remove('selected');
-        }
+        btn.classList.toggle('selected', btn.dataset.format === format);
     });
     document.getElementById('formatInput').value = format;
 }
 
-// 1. Visualiser / Aperçu - Charge l'aperçu directement
-function viewCV(cvId) {
+// ── Gestion photo ─────────────────────────────────────────────────────────────
+function handlePhotoChange(input) {
+    if (!input.files || !input.files[0]) return;
+
+    const file = input.files[0];
+
+    // Validation taille (5 Mo max)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('La photo est trop lourde (max 5 Mo). Veuillez choisir une image plus légère.');
+        input.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('photoPreviewImg').src   = e.target.result;
+        document.getElementById('photoPreviewWrap').classList.add('visible');
+        document.getElementById('photoPlaceholder').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+
+function removePhoto() {
+    document.getElementById('photoInput').value = '';
+    document.getElementById('photoPreviewImg').src = '';
+    document.getElementById('photoPreviewWrap').classList.remove('visible');
+    document.getElementById('photoPlaceholder').style.display = 'block';
+}
+
+// ── Aperçu style ──────────────────────────────────────────────────────────────
+function showPreview(style) {
     $('#previewModal').modal('show');
     const iframe = document.getElementById('previewIframe');
-    
-    // Afficher le loader
-    iframe.srcdoc = '<html><body style="background: white; padding: 20px; text-align: center;">Chargement de l\'aperçu...</body></html>';
-    
-    // Récupérer le HTML via fetch et l'injecter dans l'iframe
-    fetch(`/cv/apercu/${cvId}/`)
-        .then(response => response.text())
-        .then(html => {
-            iframe.srcdoc = html;
-        })
-        .catch(error => {
-            console.error('Erreur:', error);
-            iframe.srcdoc = '<html><body style="background: white; padding: 20px; text-align: center; color: red;">Erreur de chargement de l\'aperçu</body></html>';
+
+    iframe.srcdoc = `<html><body style="background:white;padding:40px;text-align:center;font-family:Arial;">
+        <div style="margin-top:80px;">
+            <div style="border:3px solid #1ed760;width:50px;height:50px;border-radius:50%;
+                 border-top-color:transparent;margin:0 auto 20px;animation:spin 1s linear infinite;"></div>
+            <p>Chargement du style <strong>${style}</strong>...</p>
+        </div>
+        <style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
+    </body></html>`;
+
+    fetch(`/cv/apercu/style/${style}/`)
+        .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+        .then(html => { iframe.srcdoc = html; })
+        .catch(err => {
+            console.error('Erreur aperçu :', err);
+            iframe.srcdoc = '<html><body style="padding:40px;color:red;">Impossible de charger l\'aperçu.</body></html>';
         });
 }
 
-// Gestion du formulaire
+// ── Soumission formulaire ─────────────────────────────────────────────────────
 document.getElementById('cvForm').addEventListener('submit', function(e) {
     const prenom = document.querySelector('input[name="prenom"]').value;
-    const nom = document.querySelector('input[name="nom"]').value;
-    
+    const nom    = document.querySelector('input[name="nom"]').value;
+
     if (!prenom || !nom) {
         e.preventDefault();
         alert('Veuillez remplir votre prénom et votre nom.');
         return false;
     }
-    
-    // Afficher le loader
-    const loader = document.getElementById('loadingOverlay');
-    loader.style.display = 'flex';
-    
-    // Désactiver le bouton
+
+    document.getElementById('loadingOverlay').style.display = 'flex';
+
     const btn = document.getElementById('generateBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Génération en cours...';
-    
-    // Le formulaire va s'envoyer normalement
-    // Le loader restera affiché jusqu'à ce que la page se recharge
-    // Mais comme le serveur renvoie un fichier, la page ne se recharge pas !
-    // C'est le problème : il faut cacher le loader après un certain temps
-    
-    // Solution : cacher le loader après 5 secondes (le temps du téléchargement)
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Génération en cours...';
+    }
+
     setTimeout(function() {
-        loader.style.display = 'none';
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa fa-magic"></i> Générer mon CV';
-    }, 5000);
+        document.getElementById('loadingOverlay').style.display = 'none';
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa fa-magic"></i> Générer mon CV';
+        }
+    }, 6000);
 });
 
-// Si la page se recharge (cas où il y a une erreur), cacher le loader
 window.addEventListener('load', function() {
     const loader = document.getElementById('loadingOverlay');
-    if (loader) {
-        loader.style.display = 'none';
-    }
+    if (loader) loader.style.display = 'none';
     const btn = document.getElementById('generateBtn');
     if (btn) {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa fa-magic"></i> Générer mon CV';
     }
 });
-// Fonction pour afficher l'aperçu d'un style de CV
-function showPreview(style) {
-    console.log("📄 Aperçu du style:", style);
-    
-    // Afficher le modal
-    $('#previewModal').modal('show');
-    const iframe = document.getElementById('previewIframe');
-    
-    // Afficher un message de chargement
-    iframe.srcdoc = `
-        <html>
-        <body style="background: white; padding: 20px; text-align: center; font-family: Arial;">
-            <div style="margin-top: 100px;">
-                <div style="border: 3px solid #1ed760; width: 50px; height: 50px; border-radius: 50%; border-top-color: transparent; margin: 0 auto 20px; animation: spin 1s linear infinite;"></div>
-                <p>Chargement de l'aperçu du style <strong>${style}</strong>...</p>
-            </div>
-            <style>
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-            </style>
-        </body>
-        </html>
-    `;
-    
-    // Appeler l'URL d'aperçu
-    fetch(`/cv/apercu/style/${style}/`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`Erreur HTTP ${response.status}`);
-            }
-            return response.text();
-        })
-        .then(html => {
-            console.log("✅ Aperçu chargé avec succès");
-            iframe.srcdoc = html;
-        })
-        .catch(error => {
-            console.error("❌ Erreur lors du chargement de l'aperçu:", error);
-            
-            // Afficher un aperçu par défaut en cas d'erreur
-            iframe.srcdoc = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8">
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        padding: 40px;
-                        max-width: 800px;
-                        margin: 0 auto;
-                        background: #f5f5f5;
-                    }
-                    .cv-preview {
-                        background: white;
-                        border-radius: 10px;
-                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                        overflow: hidden;
-                    }
-                    .header {
-                        background: linear-gradient(135deg, #1ed760, #15b050);
-                        color: white;
-                        padding: 30px;
-                        text-align: center;
-                    }
-                    .header h1 {
-                        margin: 0;
-                        font-size: 28px;
-                    }
-                    .header p {
-                        margin: 5px 0 0;
-                        opacity: 0.9;
-                    }
-                    .content {
-                        padding: 30px;
-                    }
-                    .section {
-                        margin-bottom: 25px;
-                    }
-                    .section-title {
-                        color: #1ed760;
-                        border-bottom: 2px solid #1ed760;
-                        padding-bottom: 5px;
-                        margin-bottom: 15px;
-                        font-size: 18px;
-                    }
-                    .experience-item {
-                        margin-bottom: 20px;
-                    }
-                    .experience-title {
-                        font-weight: bold;
-                        font-size: 16px;
-                    }
-                    .experience-date {
-                        color: #666;
-                        font-size: 12px;
-                        margin-bottom: 5px;
-                    }
-                    .skills {
-                        display: flex;
-                        flex-wrap: wrap;
-                        gap: 10px;
-                    }
-                    .skill-tag {
-                        background: #f0f0f0;
-                        padding: 5px 10px;
-                        border-radius: 20px;
-                        font-size: 14px;
-                    }
-                    .preview-notice {
-                        background: #fff3cd;
-                        border: 1px solid #ffc107;
-                        border-radius: 5px;
-                        padding: 10px;
-                        margin-top: 20px;
-                        text-align: center;
-                        font-size: 12px;
-                        color: #856404;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="cv-preview">
-                    <div class="header">
-                        <h1>Ramata TALL</h1>
-                        <p>Développeuse Full Stack</p>
-                    </div>
-                    <div class="content">
-                        <div class="section">
-                            <div class="section-title">Profil</div>
-                            <p>Professionnelle dynamique avec 5 ans d'expérience dans le développement web. Passionnée par les nouvelles technologies et le travail en équipe.</p>
-                        </div>
-                        
-                        <div class="section">
-                            <div class="section-title">Expériences</div>
-                            <div class="experience-item">
-                                <div class="experience-title">Développeuse Full Stack - TechCorp</div>
-                                <div class="experience-date">2021 - Présent</div>
-                                <p>Développement d'applications web avec Django et React. Gestion d'une équipe de 3 développeurs.</p>
-                            </div>
-                            <div class="experience-item">
-                                <div class="experience-title">Développeuse Junior - StartupIA</div>
-                                <div class="experience-date">2019 - 2021</div>
-                                <p>Maintenance et évolution d'applications existantes. Participation à la refonte du site principal.</p>
-                            </div>
-                        </div>
-                        
-                        <div class="section">
-                            <div class="section-title">Formations</div>
-                            <div class="experience-item">
-                                <div class="experience-title">Master en Informatique - Université de Paris</div>
-                                <div class="experience-date">2019</div>
-                            </div>
-                            <div class="experience-item">
-                                <div class="experience-title">Licence en Mathématiques - Université de Lyon</div>
-                                <div class="experience-date">2017</div>
-                            </div>
-                        </div>
-                        
-                        <div class="section">
-                            <div class="section-title">Compétences</div>
-                            <div class="skills">
-                                <span class="skill-tag">Python</span>
-                                <span class="skill-tag">Django</span>
-                                <span class="skill-tag">JavaScript</span>
-                                <span class="skill-tag">React</span>
-                                <span class="skill-tag">SQL</span>
-                                <span class="skill-tag">Git</span>
-                            </div>
-                        </div>
-                        
-                        <div class="preview-notice">
-                            ⚡ Aperçu du style "${style}" - Les données réelles seront utilisées lors de la génération de votre CV
-                        </div>
-                    </div>
-                </div>
-            </body>
-            </html>
-            `;
-    });
-}
 </script>
 {% endblock %}

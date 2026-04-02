@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CV – {{ prenom }} {{ nom }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { --navy: #1e2937; --blue: #334155; --gray: #64748b; --light: #f8fafc; --text: #0f172a; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Roboto', sans-serif; background:#f1f5f9; padding:40px 20px; display:flex; justify-content:center; min-height:100vh; }
+  .cv { width: 850px; background:white; box-shadow:0 15px 50px rgba(15,23,42,0.1); overflow:hidden; }
+  
+  .header { background:var(--navy); color:white; padding:50px 60px; text-align:center; }
+  .name { font-size:38px; font-weight:700; letter-spacing:-0.5px; }
+  .subtitle { font-size:14px; opacity:0.9; margin-top:8px; letter-spacing:1.5px; text-transform:uppercase; }
+  
+  .main { display:grid; grid-template-columns: 265px 1fr; }
+  .sidebar { background:var(--light); padding:45px 40px; border-right:1px solid #e2e8f0; }
+  .ls-title { font-size:11.5px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--blue); margin-bottom:16px; }
+  
+  .right { padding:45px 55px; }
+  .summary { font-size:14.5px; line-height:1.75; color:var(--text); margin-bottom:35px; }
+  .r-section-title { font-size:16px; font-weight:700; color:var(--navy); margin-bottom:18px; padding-bottom:8px; border-bottom:2px solid var(--blue); }
+  
+  .exp-item { margin-bottom:24px; }
+  .exp-role { font-weight:600; font-size:15px; color:var(--text); }
+  .exp-date { font-size:13px; color:var(--blue); }
+  .exp-company { color:var(--gray); margin:4px 0 8px; font-size:13.5px; }
+  .exp-desc { font-size:13.5px; line-height:1.65; color:#475569; }
+</style>
+</head>
+<body>
+<div class="cv">
+  <div class="header">
+    <div class="name">{{ prenom }} {{ nom }}</div>
+    <div class="subtitle">Curriculum Vitae</div>
+  </div>
+  
+  <div class="main">
+    <aside class="sidebar">
+      <div class="ls-title">Contact</div>
+      {% if email %}<div style="margin-bottom:9px; font-size:13.5px;">{{ email }}</div>{% endif %}
+      {% if telephone %}<div style="margin-bottom:9px; font-size:13.5px;">{{ telephone }}</div>{% endif %}
+      {% if adresse %}<div style="font-size:13.5px;">{{ adresse }}{% if ville %}, {{ ville }}{% endif %}</div>{% endif %}
+      {% if permis %}<div style="margin-top:10px; font-size:13px;">🚗 Permis {{ permis }}</div>{% endif %}
+      
+      {% if competences %}
+      <div style="margin-top:40px;">
+        <div class="ls-title">Compétences</div>
+        {% for competence in competences %}
+        <div style="margin-bottom:8px; font-size:14px;">• {{ competence }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      
+      {% if langues %}
+      <div style="margin-top:35px;">
+        <div class="ls-title">Langues</div>
+        {% for langue in langues %}
+        <div style="margin-bottom:7px; font-size:14px;">{{ langue }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </aside>
+    
+    <main class="right">
+      {% if resume %}<div class="summary">{{ resume }}</div>{% endif %}
+      
+      {% if experiences %}
+      <div>
+        <div class="r-section-title">Expériences professionnelles</div>
+        {% for exp in experiences %}
+        <div class="exp-item">
+          <div class="exp-role">{{ exp.titre }}</div>
+          <div class="exp-date">{{ exp.date_debut }}{% if exp.date_fin %} – {{ exp.date_fin }}{% endif %}</div>
+          <div class="exp-company">{{ exp.entreprise }}</div>
+          {% if exp.description %}<div class="exp-desc">{{ exp.description }}</div>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      
+      {% if formations %}
+      <div style="margin-top:35px;">
+        <div class="r-section-title">Formation</div>
+        {% for formation in formations %}
+        <div style="margin-bottom:20px;">
+          <strong style="font-size:14.5px;">{{ formation.diplome }}</strong><br>
+          <span style="color:var(--gray);">{{ formation.etablissement }} — {{ formation.annee }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </main>
+  </div>
+</div>
+</body>
+</html>

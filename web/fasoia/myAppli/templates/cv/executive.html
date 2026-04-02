@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CV – {{ prenom }} {{ nom }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1a3a5c;
+    --accent: #2d7dd2;
+    --light: #e8f0f7;
+    --gray: #5a6a7a;
+    --text: #1e2a35;
+    --white: #ffffff;
+    --gold: #c9a84c;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Lato', sans-serif;
+    background: #d0d8e0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+  .cv-wrapper {
+    width: 900px;
+    background: var(--white);
+    box-shadow: 0 30px 80px rgba(26,58,92,0.25);
+    display: flex;
+    position: relative;
+    overflow: hidden;
+  }
+  .sidebar {
+    width: 280px;
+    min-width: 280px;
+    background: var(--primary);
+    color: var(--white);
+    padding: 0 0 40px;
+    display: flex;
+    flex-direction: column;
+  }
+  .photo-area {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    overflow: hidden;
+  }
+  .photo-area img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: grayscale(20%);
+  }
+  .photo-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #2d5986 0%, #1a3a5c 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 56px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 4px;
+  }
+  .photo-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: linear-gradient(to top, var(--primary), transparent);
+  }
+  .gold-bar {
+    height: 3px;
+    background: linear-gradient(to right, var(--gold), #e8c870, var(--gold));
+  }
+  .sidebar-content { padding: 28px 24px; flex: 1; }
+  .sidebar-section { margin-bottom: 28px; }
+  .sidebar-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 14px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(201,168,76,0.3);
+  }
+  .contact-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 11px;
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.82);
+    line-height: 1.5;
+  }
+  .contact-icon { color: var(--gold); font-size: 13px; margin-top: 1px; flex-shrink: 0; width: 14px; }
+  .skill-bar-wrap { margin-bottom: 10px; }
+  .skill-label { font-size: 12px; color: rgba(255,255,255,0.8); margin-bottom: 5px; }
+  .skill-bar-bg { height: 3px; background: rgba(255,255,255,0.15); border-radius: 2px; overflow: hidden; }
+  .skill-bar-fill { height: 100%; background: linear-gradient(to right, var(--gold), #e8c870); border-radius: 2px; }
+  .lang-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 9px; font-size: 12.5px; }
+  .lang-name { color: rgba(255,255,255,0.85); }
+  .lang-dots { display: flex; gap: 4px; }
+  .lang-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.2); }
+  .lang-dot.filled { background: var(--gold); }
+  .main { flex: 1; padding: 48px 40px; display: flex; flex-direction: column; gap: 32px; }
+  .header-section { border-bottom: 1px solid var(--light); padding-bottom: 24px; }
+  .name-block { font-family: 'Cormorant Garamond', serif; }
+  .first-name { font-size: 42px; font-weight: 300; color: var(--primary); letter-spacing: 2px; display: block; line-height: 1; }
+  .last-name { font-size: 42px; font-weight: 700; color: var(--primary); letter-spacing: 2px; display: block; line-height: 1.1; }
+  .job-title { font-size: 13px; letter-spacing: 4px; text-transform: uppercase; color: var(--accent); margin-top: 10px; font-weight: 300; }
+  .summary-text { font-size: 13.5px; color: var(--gray); line-height: 1.75; margin-top: 16px; font-style: italic; border-left: 2px solid var(--gold); padding-left: 14px; }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--primary);
+    letter-spacing: 1px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--light); }
+  .section-title span.num { font-size: 11px; color: var(--gold); font-family: 'Lato', sans-serif; font-weight: 700; letter-spacing: 2px; }
+  .exp-item {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 16px;
+    margin-bottom: 22px;
+    padding-bottom: 22px;
+    border-bottom: 1px dashed rgba(26,58,92,0.1);
+  }
+  .exp-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .exp-date { font-size: 11.5px; color: var(--accent); font-weight: 700; letter-spacing: 0.5px; padding-top: 2px; text-align: right; padding-right: 16px; border-right: 2px solid var(--light); }
+  .exp-role { font-size: 14.5px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+  .exp-company { font-size: 12.5px; color: var(--accent); margin-bottom: 7px; font-style: italic; }
+  .exp-desc { font-size: 12.5px; color: var(--gray); line-height: 1.65; }
+  .exp-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .tag { background: var(--light); color: var(--primary); font-size: 10.5px; font-weight: 700; padding: 3px 8px; letter-spacing: 0.5px; }
+  .edu-item { display: grid; grid-template-columns: 110px 1fr; gap: 16px; margin-bottom: 16px; }
+  .edu-date { font-size: 11.5px; color: var(--accent); font-weight: 700; text-align: right; padding-right: 16px; border-right: 2px solid var(--light); padding-top: 2px; }
+  .edu-degree { font-size: 14px; font-weight: 700; color: var(--text); }
+  .edu-school { font-size: 12.5px; color: var(--gray); font-style: italic; }
+  .corner-accent { position: absolute; bottom: 0; right: 0; width: 120px; height: 120px; background: linear-gradient(135deg, transparent 50%, rgba(45,125,210,0.06) 50%); }
+  .int-tag { background: rgba(201,168,76,0.15); color: var(--gold); font-size: 10.5px; font-weight: 700; padding: 3px 8px; letter-spacing: 0.5px; margin: 3px 3px 0 0; display: inline-block; }
+</style>
+</head>
+<body>
+<div class="cv-wrapper">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="photo-area">
+      {% if photo_src %}
+        <img src="{{ photo_src }}" alt="Photo de profil" />
+      {% else %}
+        <div class="photo-placeholder">{{ prenom|slice:":1" }}{{ nom|slice:":1" }}</div>
+      {% endif %}
+      <div class="photo-overlay"></div>
+    </div>
+    <div class="gold-bar"></div>
+    <div class="sidebar-content">
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Contact</div>
+        {% if email %}<div class="contact-item"><span class="contact-icon">✉</span>{{ email }}</div>{% endif %}
+        {% if telephone %}<div class="contact-item"><span class="contact-icon">☎</span>{{ telephone }}</div>{% endif %}
+        {% if adresse %}<div class="contact-item"><span class="contact-icon">⌖</span>{{ adresse }}{% if ville %}, {{ ville }}{% endif %}</div>{% endif %}
+        {% if permis %}<div class="contact-item"><span class="contact-icon">🚗</span>Permis {{ permis }}</div>{% endif %}
+      </div>
+
+      {% if competences %}
+      <div class="sidebar-section">
+        <div class="sidebar-title">Compétences</div>
+        {% for competence in competences %}
+        <div class="skill-bar-wrap">
+          <div class="skill-label">{{ competence }}</div>
+          <div class="skill-bar-bg"><div class="skill-bar-fill" style="width:80%"></div></div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if langues %}
+      <div class="sidebar-section">
+        <div class="sidebar-title">Langues</div>
+        {% for langue in langues %}
+        <div class="lang-item">
+          <span class="lang-name">{{ langue }}</span>
+          <div class="lang-dots">
+            <div class="lang-dot filled"></div><div class="lang-dot filled"></div><div class="lang-dot filled"></div><div class="lang-dot filled"></div><div class="lang-dot"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if centres_interet %}
+      <div class="sidebar-section">
+        <div class="sidebar-title">Centres d'intérêt</div>
+        {% for interet in centres_interet %}
+          <span class="int-tag">{{ interet }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="header-section">
+      <div class="name-block">
+        <span class="first-name">{{ prenom }}</span>
+        <span class="last-name">{{ nom }}</span>
+      </div>
+      {% if resume %}<p class="summary-text">{{ resume }}</p>{% endif %}
+    </div>
+
+    {% if experiences %}
+    <div class="section">
+      <div class="section-title"><span class="num">01</span> Expériences Professionnelles</div>
+      {% for exp in experiences %}
+      <div class="exp-item">
+        <div class="exp-date">{{ exp.date_debut }}{% if exp.date_fin %} – {{ exp.date_fin }}{% endif %}</div>
+        <div>
+          <div class="exp-role">{{ exp.titre }}</div>
+          <div class="exp-company">{{ exp.entreprise }}</div>
+          {% if exp.description %}<div class="exp-desc">{{ exp.description }}</div>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if formations %}
+    <div class="section">
+      <div class="section-title"><span class="num">02</span> Formations</div>
+      {% for formation in formations %}
+      <div class="edu-item">
+        <div class="edu-date">{{ formation.annee }}</div>
+        <div>
+          <div class="edu-degree">{{ formation.diplome }}</div>
+          <div class="edu-school">{{ formation.etablissement }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </main>
+
+  <div class="corner-accent"></div>
+</div>
+</body>
+</html>
