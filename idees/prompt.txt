@@ -6,3 +6,32 @@
 - Style professionnel avec couleurs bleu et gris"
 
 tu peux apporter tes ameliorations et genere 6
+
+#############################################################Pour peupler ModelCV avec les templates correspondant#######
+
+# Dans le shell Django ou une migration
+from myAppli.models import ModeleCV
+
+styles = [
+    ('Executive Gold',  'executive',  True,  False, 1),
+    ('Geometric Tech',  'geometric',  False, False, 2),
+    ('Diagonal Clip',   'diagonal',   False, False, 3),
+    ('Dark Premium',    'dark',       False, True,  4),
+    ('Swiss Grid',      'swiss',      False, False, 5),
+    ('Split Card',      'splitcard',  False, False, 6),
+]
+
+for nom, cat, populaire, premium, ordre in styles:
+    ModeleCV.objects.update_or_create(
+        categorie=cat,
+        defaults={
+            'nom': nom,
+            'est_populaire': populaire,
+            'est_premium': premium,
+            'ordre_affichage': ordre,
+            'est_actif': True,
+        }
+    )
+
+
+
