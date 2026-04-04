@@ -2,596 +2,649 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <title>{% block title %}FasoIA - Espace Emploi{% endblock %}</title>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+  <title>{% block title %}FASOIA — Espace Carrière{% endblock %}</title>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/font-awesome.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/owl.carousel.css' %}">
-    <link rel="stylesheet" href="{% static 'css/owl.theme.default.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/templatemo-style.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    
-    {% block extra_css %}{% endblock %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-    <style>
-        /* ===== VARIABLES ===== */
-        :root {
-            --primary-color: #1ed760;
-            --secondary-color: #121212;
-            --sidebar-bg: #1a1a1a;
-            --sidebar-width: 250px;  /* Réduit de 300px à 250px */
-            --sidebar-collapsed-width: 0px;
-            --text-primary: #ffffff;
-            --text-secondary: #b3b3b3;
-            --hover-bg: #2a2a2a;
-        }
-        
-        /* ===== RESET & BASE ===== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        html, body {
-            height: 100%;
-            background: var(--secondary-color);
-            color: var(--text-primary);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow-x: hidden;
-        }
-        
-        /* ===== LAYOUT PRINCIPAL ===== */
-        .app-wrapper {
-            display: flex;
-            min-height: 100vh;
-            position: relative;
-        }
-        
-        /* ===== SIDEBAR ===== */
-        .app-sidebar {
-            width: var(--sidebar-width);
-            background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
-            border-right: 1px solid #333;
-            position: fixed;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            overflow-y: auto;
-            box-shadow: 5px 0 15px rgba(0,0,0,0.3);
-            z-index: 1000;
-            transition: transform 0.3s ease;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .app-sidebar.collapsed {
-            transform: translateX(calc(-1 * var(--sidebar-width)));
-        }
-        
-        /* Header de la sidebar avec bouton de fermeture */
-        .sidebar-header {
-            padding: 20px 15px;
-            border-bottom: 1px solid #333;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(0,0,0,0.2);
-        }
-        
-        .sidebar-header h2 {
-            color: var(--primary-color);
-            margin: 0;
-            font-size: 20px;
-            font-weight: 600;
-        }
-        
-        .sidebar-header p {
-            color: var(--text-secondary);
-            margin: 2px 0 0;
-            font-size: 11px;
-        }
-        
-        .close-sidebar {
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 18px;
-            cursor: pointer;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 5px;
-            transition: all 0.3s ease;
-        }
-        
-        .close-sidebar:hover {
-            background: var(--hover-bg);
-            color: var(--primary-color);
-        }
-        
-        /* Profile utilisateur (plus compact) */
-        .sidebar-profile {
-            padding: 15px;
-            border-bottom: 1px solid #333;
-            background: rgba(0,0,0,0.1);
-        }
-        
-        .profile-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .profile-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: black;
-            font-size: 20px;
-            font-weight: bold;
-            border: 2px solid var(--primary-color);
-        }
-        
-        .profile-details {
-            flex: 1;
-        }
-        
-        .profile-name {
-            color: white;
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 3px;
-        }
-        
-        .profile-type {
-            color: var(--text-secondary);
-            font-size: 12px;
-            background: rgba(255,255,255,0.1);
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 20px;
-        }
-        
-        /* Navigation plus compacte */
-        .sidebar-nav {
-            flex: 1;
-            padding: 15px 10px;
-            overflow-y: auto;
-        }
-        
-        .nav-section {
-            margin-bottom: 20px;
-        }
-        
-        .nav-section-title {
-            color: var(--text-secondary);
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            padding: 0 10px 8px;
-        }
-        
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 12px;
-            color: var(--text-primary);
-            text-decoration: none;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-            margin: 2px 0;
-            font-size: 14px;
-        }
-        
-        .nav-item:hover {
-            background: var(--hover-bg);
-            color: var(--primary-color);
-            transform: translateX(3px);
-        }
-        
-        .nav-item.active {
-            background: var(--primary-color);
-            color: black;
-        }
-        
-        .nav-item i {
-            width: 18px;
-            font-size: 1rem;
-        }
-        
-        .nav-badge {
-            background: var(--primary-color);
-            color: black;
-            padding: 2px 6px;
-            border-radius: 20px;
-            font-size: 10px;
-            margin-left: auto;
-        }
-        
-        .nav-item.active .nav-badge {
-            background: black;
-            color: var(--primary-color);
-        }
-        
-        /* Footer de la sidebar */
-        .sidebar-footer {
-            padding: 15px;
-            border-top: 1px solid #333;
-            background: rgba(0,0,0,0.2);
-        }
-        
-        .home-link {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 12px;
-            color: var(--text-primary);
-            text-decoration: none;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-            background: var(--hover-bg);
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-        
-        .home-link:hover {
-            background: var(--primary-color);
-            color: black;
-        }
-        
-        .version-info {
-            color: var(--text-secondary);
-            font-size: 11px;
-            text-align: center;
-        }
-        
-        /* ===== BOUTON BURGER EN HAUT ===== */
-        .burger-btn {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1002;
-            background: var(--primary-color);
-            color: black;
-            width: 45px;
-            height: 45px;
-            border-radius: 8px;  /* Carré avec légers bords arrondis */
-            display: none;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            border: none;
-            font-size: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-        }
-        
-        .burger-btn:hover {
-            background: #15b050;
-            transform: scale(1.05);
-        }
-        
-        .burger-btn.visible {
-            display: flex;
-        }
-        
-        /* ===== CONTENU PRINCIPAL ===== */
-        .app-main {
-            flex: 1;
-            margin-left: var(--sidebar-width);
-            padding: 30px;
-            background: var(--secondary-color);
-            min-height: 100vh;
-            transition: margin-left 0.3s ease;
-        }
-        
-        .app-main.expanded {
-            margin-left: 0;
-        }
-        
-        /* ===== OVERLAY ===== */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 999;
-        }
-        
-        .sidebar-overlay.active {
-            display: block;
-        }
-        
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 768px) {
-            .app-sidebar {
-                transform: translateX(-100%);
-            }
-            
-            .app-sidebar.active {
-                transform: translateX(0);
-            }
-            
-            .app-main {
-                margin-left: 0 !important;
-            }
-            
-            .burger-btn {
-                display: flex;
-            }
-        }
-        
-        {% block app_extra_css %}{% endblock %}
-    </style>
+  <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <style>
+    :root {
+      --ink:        #1C1917;
+      --ink-mid:    #44403C;
+      --muted:      #78716C;
+      --hint:       #A8A29E;
+      --border:     #E7E5E4;
+      --bg:         #FAFAF9;
+      --cream:      #F5F3EF;
+      --surface:    #FFFFFF;
+      --red:        #C0392B;
+      --teal:       #0D7377;
+      --amber:      #D97706;
+      --blue:       #1D4ED8;
+      --green:      #15803D;
+
+      /* Sidebar version B */
+      --sb-bg:       #3D3530;
+      --sb-bg-deep:  #332D29;
+      --sb-border:   rgba(255,255,255,0.10);
+      --sb-text:     rgba(255,255,255,0.60);
+      --sb-text-dim: rgba(255,255,255,0.35);
+      --sb-hover:    rgba(255,255,255,0.08);
+      --sb-active:   rgba(255,255,255,0.10);
+
+      --sidebar-w: 260px;
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body:    'Nunito Sans', 'Segoe UI', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--ink);
+      font-size: 14px;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; transition: color 0.15s; }
+    a:hover { color: var(--red); }
+
+    .app-wrapper { display: flex; min-height: 100vh; }
+
+    /* ===== SIDEBAR ===== */
+    .app-sidebar {
+      width: var(--sidebar-w);
+      background: var(--sb-bg);
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease;
+    }
+    .app-sidebar.collapsed { transform: translateX(calc(-1 * var(--sidebar-w))); }
+    .app-sidebar::-webkit-scrollbar { width: 4px; }
+    .app-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+    .sidebar-masthead {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--sb-border);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .sidebar-brand-name {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 2px;
+      line-height: 1;
+    }
+    .sidebar-brand-name span { color: var(--red); }
+    .sidebar-brand-sub {
+      font-size: 8px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--sb-text-dim);
+      margin-top: 5px;
+      padding-top: 5px;
+      border-top: 1px solid var(--sb-border);
+    }
+    .btn-close-sidebar {
+      background: transparent;
+      border: 1px solid var(--sb-border);
+      color: var(--sb-text-dim);
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .btn-close-sidebar:hover { border-color: rgba(255,255,255,0.25); color: #fff; background: var(--sb-hover); }
+
+    .sidebar-profile {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--sb-border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      background: var(--sb-bg-deep);
+    }
+    .profile-avatar {
+      width: 42px; height: 42px;
+      border: 1.5px solid rgba(255,255,255,0.20);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display);
+      font-size: 18px; font-weight: 700;
+      color: #fff; flex-shrink: 0;
+      background: rgba(255,255,255,0.10);
+    }
+    .profile-name {
+      font-size: 13px; font-weight: 700; color: #fff;
+      line-height: 1.3; margin-bottom: 4px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .profile-role {
+      display: inline-block;
+      font-size: 9px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.8px;
+      padding: 2px 8px;
+      border: 1px solid rgba(255,255,255,0.20);
+      color: rgba(255,255,255,0.55);
+    }
+
+    .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+    .nav-section { margin-bottom: 24px; }
+    .nav-section-label {
+      font-size: 9px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1.8px;
+      color: var(--sb-text-dim);
+      padding: 0 8px 8px; display: block;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      margin-bottom: 6px;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 11px;
+      padding: 9px 10px;
+      color: var(--sb-text);
+      font-size: 13px; font-weight: 600;
+      transition: all 0.15s;
+      margin-bottom: 2px;
+      border-left: 2px solid transparent;
+    }
+    .nav-item:hover { color: #fff; background: var(--sb-hover); border-left-color: rgba(255,255,255,0.20); }
+    .nav-item.active { color: #fff; background: var(--sb-active); border-left-color: var(--red); }
+    .nav-item i {
+      width: 16px; font-size: 13px; text-align: center;
+      flex-shrink: 0; color: rgba(255,255,255,0.35);
+      transition: color 0.15s;
+    }
+    .nav-item:hover i, .nav-item.active i { color: rgba(255,255,255,0.80); }
+    .nav-badge {
+      margin-left: auto;
+      background: var(--red); color: #fff;
+      font-size: 9px; font-weight: 700;
+      padding: 2px 7px; flex-shrink: 0;
+    }
+
+    .sidebar-footer {
+      padding: 14px 12px;
+      border-top: 1px solid var(--sb-border);
+      flex-shrink: 0;
+      background: var(--sb-bg-deep);
+    }
+    .sidebar-footer .nav-item { color: rgba(255,255,255,0.45); }
+    .sidebar-footer .nav-item.logout { color: rgba(192,57,43,0.75); }
+    .sidebar-footer .nav-item.logout:hover { color: #fff; background: rgba(192,57,43,0.2); border-left-color: var(--red); }
+    .sidebar-version {
+      font-size: 10px; color: rgba(255,255,255,0.15);
+      text-align: center; margin-top: 10px; padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,0.06); letter-spacing: 0.5px;
+    }
+
+    /* ===== BURGER ===== */
+    .burger-btn {
+      position: fixed; top: 16px; left: 16px; z-index: 1002;
+      background: var(--sb-bg); color: #fff;
+      width: 40px; height: 40px;
+      display: none; align-items: center; justify-content: center;
+      cursor: pointer; border: 1px solid rgba(255,255,255,0.15);
+      font-size: 16px; transition: all 0.2s;
+    }
+    .burger-btn:hover { background: var(--red); border-color: var(--red); }
+    .burger-btn.visible { display: flex; }
+
+    /* ===== OVERLAY ===== */
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(28,25,23,0.55); z-index: 999;
+    }
+    .sidebar-overlay.active { display: block; }
+
+    /* ===== MAIN ===== */
+    .app-main {
+      flex: 1; margin-left: var(--sidebar-w);
+      min-height: 100vh; display: flex; flex-direction: column;
+      transition: margin-left 0.3s ease; background: var(--bg);
+    }
+    .app-main.expanded { margin-left: 0; }
+
+    .app-topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px; height: 52px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0; position: sticky; top: 0; z-index: 100;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+    .topbar-toggle {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 13px; transition: all 0.15s;
+    }
+    .topbar-toggle:hover { border-color: var(--ink); color: var(--ink); }
+    .topbar-breadcrumb {
+      font-size: 12px; color: var(--muted);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .topbar-breadcrumb .sep { color: var(--border); }
+    .topbar-breadcrumb .current { font-weight: 700; color: var(--ink); }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .topbar-link {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+      text-transform: uppercase; color: var(--muted);
+      padding: 5px 12px; border: 1px solid var(--border); transition: all 0.15s;
+    }
+    .topbar-link:hover { color: var(--ink); border-color: var(--ink); }
+    .topbar-link.danger { color: var(--red); border-color: #f5c6c2; }
+    .topbar-link.danger:hover { background: var(--red); color: #fff; border-color: var(--red); }
+
+    .app-content { flex: 1; padding: 28px; }
+
+    /* ===== MESSAGES DJANGO ===== */
+    .django-messages {
+      position: fixed; top: 64px; right: 20px;
+      z-index: 8000; display: flex; flex-direction: column;
+      gap: 8px; max-width: 320px;
+    }
+    .django-msg {
+      background: var(--surface);
+      border: 1px solid var(--border); border-left: 3px solid var(--ink);
+      padding: 12px 16px; font-size: 12px;
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .django-msg.success { border-left-color: var(--teal); }
+    .django-msg.error   { border-left-color: var(--red); }
+    .django-msg.warning { border-left-color: var(--amber); }
+    .django-msg-close { margin-left: auto; cursor: pointer; color: var(--hint); font-size: 14px; line-height: 1; }
+
+    /* ===== COMPOSANTS RÉUTILISABLES ===== */
+    .page-header {
+      margin-bottom: 24px; padding-bottom: 16px;
+      border-bottom: 2px solid var(--ink);
+      display: flex; align-items: baseline;
+      justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    }
+    .page-header h1 { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--ink); line-height: 1; }
+    .page-header .page-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    .card-edit { background: var(--surface); border: 1px solid var(--border); padding: 24px; margin-bottom: 20px; }
+    .card-edit-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+    }
+    .card-edit-head h3 { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--ink); }
+
+    .stats-row {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 1px; background: var(--border); border: 1px solid var(--border);
+      margin-bottom: 24px; overflow: hidden;
+    }
+    .stat-cell { background: var(--surface); padding: 16px; text-align: center; }
+    .stat-cell .n { font-family: var(--font-display); font-size: 32px; font-weight: 700; color: var(--ink); line-height: 1; }
+    .stat-cell .l { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-top: 4px; }
+    .stat-cell.accent .n { color: var(--red); }
+    .stat-cell.success .n { color: var(--teal); }
+
+    .tag { display: inline-block; padding: 2px 8px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; }
+    .tag-ao  { background: var(--ink);   color: #fff; }
+    .tag-ami { background: var(--teal);  color: #fff; }
+    .tag-job { background: var(--amber); color: #fff; }
+    .tag-urg { background: var(--red);   color: #fff; }
+    .tag-cdi { background: var(--blue);  color: #fff; }
+    .tag-ok  { background: var(--teal);  color: #fff; }
+
+    .btn-app {
+      background: var(--ink); color: #fff; border: none;
+      padding: 9px 22px; font-family: var(--font-body);
+      font-size: 11px; font-weight: 700; letter-spacing: 0.8px;
+      text-transform: uppercase; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: background 0.15s;
+    }
+    .btn-app:hover { background: var(--red); color: #fff; }
+    .btn-app.outline { background: transparent; color: var(--ink); border: 1.5px solid var(--ink); }
+    .btn-app.outline:hover { background: var(--ink); color: #fff; }
+    .btn-app.danger { background: var(--red); }
+    .btn-app.sm { padding: 6px 14px; font-size: 10px; }
+
+    .form-field { margin-bottom: 18px; }
+    .form-field label { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; }
+    .form-field input, .form-field select, .form-field textarea {
+      width: 100%; border: 1px solid var(--border); padding: 10px 12px;
+      font-size: 13px; font-family: var(--font-body); color: var(--ink);
+      background: var(--surface); outline: none; transition: border-color 0.2s;
+      border-radius: 0; -webkit-appearance: none;
+    }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: var(--ink); }
+    .form-field input::placeholder, .form-field textarea::placeholder { color: var(--hint); }
+    .form-field textarea { resize: vertical; min-height: 90px; }
+
+    .item-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 13px 0; border-bottom: 1px solid var(--border); transition: background 0.1s;
+    }
+    .item-row:first-of-type { border-top: 1px solid var(--border); }
+    .item-row:last-child { border-bottom: none; }
+    .item-row:hover { background: var(--cream); padding-left: 8px; padding-right: 8px; margin-left: -8px; margin-right: -8px; }
+    .item-title { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
+    .item-meta { display: flex; gap: 8px; align-items: center; font-size: 11px; color: var(--muted); flex-wrap: wrap; }
+
+    .prog-item { margin-bottom: 14px; }
+    .prog-labels { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 5px; }
+    .prog-labels span:first-child { color: var(--muted); }
+    .prog-labels span:last-child { font-weight: 700; color: var(--ink); }
+    .prog-track { height: 3px; background: var(--border); overflow: hidden; }
+    .prog-fill  { height: 100%; }
+
+    .app-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .app-table th { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); padding: 10px 14px; border-bottom: 2px solid var(--ink); text-align: left; background: var(--cream); }
+    .app-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); color: var(--ink); vertical-align: middle; }
+    .app-table tr:hover td { background: var(--cream); }
+    .app-table tr:last-child td { border-bottom: none; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      .app-sidebar { transform: translateX(calc(-1 * var(--sidebar-w))); }
+      .app-sidebar.active { transform: translateX(0); }
+      .app-main { margin-left: 0 !important; }
+      .burger-btn { display: flex; }
+      .app-topbar { padding: 0 16px; }
+      .app-content { padding: 20px 16px; }
+      .topbar-breadcrumb { display: none; }
+    }
+
+    {% block app_extra_css %}{% endblock %}
+  </style>
+
+  {% block extra_css %}{% endblock %}
 </head>
-<body>
-    <!-- Bouton burger (visible quand sidebar cachée) -->
-    <button class="burger-btn" id="burgerBtn" onclick="openSidebar()">
-        <i class="fa fa-bars"></i>
-    </button>
-    
-    <!-- Overlay pour mobile -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-    
-    <div class="app-wrapper">
-        <!-- Sidebar -->
-        <aside class="app-sidebar" id="appSidebar">
-            <!-- Header avec bouton de fermeture -->
-            <div class="sidebar-header">
-                <div>
-                    <h2>FasoIA</h2>
-                    <p>Espace carrière</p>
-                </div>
-                <button class="close-sidebar" onclick="closeSidebar()">
-                    <i class="fa fa-times"></i>
-                </button>
-            </div>
-            
-            <!-- Profile utilisateur -->
-            <div class="sidebar-profile">
-                <div class="profile-info">
-                    <div class="profile-avatar">
-                        {% if user.is_authenticated %}
-                            {% if user.particulier %}
-                                {{ user.particulier.prenom|first|upper }}{{ user.particulier.nom|first|upper }}
-                            {% elif user.entreprise %}
-                                {{ user.entreprise.raisonSociale|first|upper }}
-                            {% else %}
-                                <i class="fa fa-user"></i>
-                            {% endif %}
-                        {% else %}
-                            <i class="fa fa-user"></i>
-                        {% endif %}
-                    </div>
-                    <div class="profile-details">
-                        <div class="profile-name">
-                            {% if user.is_authenticated %}
-                                {% if user.particulier %}
-                                    {{ user.particulier.prenom }} {{ user.particulier.nom }}
-                                {% elif user.entreprise %}
-                                    {{ user.entreprise.raisonSociale }}
-                                {% else %}
-                                    {{ user.username }}
-                                {% endif %}
-                            {% else %}
-                                Visiteur
-                            {% endif %}
-                        </div>
-                        <div class="profile-type">
-                            {% if user.is_authenticated %}
-                                {% if user.particulier %}
-                                    {% if user.particulier.candidat %}Candidat{% endif %}
-                                    {% if user.particulier.recruteur %} / Recruteur{% endif %}
-                                {% elif user.entreprise %}
-                                    Entreprise
-                                {% endif %}
-                            {% else %}
-                                Non connecté
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Navigation -->
-            <nav class="sidebar-nav">
 
-            <!-- Section Recherche -->
-            <div class="nav-section">
-                <div class="nav-section-title">Recherche</div>
-                <a href="{% url 'myAppli:trouver_emploi' %}" class="nav-item">
-                    <i class="fa fa-search"></i>
-                    <span>Trouver un emploi</span>
-                </a>
-                
-                <!-- Lien vers les opportunités personnalisées du dashboard -->
-                <a href="{% url 'myAppli:dashboard_opportunites' %}" class="nav-item">
-                    <i class="fa fa-briefcase"></i>
-                    <span>Mes opportunités</span>
-                    <span class="nav-badge">{{ total_opportunites|default:"0" }}</span>
-                </a>
-            </div>
-                
-                <!-- Section Outils -->
-                <div class="nav-section">
-                    <div class="nav-section-title">Outils</div>
-                    <a href="{% url 'myAppli:generer_cv' %}" class="nav-item {% if request.resolver_match.url_name == 'generer_cv' %}active{% endif %}">
-                        <i class="fa fa-file-pdf-o"></i>
-                        <span>Générateur de CV</span>
-                    </a>
-                    <a href="{% url 'myAppli:generer_lettre_motivation' %}" class="nav-item {% if request.resolver_match.url_name == 'generer_lettre_motivation' %}active{% endif %}">
-                        <i class="fa fa-envelope-open"></i>
-                        <span>Lettre de motivation</span>
-                    </a>
-                    <a href="{% url 'myAppli:preparer_entretien' %}" class="nav-item {% if request.resolver_match.url_name == 'preparer_entretien' %}active{% endif %}">
-                        <i class="fa fa-handshake-o"></i>
-                        <span>Préparation entretien</span>
-                    </a>
-                </div>
-                
-                <!-- Section Mon espace -->
-                <div class="nav-section">
-                    <div class="nav-section-title">Mon espace</div>
-                    {% if user.is_authenticated %}
-                        {% if user.particulier %}
-                            <a href="{% url 'myAppli:dashboard_candidat' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard_candidat' %}active{% endif %}">
-                                <i class="fa fa-tachometer"></i>
-                                <span>Tableau de bord</span>
-                            </a>
-                            <a href="{% url 'myAppli:mes_cvs' %}" class="nav-item {% if request.resolver_match.url_name == 'mes_cvs' %}active{% endif %}">
-                                <i class="fa fa-files-o"></i>
-                                <span>Mes CV</span>
-                            </a>
-                        {% elif user.entreprise %}
-                            <a href="{% url 'myAppli:dashboard_entreprise' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard_entreprise' %}active{% endif %}">
-                                <i class="fa fa-building"></i>
-                                <span>Dashboard entreprise</span>
-                            </a>
-                            <a href="{% url 'myAppli:mes_soumissions' %}" class="nav-item {% if request.resolver_match.url_name == 'mes_soumissions' %}active{% endif %}">
-                                <i class="fa fa-file-text"></i>
-                                <span>Mes soumissions</span>
-                            </a>
-                        {% endif %}
-                        <a href="{% url 'myAppli:profil' %}" class="nav-item {% if request.resolver_match.url_name == 'profil' %}active{% endif %}">
-                            <i class="fa fa-user-circle"></i>
-                            <span>Mon profil</span>
-                        </a>
-                    {% else %}
-                        <a href="{% url 'myAppli:connexion' %}" class="nav-item">
-                            <i class="fa fa-sign-in"></i>
-                            <span>Se connecter</span>
-                        </a>
-                        <a href="{% url 'myAppli:inscription' %}" class="nav-item">
-                            <i class="fa fa-user-plus"></i>
-                            <span>S'inscrire</span>
-                        </a>
-                    {% endif %}
-                </div>
-                
-                <!-- Section Aide -->
-                <div class="nav-section">
-                    <div class="nav-section-title">Aide</div>
-                    <a href="#" class="nav-item">
-                        <i class="fa fa-question-circle"></i>
-                        <span>FAQ</span>
-                    </a>
-                    <a href="#" class="nav-item">
-                        <i class="fa fa-envelope"></i>
-                        <span>Contact</span>
-                    </a>
-                </div>
-            </nav>
-            
-            <!-- Footer avec lien accueil -->
-            <div class="sidebar-footer">
-                <a href="{% url 'myAppli:home' %}" class="home-link">
-                    <i class="fa fa-home"></i>
-                    <span>Accueil</span>
-                </a>
-                <div class="version-info">
-                    FasoIA v1.0 | &copy; 2026
-                </div>
-            </div>
-        </aside>
-        
-        <!-- Contenu principal -->
-        <main class="app-main" id="appMain">
-            {% block content %}{% endblock %}
-        </main>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+{% if messages %}
+<div class="django-messages">
+  {% for message in messages %}
+  <div class="django-msg {{ message.tags }}">
+    <span>{{ message }}</span>
+    <span class="django-msg-close" onclick="this.parentElement.remove()">&times;</span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="app-wrapper">
+
+  <aside class="app-sidebar" id="appSidebar">
+
+    <div class="sidebar-masthead">
+      <div>
+        <div class="sidebar-brand-name">FASO<span>IA</span></div>
+        <div class="sidebar-brand-sub">Espace Carrière</div>
+      </div>
+      <button class="btn-close-sidebar" onclick="closeSidebar()">
+        <i class="fa fa-times"></i>
+      </button>
     </div>
 
-    <!-- Scripts -->
-    <script src="{% static 'js/jquery.js' %}"></script>
-    <script src="{% static 'js/bootstrap.min.js' %}"></script>
-    
-    <script>
-        let sidebarCollapsed = false;
-        
-        // Vérifier la préférence sauvegardée
-        if (localStorage.getItem('sidebarCollapsed') === 'true') {
-            sidebarCollapsed = true;
-            updateSidebarState(true);
+    <div class="sidebar-profile">
+      <div class="profile-avatar">
+        {% if user.is_authenticated %}
+          {% if user.particulier %}
+            {{ user.particulier.prenom|first|upper }}{{ user.particulier.nom|first|upper }}
+          {% elif user.entreprise %}
+            {{ user.entreprise.raisonSociale|first|upper }}
+          {% else %}
+            <i class="fa fa-user" style="font-size:15px"></i>
+          {% endif %}
+        {% else %}
+          <i class="fa fa-user" style="font-size:15px"></i>
+        {% endif %}
+      </div>
+      <div style="min-width:0">
+        <div class="profile-name">
+          {% if user.is_authenticated %}
+            {% if user.particulier %}{{ user.particulier.prenom }} {{ user.particulier.nom }}
+            {% elif user.entreprise %}{{ user.entreprise.raisonSociale }}
+            {% else %}{{ user.username }}{% endif %}
+          {% else %}Visiteur{% endif %}
+        </div>
+        <div class="profile-role">
+          {% if user.is_authenticated %}
+            {% if user.particulier %}
+              {% if user.particulier.candidat %}Candidat{% endif %}
+              {% if user.particulier.recruteur %}&nbsp;/&nbsp;Recruteur{% endif %}
+            {% elif user.entreprise %}Entreprise{% endif %}
+          {% else %}Non connecté{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+
+      <div class="nav-section">
+        <span class="nav-section-label">Recherche</span>
+        <a href="{% url 'myAppli:trouver_emploi' %}"
+           class="nav-item {% if request.resolver_match.url_name == 'trouver_emploi' %}active{% endif %}">
+          <i class="fa fa-search"></i><span>Trouver un emploi</span>
+        </a>
+        <a href="{% url 'myAppli:dashboard_opportunites' %}"
+           class="nav-item {% if request.resolver_match.url_name == 'dashboard_opportunites' %}active{% endif %}">
+          <i class="fa fa-briefcase"></i><span>Mes opportunités</span>
+          {% if total_opportunites %}<span class="nav-badge">{{ total_opportunites }}</span>{% endif %}
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-label">Outils carrière</span>
+        <a href="{% url 'myAppli:generer_cv' %}"
+           class="nav-item {% if request.resolver_match.url_name == 'generer_cv' %}active{% endif %}">
+          <i class="fa fa-file-pdf"></i><span>Générateur de CV</span>
+        </a>
+        <a href="{% url 'myAppli:generer_lettre_motivation' %}"
+           class="nav-item {% if request.resolver_match.url_name == 'generer_lettre_motivation' %}active{% endif %}">
+          <i class="fa fa-envelope-open-text"></i><span>Lettre de motivation</span>
+        </a>
+        <a href="{% url 'myAppli:preparer_entretien' %}"
+           class="nav-item {% if request.resolver_match.url_name == 'preparer_entretien' %}active{% endif %}">
+          <i class="fa fa-comments"></i><span>Préparation entretien</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-label">Mon espace</span>
+        {% if user.is_authenticated %}
+          {% if user.particulier %}
+            <a href="{% url 'myAppli:dashboard_candidat' %}"
+               class="nav-item {% if request.resolver_match.url_name == 'dashboard_candidat' %}active{% endif %}">
+              <i class="fa fa-gauge"></i><span>Tableau de bord</span>
+            </a>
+            <a href="{% url 'myAppli:mes_cvs' %}"
+               class="nav-item {% if request.resolver_match.url_name == 'mes_cvs' %}active{% endif %}">
+              <i class="fa fa-copy"></i><span>Mes CV</span>
+            </a>
+          {% elif user.entreprise %}
+            <a href="{% url 'myAppli:dashboard_entreprise' %}"
+               class="nav-item {% if request.resolver_match.url_name == 'dashboard_entreprise' %}active{% endif %}">
+              <i class="fa fa-building"></i><span>Dashboard entreprise</span>
+            </a>
+            <a href="{% url 'myAppli:mes_soumissions' %}"
+               class="nav-item {% if request.resolver_match.url_name == 'mes_soumissions' %}active{% endif %}">
+              <i class="fa fa-file-lines"></i><span>Mes soumissions</span>
+            </a>
+          {% endif %}
+          <a href="{% url 'myAppli:profil' %}"
+             class="nav-item {% if request.resolver_match.url_name == 'profil' %}active{% endif %}">
+            <i class="fa fa-circle-user"></i><span>Mon profil</span>
+          </a>
+        {% else %}
+          <a href="{% url 'myAppli:connexion' %}" class="nav-item">
+            <i class="fa fa-right-to-bracket"></i><span>Se connecter</span>
+          </a>
+          <a href="{% url 'myAppli:inscription' %}" class="nav-item">
+            <i class="fa fa-user-plus"></i><span>S'inscrire</span>
+          </a>
+        {% endif %}
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-label">Aide</span>
+        <a href="#" class="nav-item"><i class="fa fa-circle-question"></i><span>FAQ</span></a>
+        <a href="#" class="nav-item"><i class="fa fa-envelope"></i><span>Contact</span></a>
+      </div>
+
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="{% url 'myAppli:home' %}" class="nav-item">
+        <i class="fa fa-house"></i><span>Retour à l'accueil</span>
+      </a>
+      {% if user.is_authenticated %}
+      <a href="{% url 'myAppli:deconnexion' %}" class="nav-item logout">
+        <i class="fa fa-right-from-bracket"></i><span>Déconnexion</span>
+      </a>
+      {% endif %}
+      <div class="sidebar-version">FASOIA v1.0 &nbsp;&middot;&nbsp; &copy; 2026</div>
+    </div>
+
+  </aside>
+
+  <div class="app-main" id="appMain">
+
+    <div class="app-topbar">
+      <div class="topbar-left">
+        <button class="topbar-toggle" onclick="toggleSidebar()">
+          <i class="fa fa-bars"></i>
+        </button>
+        <div class="topbar-breadcrumb">
+          <a href="{% url 'myAppli:home' %}" style="color:var(--hint)">FASOIA</a>
+          <span class="sep">/</span>
+          <span class="current">{% block breadcrumb %}Tableau de bord{% endblock %}</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        {% if user.is_authenticated %}
+          <a href="{% url 'myAppli:profil' %}" class="topbar-link">
+            <i class="fa fa-circle-user" style="font-size:11px"></i>
+            {% if user.particulier %}{{ user.particulier.prenom }}
+            {% elif user.entreprise %}{{ user.entreprise.raisonSociale|truncatechars:16 }}{% endif %}
+          </a>
+          <a href="{% url 'myAppli:deconnexion' %}" class="topbar-link danger">
+            <i class="fa fa-right-from-bracket" style="font-size:11px"></i>
+          </a>
+        {% else %}
+          <a href="{% url 'myAppli:connexion' %}" class="topbar-link">Connexion</a>
+          <a href="{% url 'myAppli:inscription' %}" class="topbar-link" style="background:var(--ink);color:#fff;border-color:var(--ink)">Inscription</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="app-content">
+      {% block content %}{% endblock %}
+    </div>
+
+  </div>
+
+</div>
+
+<script src="{% static 'js/jquery.js' %}"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+<script>
+  var sidebarOpen = true;
+
+  (function init() {
+    var saved = localStorage.getItem('fasoia_sidebar');
+    sidebarOpen = window.innerWidth <= 900 ? false : saved !== 'closed';
+    applySidebarState();
+  })();
+
+  function toggleSidebar() {
+    sidebarOpen = !sidebarOpen;
+    localStorage.setItem('fasoia_sidebar', sidebarOpen ? 'open' : 'closed');
+    applySidebarState();
+  }
+  function openSidebar() {
+    sidebarOpen = true;
+    localStorage.setItem('fasoia_sidebar', 'open');
+    applySidebarState();
+  }
+  function closeSidebar() {
+    sidebarOpen = false;
+    localStorage.setItem('fasoia_sidebar', 'closed');
+    applySidebarState();
+  }
+
+  function applySidebarState() {
+    var sidebar = document.getElementById('appSidebar');
+    var main    = document.getElementById('appMain');
+    var burger  = document.getElementById('burgerBtn');
+    var overlay = document.getElementById('sidebarOverlay');
+
+    if (sidebarOpen) {
+        // CAS OUVERT
+        if (window.innerWidth <= 900) {
+            sidebar.classList.add('active');
+            sidebar.classList.remove('collapsed');
+            overlay.classList.add('active'); // Affiche le voile noir
         } else {
-            // Sur desktop, sidebar ouverte par défaut
-            if (window.innerWidth > 768) {
-                sidebarCollapsed = false;
-                updateSidebarState(false);
-            } else {
-                sidebarCollapsed = true;
-                updateSidebarState(true);
-            }
+            sidebar.classList.remove('collapsed');
+            main.classList.remove('expanded');
+            overlay.classList.remove('active');
         }
+        burger.classList.remove('visible');
+    } else {
+        // CAS FERMÉ
+        sidebar.classList.add('collapsed');
+        sidebar.classList.remove('active');
+        main.classList.add('expanded');
+        overlay.classList.remove('active'); // CRITIQUE : On retire l'overlay ici
         
-        function toggleSidebar() {
-            sidebarCollapsed = !sidebarCollapsed;
-            updateSidebarState(sidebarCollapsed);
-            localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+        if (window.innerWidth <= 900) {
+            burger.classList.add('visible');
+        } else {
+            burger.classList.remove('visible');
         }
-        
-        function openSidebar() {
-            sidebarCollapsed = false;
-            updateSidebarState(false);
-            localStorage.setItem('sidebarCollapsed', false);
-        }
-        
-        function closeSidebar() {
-            sidebarCollapsed = true;
-            updateSidebarState(true);
-            localStorage.setItem('sidebarCollapsed', true);
-        }
-        
-        function updateSidebarState(collapsed) {
-            const sidebar = document.getElementById('appSidebar');
-            const main = document.getElementById('appMain');
-            const burgerBtn = document.getElementById('burgerBtn');
-            
-            if (collapsed) {
-                sidebar.classList.add('collapsed');
-                main.classList.add('expanded');
-                burgerBtn.classList.add('visible');
-            } else {
-                sidebar.classList.remove('collapsed');
-                main.classList.remove('expanded');
-                burgerBtn.classList.remove('visible');
-            }
-        }
-        
-        // Gestion responsive
-        window.addEventListener('resize', function() {
-            const overlay = document.getElementById('sidebarOverlay');
-            
-            if (window.innerWidth > 768) {
-                overlay.classList.remove('active');
-                // Sur grand écran, on restaure l'état sauvegardé
-                if (!sidebarCollapsed) {
-                    updateSidebarState(false);
-                }
-            } else {
-                // Sur mobile, on ferme la sidebar si elle était ouverte
-                if (!sidebarCollapsed) {
-                    sidebarCollapsed = true;
-                    updateSidebarState(true);
-                }
-            }
-        });
-    </script>
-    
-    {% block extra_js %}{% endblock %}
+    }
+}
+
+  window.addEventListener('resize', function () {
+    if (window.innerWidth <= 900) {
+      document.getElementById('appMain').classList.remove('expanded');
+    }
+    applySidebarState();
+  });
+
+  setTimeout(function () {
+    document.querySelectorAll('.django-msg').forEach(function (el) {
+      el.style.opacity = '0';
+      el.style.transition = 'opacity 0.4s';
+      setTimeout(function () { el.remove(); }, 400);
+    });
+  }, 5000);
+</script>
+
+{% block extra_js %}{% endblock %}
+
 </body>
 </html>

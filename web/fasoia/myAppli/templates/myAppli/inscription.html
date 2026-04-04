@@ -1,333 +1,367 @@
 {% extends "base.html" %}
-{% block title %}Inscription - FasoIA{% endblock %}
+{% load static %}
+{% block title %}Inscription - FASOIA{% endblock %}
 
 {% block extra_css %}
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+<style>
+    .inscription-page {
+        background: linear-gradient(145deg, #F8F4ED 0%, #EDE4D4 45%, #D9C9B0 100%);
+        min-height: calc(100vh - 180px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+    }
 
-        /* Page d'inscription isolée */
-        .inscription-page {
-            background-color: #05192b;
-            min-height: calc(100vh - 100px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 40px 20px;
-        }
+    .auth-card {
+        width: 100%;
+        max-width: 440px;
+        background: rgba(255, 255, 255, 0.97);
+        border: 1px solid var(--border);
+        padding: 48px 40px;
+        box-shadow: 0 20px 60px rgba(28, 25, 23, 0.10);
+        border-radius: 4px;
+    }
 
-        main.content {
-            padding-top: 0;
-        }
-        .content {
-            padding-top: 0;
-        }
+    .logo {
+        margin-bottom: 24px;
+        text-align: center;
+    }
 
-        .social-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 10px;
-        }
+    .logo svg {
+        width: 52px;
+        height: 52px;
+    }
 
+    .auth-card h1 {
+        font-family: var(--font-display);
+        font-size: 26px;
+        font-weight: 700;
+        color: var(--ink);
+        text-align: center;
+        line-height: 1.2;
+        margin-bottom: 32px;
+        letter-spacing: -0.3px;
+    }
+
+    /* Sélecteur Particulier / Entreprise */
+    .profile-selection {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 32px;
+        justify-content: center;
+    }
+
+    .profile-card {
+        flex: 1;
+        padding: 16px 12px;
+        border: 1.5px solid var(--border);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        background: var(--surface);
+        text-align: center;
+    }
+
+    .profile-card:hover {
+        border-color: var(--red);
+        background: var(--cream);
+    }
+
+    .profile-card.active {
+        border-color: var(--red);
+        background: var(--cream);
+        box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.08);
+    }
+
+    .profile-card span {
+        display: block;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ink);
+        letter-spacing: 0.4px;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+        text-align: left;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--muted);
+        margin-bottom: 8px;
+    }
+
+    .fasoia-input {
+        width: 100%;
+        padding: 14px 16px;
+        font-size: 15px;
+        border: 1.5px solid var(--border);
+        background: var(--surface);
+        color: var(--ink);
+        transition: all 0.2s;
+    }
+
+    .fasoia-input:focus {
+        border-color: var(--red);
+        box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.08);
+    }
+
+    .btn-fasoia-primary {
+        width: 100%;
+        padding: 14px;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin: 8px 0 24px;
+    }
+
+    .divider {
+        position: relative;
+        text-align: center;
+        margin: 32px 0;
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    .divider::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--border);
+    }
+
+    .divider span {
+        background: rgba(255, 255, 255, 0.97);
+        padding: 0 20px;
+        position: relative;
+    }
+
+    .social-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .btn-social {
+        width: 100%;
+        padding: 13px 16px;
+        background: transparent;
+        border: 1.5px solid var(--border);
+        color: var(--ink);
+        font-weight: 600;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        transition: all 0.2s;
+    }
+
+    .btn-social:hover {
+        background: var(--cream);
+        border-color: var(--ink);
+    }
+
+    .btn-social img {
+        width: 22px;
+        height: 22px;
+    }
+
+    .login-link {
+        display: block;
+        text-align: center;
+        margin-top: 28px;
+        color: var(--red);
+        font-weight: 700;
+        font-size: 15px;
+    }
+
+    .login-link:hover {
+        text-decoration: underline;
+    }
+
+    .legal-footer {
+        margin-top: 40px;
+        text-align: center;
+        font-size: 11px;
+        color: var(--muted);
+        line-height: 1.5;
+    }
+
+    .legal-footer a {
+        color: var(--muted);
+        text-decoration: underline;
+    }
+
+    @media (max-width: 480px) {
         .auth-card {
-            width: 100%;
-            max-width: 440px;
-            text-align: center;
+            padding: 40px 24px;
         }
-
-        h1 {
-            font-size: 28px;
-            font-weight: 700;
-            line-height: 1.2;
-            margin-bottom: 30px;
-            color: #ffffff;
-        }
-
-        /* Sélecteur de Profil */
-        .profile-selection {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
-            justify-content: center;
-        }
-
-        .profile-card {
-            flex: 1;
-            padding: 15px 10px;
-            border: 1px solid #3d5467;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .profile-card:hover {
-            border-color: #1ed760;
-            background: rgba(30, 215, 96, 0.05);
-        }
-
-        .profile-card.active {
-            border-color: #1ed760;
-            background: rgba(30, 215, 96, 0.1);
-            box-shadow: 0 0 10px rgba(30, 215, 96, 0.2);
-        }
-
-        .profile-card span {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            color: #aebbc5;
-        }
-
-        .profile-card.active span {
-            color: #1ed760;
-        }
-
-        .form-group {
-            text-align: left;
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #ffffff;
-        }
-
-        input[type="email"], 
-        input[type="text"], 
-        input[type="password"] {
-            width: 100%;
-            background-color: #03121f;
-            border: 1px solid #3d5467;
-            border-radius: 4px;
-            padding: 14px;
-            color: white;
-            font-size: 16px;
-            outline: none;
-        }
-
-        input:focus {
-            border-color: #1ed760;
-        }
-
-        .btn-submit {
-            width: 100%;
-            background-color: #1ed760;
-            color: #000;
-            border: none;
-            border-radius: 50px;
-            padding: 16px;
-            font-weight: 700;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        .btn-submit:active {
-            transform: scale(0.98);
-        }
-
-        .divider {
-            margin: 25px 0;
-            color: #aebbc5;
-            font-size: 14px;
-            position: relative;
-        }
-
-        .btn-social {
-            width: 100%;
-            background: transparent;
-            border: 1px solid #3d5467;
-            border-radius: 50px;
-            color: white;
-            padding: 12px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 12px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-social:hover {
-            background-color: rgba(255, 255, 255, 0.05);
-            border-color: #ffffff;
-        }
-
-        .btn-social img {
-            width: 20px;
-            height: 20px;
-        }
-
-        .login-link {
-            display: block;
-            margin-top: 20px;
-            color: white;
-            text-decoration: none;
-            font-weight: 700;
-        }
-
-        .login-link:hover {
-            text-decoration: underline;
-        }
-
-        .legal-footer {
-            margin-top: 40px;
-            font-size: 11px;
-            color: #7f8c98;
-            padding: 0 20px;
-        }
-
-        .legal-footer a {
-            color: #7f8c98;
-            text-decoration: underline;
-        }
-
-        /* Classes pour afficher/masquer */
-        .hidden {
-            display: none;
-        }
-    </style>
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-    <div class="inscription-page">
-        <div class="auth-card">
-            <h1>Inscrivez-vous pour<br>commencer</h1>
+<div class="inscription-page">
+    <div class="auth-card">
 
-            <form method="POST" action="{% url 'myAppli:inscription' %}" id="signup-form">
-                {% csrf_token %}
-                
-                <label style="text-align: left; display: block; margin-bottom: 10px;">Je suis un :</label>
-                <div class="profile-selection">
-                    <div class="profile-card active" onclick="updateProfile(this, 'particulier')">
-                        <span>Particulier</span>
-                    </div>
-                    <div class="profile-card" onclick="updateProfile(this, 'entreprise')">
-                        <span>Entreprise</span>
-                    </div>
-                    <div class="profile-card" onclick="updateProfile(this, 'partenaire')">
-                        <span>Partenaire</span>
-                    </div>
-                </div>
-
-                <input type="hidden" name="profile_type" id="profile_type" value="particulier">
-
-                <div class="form-group">
-                    <label>Adresse e-mail</label>
-                    <input type="email" name="email" placeholder="nom@domaine.com" required>
-                </div>
-
-                <!-- Champ pour particulier/partenaire (nom complet) -->
-                <div class="form-group" id="fullname-group">
-                    <label id="fullname-label">Nom complet</label>
-                    <input type="text" name="fullname" id="fullname-input" placeholder="Votre nom complet" required>
-                </div>
-
-                <!-- Champ pour entreprise (raison sociale) - Caché par défaut -->
-                <div class="form-group hidden" id="raison-sociale-group">
-                    <label>Nom de l'entreprise</label>
-                    <input type="text" name="raison_sociale" id="raison-sociale-input" placeholder="Raison sociale" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Mot de passe</label>
-                    <input type="password" name="password1" placeholder="Créer un mot de passe" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Confirmation</label>
-                    <input type="password" name="password2" placeholder="Confirmez votre mot de passe" required>
-                </div>
-
-                <button type="submit" class="btn-submit">Suivant</button>
-            </form>
-
-            <div class="divider">ou</div>
-
-            <div class="social-container">
-                <button class="btn-social">
-                    <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google">
-                    S'inscrire avec Google
-                </button>
-                <button class="btn-social">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" alt="Facebook">
-                    S'inscrire avec Facebook
-                </button>
-                <button class="btn-social">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple" style="filter: invert(1);">
-                    S'inscrire avec Apple
-                </button>
-            </div>
-
-            <p class="no-account" style="margin-top: 25px; color: #aebbc5; font-size: 14px;">Vous avez déjà un compte ?</p>
-            <a href="{% url 'myAppli:connexion' %}" class="login-link">Se connecter</a>
-
-            <div class="legal-footer">
-                Ce site est protégé par reCAPTCHA. La <a href="#">Politique de confidentialité</a> et les <a href="#">Conditions d'utilisation</a> de Google s'appliquent.
-            </div>
+        <!-- Logo FASOIA -->
+        <div class="logo">
+            <svg width="52" height="52" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M50 5L85 25V65L50 85L15 65V25L50 5Z" fill="var(--red)" fill-opacity="0.12"/>
+                <path d="M50 5L85 25V65L50 85L15 65V25L50 5Z" stroke="var(--red)" stroke-width="6"/>
+                <path d="M50 5V85" stroke="var(--red)" stroke-width="3"/>
+            </svg>
         </div>
-    </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Simuler un clic sur le bouton "Particulier" au chargement
-            const particulierCard = document.querySelector('.profile-card.active');
-            if (particulierCard) {
-                updateProfile(particulierCard, 'particulier');
-            }
-        });
-        function updateProfile(element, type) {
-            // 1. Gérer les classes actives
-            document.querySelectorAll('.profile-card').forEach(card => {
-                card.classList.remove('active');
-            });
-            element.classList.add('active');
-            
-            // 2. Mettre à jour le champ caché pour Django
-            document.getElementById('profile_type').value = type;
-            
-            // 3. Récupérer les éléments
-            const fullnameGroup = document.getElementById('fullname-group');
-            const raisonSocialeGroup = document.getElementById('raison-sociale-group');
-            const fullnameInput = document.getElementById('fullname-input');
-            const raisonSocialeInput = document.getElementById('raison-sociale-input');
-            const fullnameLabel = document.getElementById('fullname-label');
-            
-            if (type === 'entreprise') {
-                // Mode entreprise
-                fullnameGroup.classList.add('hidden');
-                raisonSocialeGroup.classList.remove('hidden');
-                
-                fullnameInput.required = false;
-                raisonSocialeInput.required = true;
-                
-                raisonSocialeInput.placeholder = "Ex: Faso Digital SA";
-            } else {
-                // Mode particulier ou partenaire
-                fullnameGroup.classList.remove('hidden');
-                raisonSocialeGroup.classList.add('hidden');
-                
-                fullnameInput.required = true;
-                raisonSocialeInput.required = false;
-                
-                if (type === 'particulier') {
-                    fullnameLabel.innerText = 'Nom complet';
-                    fullnameInput.placeholder = "Votre nom complet";
-                } else if (type === 'partenaire') {
-                    fullnameLabel.innerText = 'Nom / Organisation';
-                    fullnameInput.placeholder = "Votre nom ou organisation";
-                }
-            }
-        }
-    </script>
+        <h1>Inscrivez-vous pour<br>commencer votre parcours</h1>
+
+        <form method="POST" action="{% url 'myAppli:inscription' %}" id="signup-form">
+            {% csrf_token %}
+
+            <label style="text-align: left; display: block; margin-bottom: 12px; 
+                          font-size: 11px; font-weight: 700; color: var(--muted); 
+                          text-transform: uppercase; letter-spacing: 0.8px;">
+                Je suis un :
+            </label>
+
+            <div class="profile-selection">
+                <div class="profile-card active" onclick="updateProfile(this, 'particulier')">
+                    <span>Particulier</span>
+                </div>
+                <div class="profile-card" onclick="updateProfile(this, 'entreprise')">
+                    <span>Entreprise</span>
+                </div>
+            </div>
+
+            <input type="hidden" name="profile_type" id="profile_type" value="particulier">
+
+            <div class="form-group">
+                <label>Adresse e-mail</label>
+                <input type="email" 
+                       class="fasoia-input" 
+                       name="email" 
+                       placeholder="nom@domaine.com" 
+                       required>
+            </div>
+
+            <!-- Nom complet pour Particulier -->
+            <div class="form-group" id="fullname-group">
+                <label id="fullname-label">Nom complet</label>
+                <input type="text" 
+                       class="fasoia-input" 
+                       name="fullname" 
+                       id="fullname-input" 
+                       placeholder="Votre nom complet" 
+                       required>
+            </div>
+
+            <!-- Raison sociale pour Entreprise -->
+            <div class="form-group hidden" id="raison-sociale-group">
+                <label>Nom de l'entreprise</label>
+                <input type="text" 
+                       class="fasoia-input" 
+                       name="raison_sociale" 
+                       id="raison-sociale-input" 
+                       placeholder="Ex: Faso Digital SA" 
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label>Mot de passe</label>
+                <input type="password" 
+                       class="fasoia-input" 
+                       name="password1" 
+                       placeholder="Créer un mot de passe" 
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label>Confirmation du mot de passe</label>
+                <input type="password" 
+                       class="fasoia-input" 
+                       name="password2" 
+                       placeholder="Confirmez votre mot de passe" 
+                       required>
+            </div>
+
+            <button type="submit" class="btn-fasoia-primary">
+                Créer mon compte
+            </button>
+        </form>
+
+        <div class="divider"><span>ou</span></div>
+
+        <div class="social-container">
+            <button type="button" class="btn-social">
+                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google">
+                S'inscrire avec Google
+            </button>
+            <button type="button" class="btn-social">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" alt="Facebook">
+                S'inscrire avec Facebook
+            </button>
+        </div>
+
+        <a href="{% url 'myAppli:connexion' %}" class="login-link">
+            Vous avez déjà un compte ? Se connecter
+        </a>
+
+        <div class="legal-footer">
+            Ce site est protégé par reCAPTCHA.<br>
+            La <a href="#">Politique de confidentialité</a> et les <a href="#">Conditions d'utilisation</a> s'appliquent.
+        </div>
+
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const particulierCard = document.querySelector('.profile-card.active');
+    if (particulierCard) {
+        updateProfile(particulierCard, 'particulier');
+    }
+});
+
+function updateProfile(element, type) {
+    // Gestion des classes actives
+    document.querySelectorAll('.profile-card').forEach(card => {
+        card.classList.remove('active');
+    });
+    element.classList.add('active');
+
+    // Mise à jour du champ caché
+    document.getElementById('profile_type').value = type;
+
+    const fullnameGroup = document.getElementById('fullname-group');
+    const raisonSocialeGroup = document.getElementById('raison-sociale-group');
+    const fullnameInput = document.getElementById('fullname-input');
+    const raisonSocialeInput = document.getElementById('raison-sociale-input');
+    const fullnameLabel = document.getElementById('fullname-label');
+
+    if (type === 'entreprise') {
+        fullnameGroup.classList.add('hidden');
+        raisonSocialeGroup.classList.remove('hidden');
+        fullnameInput.required = false;
+        raisonSocialeInput.required = true;
+    } else {
+        fullnameGroup.classList.remove('hidden');
+        raisonSocialeGroup.classList.add('hidden');
+        fullnameInput.required = true;
+        raisonSocialeInput.required = false;
+
+        fullnameLabel.innerText = 'Nom complet';
+        fullnameInput.placeholder = "Votre nom complet";
+    }
+}
+</script>
 {% endblock %}
