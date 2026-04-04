@@ -1,109 +1,298 @@
-<header>
-    <nav class="navbar custom-navbar navbar-fixed-top" role="navigation">
-        <div class="container">
+{% load static %}
 
-            <!-- Logo -->
-            <div class="navbar-header">
-                <button class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="icon icon-bar"></span>
-                    <span class="icon icon-bar"></span>
-                    <span class="icon icon-bar"></span>
-                </button>
-                <a href="{% url 'myAppli:home' %}" class="navbar-brand">
-                    <strong><span style="color: green;">FASO</span><span style="color: red;">IA</span></strong>
-                </a>
-            </div>
+<style>
+  /* ===== TOP STRIP ===== */
+  .topstrip {
+    background: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    height: 38px;
+  }
+  .topstrip-left {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.3px;
+  }
+  .topstrip-right {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+  .topstrip-right a {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    transition: color 0.15s;
+    letter-spacing: 0.3px;
+  }
+  .topstrip-right a:hover { color: #fff; }
+  .topstrip-sep {
+    width: 1px;
+    height: 12px;
+    background: rgba(255,255,255,0.15);
+  }
 
-            <!-- Menu -->
-            <div class="collapse navbar-collapse">
-                <ul class="nav navbar-nav navbar-nav-first">
-                    <li class="{% if request.resolver_match.view_name == 'myAppli:home' %}active{% endif %}">
-                        <a href="{% url 'myAppli:home' %}">Accueil</a>
-                    </li>
-                    <li class="{% if request.resolver_match.view_name == 'myAppli:opportunites' %}active{% endif %}">
-                        <a href="{% url 'myAppli:opportunites' %}">Opportunités</a>
-                    </li>
-                    <li class="{% if request.resolver_match.view_name == 'myAppli:gestion_entreprise' %}active{% endif %}">
-                        <a href="{% url 'myAppli:gestion_entreprise' %}">Entreprise</a>
-                    </li>
-                    <li class="{% if request.resolver_match.view_name == 'myAppli:trouver_emploi' %}active{% endif %}">
-                        <a href="{% url 'myAppli:trouver_emploi' %}">Trouver emploi</a>
-                    </li>
-                </ul>
-                
-                <ul class="nav navbar-nav navbar-right">
-                    {% if user.is_authenticated %}
-                        <!-- Affichage selon le type d'utilisateur -->
-                        
-                        {% if user.entreprise %}
-                            <!-- ENTREPRISE -->
-                            <li class="{% if request.resolver_match.view_name == 'myAppli:dashboard_entreprise' %}active{% endif %}">
-                                <a href="{% url 'myAppli:dashboard_entreprise' %}" class="text-primary">
-                                    <i class="fa fa-building"></i> {{ user.entreprise.raisonSociale }}
-                                </a>
-                            </li>
-                        
-                        {% elif user.particulier %}
-                            <!-- PARTICULIER (peut avoir candidat et/ou recruteur) -->
-                            {% if user.particulier.candidat and user.particulier.recruteur %}
-                                <!-- Les deux rôles sont activés : menu déroulant -->
-                                <li class="dropdown">
-                                    <a href="#" class="dropdown-toggle text-primary" data-toggle="dropdown" role="button">
-                                        <i class="fa fa-user"></i> {{ user.particulier.prenom }} <span class="caret"></span>
-                                    </a>
-                                    <ul class="dropdown-menu">
-                                        <li><a href="{% url 'myAppli:dashboard_candidat' %}"><i class="fa fa-user-graduate"></i> Espace candidat</a></li>
-                                        <li><a href="{% url 'myAppli:dashboard_recruteur' %}"><i class="fa fa-building"></i> Espace recruteur</a></li>
-                                        <li role="separator" class="divider"></li>
-                                        <li><a href="{% url 'myAppli:profil' %}"><i class="fa fa-cog"></i> Mon profil</a></li>
-                                    </ul>
-                                </li>
-                            {% elif user.particulier.candidat %}
-                                <!-- Seulement candidat -->
-                                <li class="{% if request.resolver_match.view_name == 'myAppli:dashboard_candidat' %}active{% endif %}">
-                                    <a href="{% url 'myAppli:dashboard_candidat' %}" class="text-primary">
-                                        <i class="fa fa-user-graduate"></i> {{ user.particulier.prenom }}
-                                    </a>
-                                </li>
-                            {% elif user.particulier.recruteur %}
-                                <!-- Seulement recruteur -->
-                                <li class="{% if request.resolver_match.view_name == 'myAppli:dashboard_recruteur' %}active{% endif %}">
-                                    <a href="{% url 'myAppli:dashboard_recruteur' %}" class="text-primary">
-                                        <i class="fa fa-building"></i> {{ user.particulier.prenom }}
-                                    </a>
-                                </li>
-                            {% else %}
-                                <!-- Aucun rôle activé : dashboard_particulier pour choix -->
-                                <li class="{% if request.resolver_match.view_name == 'myAppli:dashboard_particulier' %}active{% endif %}">
-                                    <a href="{% url 'myAppli:dashboard_particulier' %}" class="text-primary">
-                                        <i class="fa fa-user"></i> {{ user.particulier.prenom }}
-                                    </a>
-                                </li>
-                            {% endif %}
-                        {% endif %}
-                        
-                        <!-- Déconnexion (toujours visible) -->
-                        <li class="{% if request.resolver_match.view_name == 'myAppli:deconnexion' %}active{% endif %}">
-                            <a href="{% url 'myAppli:deconnexion' %}" class="text-danger">
-                                <i class="fa fa-sign-out-alt"></i> Déconnexion
-                            </a>
-                        </li>
-                        
-                    {% else %}
-                        <!-- Utilisateur NON connecté -->
-                        <li class="{% if request.resolver_match.view_name == 'myAppli:connexion' %}active{% endif %}">
-                            <a href="{% url 'myAppli:connexion' %}" class="text-primary">
-                                <i class="fa fa-user"></i> Connexion
-                            </a>
-                        </li>
-                        <li class="{% if request.resolver_match.view_name == 'myAppli:inscription' %}active{% endif %}">
-                            <a href="{% url 'myAppli:inscription' %}" class="text-success">
-                                <i class="fa fa-user-plus"></i> Inscription
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
-</header>
+  /* ===== MASTHEAD ===== */
+  .masthead {
+    background: var(--surface);
+    border-bottom: 2.5px solid var(--ink);
+    padding: 14px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  .masthead-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .brand-name {
+    font-family: var(--font-display);
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: 2px;
+    line-height: 1;
+    text-decoration: none;
+  }
+  .brand-name:hover { color: var(--ink); }
+  .brand-name .brand-ia { color: var(--red); }
+  .brand-tagline {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-top: 4px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 3px 0;
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Boutons header droite */
+  .masthead-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .masthead-user {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .masthead-user:hover {
+    border-color: var(--ink);
+    background: var(--cream);
+    color: var(--ink);
+  }
+  .masthead-user .fa { font-size: 12px; color: var(--muted); }
+
+  /* Dropdown Bootstrap override */
+  .dropdown-menu {
+    border-radius: 0;
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    padding: 6px 0;
+    min-width: 200px;
+    font-family: var(--font-body);
+    margin-top: 2px;
+  }
+  .dropdown-menu a {
+    padding: 9px 16px;
+    font-size: 13px;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.15s;
+  }
+  .dropdown-menu a:hover { background: var(--cream); color: var(--ink); }
+  .dropdown-menu .divider { margin: 4px 0; border-top: 1px solid var(--border); }
+  .dropdown-menu .fa { width: 16px; color: var(--muted); font-size: 12px; }
+
+  /* ===== NAV STRIP ===== */
+  .nav-strip {
+    background: var(--cream);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 0 var(--border);
+  }
+  .nav-strip a {
+    color: var(--muted);
+    text-decoration: none;
+    padding: 11px 18px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    display: inline-block;
+  }
+  .nav-strip a.active,
+  .nav-strip a:hover {
+    color: var(--ink);
+    border-bottom-color: var(--ink);
+  }
+  .nav-strip a.active { color: var(--ink); }
+
+  /* Mobile toggle */
+  .nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    margin-left: auto;
+  }
+  .nav-toggle span {
+    display: block;
+    width: 22px;
+    height: 1.5px;
+    background: var(--ink);
+    margin: 5px 0;
+    transition: all 0.3s;
+  }
+
+  @media (max-width: 900px) {
+    .topstrip { padding: 0 20px; }
+    .masthead { padding: 12px 20px; }
+    .brand-name { font-size: 28px; }
+    .topstrip-left { display: none; }
+
+    .nav-strip { padding: 0 20px; flex-wrap: wrap; }
+    .nav-toggle { display: block; }
+    .nav-links-wrap {
+      display: none;
+      width: 100%;
+      flex-direction: column;
+      border-top: 1px solid var(--border);
+      padding: 8px 0;
+    }
+    .nav-links-wrap.open { display: flex; }
+    .nav-strip a { padding: 10px 0; border-bottom: none; border-left: 2px solid transparent; padding-left: 12px; }
+    .nav-strip a.active { border-left-color: var(--ink); border-bottom: none; }
+    .masthead-actions .hide-mobile { display: none; }
+  }
+</style>
+
+<!-- Top info strip -->
+<div class="topstrip">
+  <div class="topstrip-left">
+    Plateforme officielle des opportunités &mdash; Burkina Faso &nbsp;&middot;&nbsp; Mise à jour quotidienne
+  </div>
+  <div class="topstrip-right">
+    <a href="tel:+22625300000"><i class="fa fa-phone" style="font-size:10px"></i> +226 25 30 00 00</a>
+    <div class="topstrip-sep"></div>
+    <a href="mailto:contact@fasoia.com">contact@fasoia.com</a>
+    <div class="topstrip-sep"></div>
+    <a href="#">Aide</a>
+  </div>
+</div>
+
+<!-- Masthead / Logo + Actions -->
+<div class="masthead">
+  <div class="masthead-brand">
+    <a href="{% url 'myAppli:home' %}" class="brand-name">
+      FASO<span class="brand-ia">IA</span>
+    </a>
+    <div class="brand-tagline">Marchés &nbsp;&middot;&nbsp; Emplois &nbsp;&middot;&nbsp; Opportunités</div>
+  </div>
+
+  <div class="masthead-actions">
+    {% if user.is_authenticated %}
+
+      {% if user.entreprise %}
+        <a href="{% url 'myAppli:dashboard_entreprise' %}" class="masthead-user">
+          <i class="fa fa-building"></i>
+          {{ user.entreprise.raisonSociale|truncatechars:20 }}
+        </a>
+
+      {% elif user.particulier %}
+        {% if user.particulier.candidat and user.particulier.recruteur %}
+          <div class="dropdown">
+            <a href="#" class="masthead-user dropdown-toggle" data-toggle="dropdown">
+              <i class="fa fa-user"></i>
+              {{ user.particulier.prenom }}
+              <i class="fa fa-caret-down" style="font-size:10px;margin-left:4px"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-right">
+              <li><a href="{% url 'myAppli:dashboard_candidat' %}"><i class="fa fa-graduation-cap"></i> Espace candidat</a></li>
+              <li><a href="{% url 'myAppli:dashboard_recruteur' %}"><i class="fa fa-building"></i> Espace recruteur</a></li>
+              <li class="divider"></li>
+              <li><a href="{% url 'myAppli:profil' %}"><i class="fa fa-cog"></i> Mon profil</a></li>
+            </ul>
+          </div>
+        {% elif user.particulier.candidat %}
+          <a href="{% url 'myAppli:dashboard_candidat' %}" class="masthead-user">
+            <i class="fa fa-user"></i> {{ user.particulier.prenom }}
+          </a>
+        {% elif user.particulier.recruteur %}
+          <a href="{% url 'myAppli:dashboard_recruteur' %}" class="masthead-user">
+            <i class="fa fa-building"></i> {{ user.particulier.prenom }}
+          </a>
+        {% else %}
+          <a href="{% url 'myAppli:dashboard_particulier' %}" class="masthead-user">
+            <i class="fa fa-user"></i> {{ user.particulier.prenom }}
+          </a>
+        {% endif %}
+      {% endif %}
+
+      <a href="{% url 'myAppli:deconnexion' %}" class="btn-fasoia-outline" style="color:var(--red);border-color:var(--red);">
+        <i class="fa fa-sign-out-alt" style="font-size:11px"></i> Déconnexion
+      </a>
+
+    {% else %}
+      <a href="{% url 'myAppli:connexion' %}" class="btn-fasoia-outline hide-mobile">Connexion</a>
+      <a href="{% url 'myAppli:inscription' %}" class="btn-fasoia-primary">Inscription</a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Navigation principale sticky -->
+<nav class="nav-strip">
+  <button class="nav-toggle" id="navToggle" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="nav-links-wrap" id="navLinks">
+    <a href="{% url 'myAppli:home' %}"
+       class="{% if request.resolver_match.view_name == 'myAppli:home' %}active{% endif %}">
+      Accueil
+    </a>
+    <a href="{% url 'myAppli:opportunites' %}"
+       class="{% if request.resolver_match.view_name == 'myAppli:opportunites' %}active{% endif %}">
+      Opportunités
+    </a>
+    <a href="{% url 'myAppli:gestion_entreprise' %}"
+       class="{% if request.resolver_match.view_name == 'myAppli:gestion_entreprise' %}active{% endif %}">
+      Entreprise
+    </a>
+    <a href="{% url 'myAppli:trouver_emploi' %}"
+       class="{% if request.resolver_match.view_name == 'myAppli:trouver_emploi' %}active{% endif %}">
+      Trouver emploi
+    </a>
+  </div>
+</nav>
+
+<script>
+  /* Mobile menu toggle */
+  document.getElementById('navToggle').addEventListener('click', function () {
+    document.getElementById('navLinks').classList.toggle('open');
+  });
+</script>

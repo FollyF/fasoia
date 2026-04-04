@@ -2,96 +2,279 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <title>{% block title %}Fasoia{% endblock %}</title>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link rel="icon" type="image/x-icon" href="{% static "images/favicon.ico" %}">
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>{% block title %}FASOIA — Marchés · Emplois · Opportunités{% endblock %}</title>
+  <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/font-awesome.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/owl.carousel.css' %}">
-    <link rel="stylesheet" href="{% static 'css/owl.theme.default.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/templatemo-style.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 
+  <!-- Bootstrap & Icons -->
+  <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-    {% block extra_css %}{% endblock %}
+  <!-- Design System Global -->
+  <style>
+    /* ===== VARIABLES ===== */
+    :root {
+      --ink:     #1C1917;
+      --ink-mid: #44403C;
+      --muted:   #78716C;
+      --hint:    #A8A29E;
+      --border:  #E7E5E4;
+      --bg:      #FAFAF9;
+      --cream:   #F5F3EF;
+      --surface: #FFFFFF;
+      --red:     #C0392B;
+      --teal:    #0D7377;
+      --amber:   #D97706;
+      --blue:    #1D4ED8;
 
-    <style>
-                /* ===== Force le footer en bas ===== */
-        html, body {
-            height: 100%;       /* occupe toute la hauteur de l’écran */
-            margin: 0;          /* supprime les marges par défaut */
-            display: flex;      /* active le flexbox */
-            flex-direction: column; /* vertical : header -> contenu -> footer */
-            /*background: linear-gradient(to right, #e0f2f7, #c1e7f0);*/
-            background: #fff;
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body:    'Nunito Sans', 'Segoe UI', sans-serif;
+    }
 
-        }
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        main.content {
-            flex: 1;  /* prend tout l’espace restant, pousse le footer en bas */
-        }
-        .content {
-            padding-top: 80px;
-            flex-grow: 1;
-        }
+    html, body {
+      height: 100%;
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.6;
+    }
 
-        .btn-success {
-            background-color: #29CA8E;
-            border-color: #29CA8E;
-        }
+    body {
+      display: flex;
+      flex-direction: column;
+    }
 
-        .btn-success:hover {
-            background-color: #22a477;
-            border-color: #22a477;
-        }
+    main.content {
+      flex: 1;
+    }
 
-        /* ===== Footer réduit ===== */
-        #footer {
-            padding: 5px 0;   /* réduit la hauteur */
-        }
+    a { color: inherit; text-decoration: none; }
+    a:hover { color: var(--red); }
 
-        #footer p {
-            margin: 0;        /* supprime l’espace autour du texte */
-            font-size: 14px;  /* texte un peu plus petit */
-        }
-    </style>
+    img { max-width: 100%; height: auto; display: block; }
+
+    /* ===== TYPOGRAPHY ===== */
+    .display { font-family: var(--font-display); }
+
+    h1, h2, h3, h4 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--ink);
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn-fasoia-primary {
+      background: var(--ink);
+      color: #fff;
+      border: none;
+      padding: 8px 22px;
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: inline-block;
+      transition: background 0.2s, color 0.2s;
+      border-radius: 0;
+    }
+    .btn-fasoia-primary:hover { background: var(--red); color: #fff; }
+
+    .btn-fasoia-outline {
+      background: transparent;
+      color: var(--ink);
+      border: 1.5px solid var(--ink);
+      padding: 7px 20px;
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: inline-block;
+      transition: background 0.2s, color 0.2s;
+      border-radius: 0;
+    }
+    .btn-fasoia-outline:hover { background: var(--ink); color: #fff; }
+
+    /* ===== TAGS / BADGES ===== */
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      line-height: 1.6;
+    }
+    .tag-ao   { background: var(--ink);   color: #fff; }
+    .tag-ami  { background: var(--teal);  color: #fff; }
+    .tag-job  { background: var(--amber); color: #fff; }
+    .tag-urg  { background: var(--red);   color: #fff; }
+    .tag-cdi  { background: var(--blue);  color: #fff; }
+    .tag-cdd  { background: var(--ink-mid); color: #fff; }
+
+    /* ===== DIVIDER ===== */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+
+    /* ===== FORM ELEMENTS ===== */
+    .fasoia-input {
+      width: 100%;
+      border: 1px solid var(--border);
+      padding: 9px 12px;
+      font-size: 13px;
+      font-family: var(--font-body);
+      color: var(--ink);
+      background: var(--surface);
+      outline: none;
+      transition: border-color 0.2s;
+      border-radius: 0;
+    }
+    .fasoia-input:focus { border-color: var(--ink); }
+    .fasoia-input::placeholder { color: var(--hint); }
+
+    /* ===== PRELOADER ===== */
+    .preloader {
+      position: fixed; inset: 0;
+      background: var(--surface);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.4s, visibility 0.4s;
+    }
+    .preloader.hidden { opacity: 0; visibility: hidden; }
+    .spinner-ring {
+      width: 36px; height: 36px;
+      border: 2px solid var(--border);
+      border-top-color: var(--ink);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.5s ease both; }
+    .fade-up-1 { animation-delay: 0.05s; }
+    .fade-up-2 { animation-delay: 0.12s; }
+    .fade-up-3 { animation-delay: 0.20s; }
+    .fade-up-4 { animation-delay: 0.28s; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      .hide-mobile { display: none !important; }
+    }
+    @media (max-width: 600px) {
+      .hide-sm { display: none !important; }
+    }
+
+    /* ===== MESSAGES DJANGO ===== */
+    .django-messages {
+      position: fixed;
+      top: 80px; right: 20px;
+      z-index: 8000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: 340px;
+    }
+    .django-msg {
+      background: var(--surface);
+      border-left: 3px solid var(--ink);
+      padding: 12px 16px;
+      font-size: 13px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .django-msg.success { border-left-color: var(--teal); }
+    .django-msg.error   { border-left-color: var(--red); }
+    .django-msg.warning { border-left-color: var(--amber); }
+    .django-msg-close { margin-left: auto; cursor: pointer; color: var(--hint); font-size: 16px; line-height: 1; }
+
+    {% block extra_css_global %}{% endblock %}
+  </style>
+
+  {% block extra_css %}{% endblock %}
 </head>
-<body id="top" data-spy="scroll" data-target=".navbar-collapse" data-offset="50">
 
-    <!-- Loader -->
-    <section class="preloader">
-        <div class="spinner">
-            <span class="spinner-rotate"></span>
-        </div>
-    </section>
+<body id="top">
 
-    <!-- Header + Navbar -->
-	{% if not no_header_footer %}
-		{% include "partials/navbar.html" %}
-	{% endif %}
+  <!-- Preloader -->
+  <div class="preloader" id="preloader">
+    <div class="spinner-ring"></div>
+  </div>
 
-    <!-- Main Content -->
-    <main class="content">
-        {% block content %}{% endblock %}
-    </main>
+  <!-- Messages Django -->
+  {% if messages %}
+  <div class="django-messages">
+    {% for message in messages %}
+    <div class="django-msg {{ message.tags }}">
+      <span>{{ message }}</span>
+      <span class="django-msg-close" onclick="this.parentElement.remove()">&times;</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
 
-    <!-- Footer -->
-	{% if not no_header_footer %}
-	{% include "partials/footer.html" %}
-	{% endif %}
+  <!-- Header + Navbar -->
+  {% if not no_header_footer %}
+    {% include "partials/navbar.html" %}
+  {% endif %}
 
-    <!-- JS -->
-    <script src="{% static 'js/jquery.js' %}"></script>
-    <script src="{% static 'js/popper.min.js' %}"></script>
-    <script src="{% static 'js/bootstrap.min.js' %}"></script>
-    <script src="{% static 'js/owl.carousel.min.js' %}"></script>
-    <script src="{% static 'js/custom.js' %}"></script>
+  <!-- Contenu principal -->
+  <main class="content">
+    {% block content %}{% endblock %}
+  </main>
 
-    {% block extra_js %}{% endblock %}
+  <!-- Footer -->
+  {% if not no_header_footer %}
+    {% include "partials/footer.html" %}
+  {% endif %}
+
+  <!-- JS -->
+  <script src="{% static 'js/jquery.js' %}"></script>
+  <script src="{% static 'js/popper.min.js' %}"></script>
+  <script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+  <script>
+    /* Preloader */
+    window.addEventListener('load', function () {
+      var pl = document.getElementById('preloader');
+      if (pl) {
+        setTimeout(function () { pl.classList.add('hidden'); }, 200);
+      }
+    });
+
+    /* Auto-dismiss messages après 5s */
+    setTimeout(function () {
+      document.querySelectorAll('.django-msg').forEach(function (el) {
+        el.style.opacity = '0';
+        el.style.transition = 'opacity 0.4s';
+        setTimeout(function () { el.remove(); }, 400);
+      });
+    }, 5000);
+  </script>
+
+  {% block extra_js %}{% endblock %}
 </body>
 </html>

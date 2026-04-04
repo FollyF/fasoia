@@ -1,683 +1,870 @@
 {% extends "base.html" %}
-
 {% load static %}
 
+{% block title %}FASOIA — Accueil | Marchés · Emplois · Opportunités{% endblock %}
+
 {% block extra_css %}
-
 <style>
-        :root {
-            --blue-main: #0056a2;
-            --blue-light: #e3f2fd;
-            --bg-gray: #f0f2f5;
-            --text-dark: #010f1a;
-        }
+  /* ===== SEARCH BAR ===== */
+  .search-mastbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 40px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .search-field {
+    display: flex;
+    flex: 1;
+    max-width: 580px;
+    border: 1.5px solid var(--ink);
+  }
+  .search-field input {
+    flex: 1;
+    border: none;
+    padding: 11px 18px;
+    font-size: 14px;
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: var(--surface);
+    outline: none;
+  }
+  .search-field input::placeholder { color: var(--hint); }
+  .search-field button {
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    padding: 11px 26px;
+    font-weight: 700;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+  .search-field button:hover { background: var(--red); }
 
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: var(--bg-gray);
-        }
+  /* KPIs dans la barre de recherche */
+  .kpi-strip {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    margin-left: auto;
+  }
+  .kpi-item {
+    padding: 10px 22px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .kpi-item:last-child { border-right: none; }
+  .kpi-item .n {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .kpi-item .l {
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-top: 3px;
+  }
 
-        .page-layout {
-            display: flex;
-            max-width: 1200px;
-            margin: 0 auto;
-            gap: 25px;
-        }
+  /* ===== LAYOUT ===== */
+  .page-body {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 0;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 40px;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
 
-        /* BARRE DE RECHERCHE */
-        .search-container {
-            max-width: 1200px;
-            margin: 10px auto 25px auto;
+  .col-main {
+    padding: 30px 30px 30px 0;
+    border-right: 1px solid var(--border);
+  }
 
-        }
+  .col-aside {
+    padding: 30px 0 30px 28px;
+  }
 
-        #searchInput {
-            width: 100%;
-            padding: 15px 20px;
-            font-size: 16px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            outline: none;
-            transition: border-color 0.3s;
-            box-sizing: border-box;
-        }
+  /* ===== SECTION HEADER ===== */
+  .sec-header {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .sec-header h2 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .sec-header .count {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-weight: 400;
+  }
+  .sec-header .see-all {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--teal);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.2s;
+  }
+  .sec-header .see-all:hover { color: var(--red); }
 
-        #searchInput:focus { border-color: var(--blue-main); }
+  /* ===== OPP ROWS ===== */
+  .opp-block { margin-bottom: 36px; }
 
-        /* COLONNES */
-        .main-content { flex: 3; width: 100%; }
-        .sidebar { flex: 1; min-width: 320px; }
+  .opp-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    gap: 14px;
+    align-items: start;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .opp-row:first-of-type { border-top: 1px solid var(--border); }
+  .opp-row:hover { background: var(--cream); padding-left: 6px; padding-right: 6px; margin-left: -6px; margin-right: -6px; }
 
-        /* CARTES D'OPPORTUNITÉ */
-        .opportunity-card, .sidebar-widget {
-            background: #ffffff;
-            margin-bottom: 30px;
-            border-top: 6px solid var(--blue-main);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            border-radius: 0 0 8px 8px;
-            overflow: hidden;
-            transition: box-shadow 0.3s ease;
-        }
+  .opp-num {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--border);
+    line-height: 1.1;
+    text-align: right;
+    padding-top: 2px;
+    transition: color 0.2s;
+  }
+  .opp-row:hover .opp-num { color: var(--ink); }
 
-        .opportunity-card:hover {
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
+  .opp-body { min-width: 0; }
+  .opp-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 5px;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .opp-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .opp-ref {
+    font-size: 11px;
+    color: var(--hint);
+    font-family: 'Courier New', monospace;
+  }
+  .opp-company {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .opp-loc {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .opp-loc::before { content: '·'; margin-right: 6px; color: var(--border); }
 
-        .card-header {
-            padding: 15px 20px;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #eee;
-        }
+  .opp-date {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: right;
+    white-space: nowrap;
+    padding-top: 3px;
+  }
+  .opp-date .date-lbl {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--hint);
+    display: block;
+    margin-bottom: 2px;
+  }
+  .opp-date.urgent .date-val { color: var(--red); font-weight: 700; }
 
-        .card-header h2 {
-            margin: 0;
-            color: var(--blue-main);
-            font-size: 1.1rem;
-            text-transform: uppercase;
-        }
+  /* Emploi row variant */
+  .job-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .job-row:first-of-type { border-top: 1px solid var(--border); }
+  .job-row:hover { background: var(--cream); padding-left: 6px; padding-right: 6px; margin-left: -6px; margin-right: -6px; }
+  .job-row:hover .opp-num { color: var(--ink); }
 
-        /* TABLE AVEC OMBRE */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
+  /* Vide */
+  .empty-state {
+    padding: 28px 0;
+    color: var(--hint);
+    font-style: italic;
+    font-size: 13px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
 
-        td {
-            padding: 15px 20px;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
+  /* ===== SIDEBAR WIDGETS ===== */
+  .widget { margin-bottom: 28px; }
 
-        tr:hover td {
-            background-color: #fcfcfc;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-        }
+  .widget-head {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .widget-head a {
+    font-size: 10px;
+    color: var(--teal);
+    text-decoration: none;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    transition: color 0.2s;
+  }
+  .widget-head a:hover { color: var(--red); }
 
-        tr:last-child td {
-            border-bottom: none;
-        }
+  /* Stat bloc */
+  .stat-bloc {
+    border: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    background: var(--border);
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+  .stat-cell {
+    background: var(--surface);
+    padding: 14px;
+    text-align: center;
+  }
+  .stat-cell .n {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .stat-cell .l {
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+  }
+  .stat-cell.highlight .n { color: var(--red); }
+  .stat-cell.full {
+    grid-column: 1 / -1;
+    background: var(--ink);
+    padding: 16px;
+  }
+  .stat-cell.full .n {
+    font-size: 40px;
+    color: #fff;
+  }
+  .stat-cell.full .l { color: rgba(255,255,255,0.4); }
 
-        .title-link {
-            color: var(--text-dark);
-            text-decoration: none;
-            font-weight: 600;
-            display: block;
-            margin-bottom: 4px;
-        }
+  /* Alerte email */
+  .alert-widget {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-bottom: 28px;
+  }
+  .alert-widget p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+  .alert-widget .input-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .alert-widget input {
+    border: 1px solid var(--border);
+    padding: 9px 12px;
+    font-size: 12px;
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: var(--surface);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .alert-widget input:focus { border-color: var(--ink); }
+  .alert-widget input::placeholder { color: var(--hint); }
+  .alert-widget button {
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    padding: 9px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: var(--font-body);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: background 0.2s;
+  }
+  .alert-widget button:hover { background: var(--red); }
 
-        .date-label {
-            color: #888;
-            font-size: 12px;
-        }
+  /* Compte à rebours */
+  .countdown-widget {
+    background: var(--ink);
+    padding: 18px;
+    margin-bottom: 28px;
+    text-align: center;
+  }
+  .cd-lbl {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 14px;
+  }
+  .cd-units {
+    display: flex;
+    justify-content: center;
+    gap: 1px;
+  }
+  .cd-unit {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    padding: 12px 8px;
+    text-align: center;
+  }
+  .cd-unit .n {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+  }
+  .cd-unit .u {
+    font-size: 9px;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+  }
+  .cd-ref {
+    font-size: 10px;
+    color: rgba(255,255,255,0.25);
+    margin-top: 12px;
+    font-family: 'Courier New', monospace;
+  }
 
-        .company-name {
-            color: #666;
-            font-size: 12px;
-            margin-top: 4px;
-        }
+  /* Progression */
+  .prog-item { margin-bottom: 14px; }
+  .prog-item:last-child { margin-bottom: 0; }
+  .prog-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    margin-bottom: 5px;
+  }
+  .prog-labels span:first-child { color: var(--muted); }
+  .prog-labels span:last-child { font-weight: 700; color: var(--ink); }
+  .prog-track {
+    height: 3px;
+    background: var(--border);
+    overflow: hidden;
+  }
+  .prog-fill { height: 100%; }
 
-        .badge { 
-            display: inline-block; 
-            background: var(--blue-main); 
-            color: white; 
-            padding: 2px 8px; 
-            border-radius: 12px; 
-            font-size: 10px; 
-            margin-left: 8px;
-        }
+  /* Liens rapides */
+  .quick-list { list-style: none; }
+  .quick-list li {
+    border-bottom: 1px solid var(--border);
+    padding: 9px 0;
+  }
+  .quick-list li:last-child { border-bottom: none; }
+  .quick-list a {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .quick-list a:hover { color: var(--red); }
+  .quick-list .arrow {
+    font-size: 11px;
+    color: var(--border);
+    transition: color 0.15s;
+  }
+  .quick-list a:hover .arrow { color: var(--red); }
 
-        .card-footer {
-            padding: 15px;
-            text-align: center;
-            border-top: 1px dashed #ddd;
-            background: #fafafa;
-        }
+  /* Assistance */
+  .assist-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .assist-row:last-child { border-bottom: none; }
+  .assist-row .fa { color: var(--muted); width: 16px; font-size: 12px; }
+  .assist-row a { color: var(--ink); font-weight: 600; transition: color 0.2s; }
+  .assist-row a:hover { color: var(--red); }
 
-        .btn-more {
-            color: var(--blue-main);
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
+  /* Contact section */
+  .contact-section {
+    background: var(--cream);
+    border-top: 1px solid var(--border);
+    padding: 40px;
+    max-width: 1280px;
+    margin: 0 auto;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+  .contact-section h2 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    color: var(--ink);
+    margin-bottom: 24px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .contact-full { grid-column: 1 / -1; }
+  .contact-section input,
+  .contact-section textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    font-size: 13px;
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: var(--surface);
+    outline: none;
+    transition: border-color 0.2s;
+    border-radius: 0;
+  }
+  .contact-section input:focus,
+  .contact-section textarea:focus { border-color: var(--ink); }
+  .contact-section input::placeholder,
+  .contact-section textarea::placeholder { color: var(--hint); }
+  .contact-section textarea { resize: vertical; min-height: 100px; }
+  .contact-section button[type="submit"] {
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    padding: 11px 32px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: var(--font-body);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .contact-section button[type="submit"]:hover { background: var(--red); }
 
-        .btn-more:hover {
-            color: #003d7a;
-            text-decoration: underline;
-        }
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 1024px) {
+    .page-body { grid-template-columns: 1fr 260px; padding: 0 24px; }
+    .col-main { padding-right: 20px; }
+    .col-aside { padding-left: 20px; }
+    .search-mastbar { padding: 14px 24px; }
+    .contact-section { padding: 30px 24px; }
+  }
+  @media (max-width: 768px) {
+    .page-body { grid-template-columns: 1fr; padding: 0 20px; }
+    .col-main { border-right: none; padding-right: 0; }
+    .col-aside { padding-left: 0; border-top: 2px solid var(--ink); padding-top: 24px; }
+    .search-mastbar { padding: 12px 20px; }
+    .kpi-strip { display: none; }
+    .search-field { max-width: 100%; }
+    .contact-grid { grid-template-columns: 1fr; }
+    .contact-full { grid-column: 1; }
+    .contact-section { padding: 24px 20px; }
+    .opp-row, .job-row { grid-template-columns: 24px 1fr; }
+    .opp-date { display: none; }
+  }
+</style>
+{% endblock %}
 
-        /* SIDEBAR WIDGETS STYLES */
-        .sidebar-widget {
-            padding: 20px;
-            transition: box-shadow 0.3s ease;
-        }
+{% block content %}
 
-        .sidebar-widget:hover {
-            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-        }
-
-        .sidebar-widget h3 {
-            margin-top: 0;
-            font-size: 1rem;
-            color: var(--blue-main);
-            border-bottom: 2px solid var(--blue-main);
-            padding-bottom: 8px;
-            margin-bottom: 15px;
-        }
-
-        /* STAT BOX */
-        .stat-box {
-            background: linear-gradient(135deg, var(--blue-main) 0%, #003d7a 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 12px;
-            text-align: center;
-            margin-bottom: 25px;
-            box-shadow: 0 6px 15px rgba(0,86,162,0.3);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .stat-box:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(0,86,162,0.4);
-        }
-
-        .stat-box span:first-child {
-            font-size: 2.2rem;
-            font-weight: bold;
-            display: block;
-        }
-
-        /* ALERTES EMPLOI */
-        .alert-box {
-            background: #fff3e0;
-            border-left: 4px solid #ff9800;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .alert-box p {
-            margin: 0 0 5px 0;
-            font-size: 13px;
-        }
-
-        .alert-box .alert-title {
-            font-weight: bold;
-            color: #ff9800;
-        }
-
-        /* MINI CALENDRIER */
-        .mini-calendar {
-            text-align: center;
-        }
-
-        .calendar-month {
-            background: var(--blue-main);
-            color: white;
-            padding: 8px;
-            border-radius: 8px 8px 0 0;
-            font-weight: bold;
-        }
-
-        .calendar-days {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            background: white;
-            border: 1px solid #eee;
-            border-top: none;
-            border-radius: 0 0 8px 8px;
-            overflow: hidden;
-        }
-
-        .calendar-day {
-            padding: 8px 4px;
-            text-align: center;
-            font-size: 12px;
-            border-right: 1px solid #eee;
-            border-bottom: 1px solid #eee;
-        }
-
-        .calendar-day.weekday {
-            background: #f8f9fa;
-            font-weight: bold;
-            color: var(--blue-main);
-        }
-
-        .calendar-day.today {
-            background: var(--blue-main);
-            color: white;
-            border-radius: 50%;
-            margin: 2px;
-        }
-
-        /* COMPTE À REBOURS */
-        .countdown-box {
-            text-align: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-        }
-
-        .countdown-number {
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        /* TENDANCES */
-        .trend-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .trend-item:last-child {
-            border-bottom: none;
-        }
-
-        .trend-title {
-            font-size: 13px;
-            color: #555;
-        }
-
-        .trend-value {
-            font-weight: bold;
-            color: var(--blue-main);
-        }
-
-        /* PROGRESSION */
-        .progress-item {
-            margin-bottom: 15px;
-        }
-
-        .progress-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            margin-bottom: 5px;
-        }
-
-        .progress-bar {
-            height: 6px;
-            background: #e0e0e0;
-            border-radius: 3px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: var(--blue-main);
-            border-radius: 3px;
-            width: 0%;
-        }
-
-        .empty-message {
-            padding: 30px;
-            text-align: center;
-            color: #888;
-            font-style: italic;
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 900px) {
-            .page-layout { flex-direction: column; }
-            .sidebar { order: 2; }
-        }
-    </style>
-
- {% endblock %}
-
- {% block content %}
-
-<!-- ===== SECTION OPPORTUNITÉS DYNAMIQUE ===== -->
-<div class="search-container">
-    <input type="text" id="searchInput" onkeyup="filterResults()" placeholder="Rechercher un appel d'offre, un avis ou un poste...">
+<!-- Barre de recherche + KPIs -->
+<div class="search-mastbar fade-up">
+  <div class="search-field">
+    <input
+      type="text"
+      id="searchInput"
+      onkeyup="filterResults()"
+      placeholder="Rechercher par secteur, référence, ville, mot-clé…"
+      autocomplete="off"
+    >
+    <button type="button">Rechercher</button>
+  </div>
+  <div class="kpi-strip">
+    <div class="kpi-item">
+      <div class="n">{{ dernieres_offres|length }}</div>
+      <div class="l">Appels d'offres</div>
+    </div>
+    <div class="kpi-item">
+      <div class="n">{{ derniers_amis|length }}</div>
+      <div class="l">Manifestations</div>
+    </div>
+    <div class="kpi-item">
+      <div class="n">{{ derniers_emplois|length }}</div>
+      <div class="l">Emplois</div>
+    </div>
+  </div>
 </div>
 
-<div class="page-layout">
-    <main class="main-content">
-        <!-- Appels d'Offres récents -->
-        <div class="opportunity-card">
-            <div class="card-header">
-                <h2>Derniers Appels d'Offres ({{ dernieres_offres|length }})</h2>
-            </div>
-            <table id="tableAO">
-                {% for offre in dernieres_offres %}
-                  <tr>
-                      <td>
-                        <span class="title-link">{{ offre.description|truncatechars:300 }}</span>
-                        <span class="ref-label">Réf: OFFRE-{{ offre.id }}</span>
-                        {% if offre.date_limite %}
-                        <span class="date-label">Échéance : {{ offre.date_limite|date:"d/m/Y" }}</span>
-                        {% endif %}
-                      </td>
-                  </tr>
-                {% empty %}
-                  <tr>
-                    <td class="empty-message">Aucun appel d'offre disponible pour le moment</td>
-                  </tr>
-                {% endfor %}
-            </table>
-            <div class="card-footer">
-                <a href="{% url 'myAppli:opportunites' %}#offres" class="btn-more">VOIR TOUS LES APPELS D'OFFRES →</a>
-            </div>
-        </div>
+<!-- Corps de page -->
+<div class="page-body">
 
-        <!-- Dernières Manifestations d'intérêt -->
-        <div class="opportunity-card">
-            <div class="card-header">
-                <h2>Dernières Manifestations d'intérêt ({{ derniers_amis|length }})</h2>
-            </div>
-            <table id="tableAMI">
-                {% for ami in derniers_amis %}
-                  <tr>
-                      <td>
-                        <span class="title-link">{{ ami.description|truncatechars:300 }}</span>
-                        <span class="ref-label">Réf: AMI-{{ ami.id }}</span>
-                        {% if ami.date_limite %}
-                        <span class="date-label">Échéance : {{ ami.date_limite|date:"d/m/Y" }}</span>
-                        {% endif %}
-                      </td>
-                  </tr>
-                {% empty %}
-                  <tr>
-                    <td class="empty-message">Aucune manifestation d'intérêt disponible pour le moment</td>
-                  </tr>
-                {% endfor %}
-            </table>
-            <div class="card-footer">
-                <a href="{% url 'myAppli:opportunites' %}#amis" class="btn-more">VOIR TOUTES LES AMI →</a>
-            </div>
-        </div>
+  <!-- ===== COLONNE PRINCIPALE ===== -->
+  <main class="col-main">
 
-        <!-- Offres d'emploi -->
-        <div class="opportunity-card">
-            <div class="card-header">
-                <h2><i class="fa fa-briefcase"></i> Offres d'emploi ({{ derniers_emplois|length }})</h2>
-            </div>
-            <table id="tableEmplois">
-                {% for emploi in derniers_emplois %}
-                  <tr>
-                      <td>
-                        <span class="title-link">{{ emploi.titre }}</span>
-                        <div class="company-name">
-                            <i class="fa fa-building"></i> 
-                            {% if emploi.recruteur %}
-                                {{ emploi.recruteur.organisation }}
-                            {% else %}
-                                {{ emploi.entreprise_nom|default:"Entreprise partenaire" }}
-                            {% endif %}
-                            {% if emploi.type_contrat %}
-                                <span class="badge">{{ emploi.get_type_contrat_display }}</span>
-                            {% endif %}
-                        </div>
-                        <div class="date-label">
-                            <i class="fa fa-map-marker"></i> {{ emploi.ville|default:emploi.localisation|default:"Non spécifiée" }}
-                            {% if emploi.date_limite %}
-                            <span style="margin-left: 12px;"><i class="fa fa-calendar"></i> Échéance : {{ emploi.date_limite|date:"d/m/Y" }}</span>
-                            {% endif %}
-                        </div>
-                      </td>
-                  </tr>
-                {% empty %}
-                  <tr>
-                    <td class="empty-message">
-                        <i class="fa fa-info-circle"></i> Aucune offre d'emploi disponible pour le moment
-                    </td>
-                  </tr>
-                {% endfor %}
-            </table>
-            {% if derniers_emplois %}
-            <div class="card-footer">
-                <a href="{% url 'myAppli:opportunites' %}#emplois" class="btn-more">VOIR TOUTES LES OFFRES D'EMPLOI →</a>
-            </div>
+    <!-- Appels d'offres -->
+    <div class="opp-block fade-up fade-up-1">
+      <div class="sec-header">
+        <h2>Appels d'offres</h2>
+        <span class="count">({{ dernieres_offres|length }} récents)</span>
+        <a href="{% url 'myAppli:opportunites' %}#offres" class="see-all">Voir tout &rarr;</a>
+      </div>
+
+      {% for offre in dernieres_offres %}
+      <div class="opp-row" id="ao-row-{{ forloop.counter }}">
+        <div class="opp-num">{{ forloop.counter|stringformat:"02d" }}</div>
+        <div class="opp-body">
+          <div class="opp-title">{{ offre.description|truncatechars:120 }}</div>
+          <div class="opp-meta">
+            <span class="tag tag-ao">AO</span>
+            <span class="opp-ref">OFFRE-{{ offre.id }}</span>
+            {% if offre.date_limite %}
+              <span class="opp-loc">Échéance&nbsp;: {{ offre.date_limite|date:"d/m/Y" }}</span>
             {% endif %}
+          </div>
         </div>
-        
-    </main>
+        {% if offre.date_limite %}
+        <div class="opp-date">
+          <span class="date-lbl">Clôture</span>
+          <span class="date-val">{{ offre.date_limite|date:"d/m/Y" }}</span>
+        </div>
+        {% endif %}
+      </div>
+      {% empty %}
+      <div class="empty-state">Aucun appel d'offre disponible pour le moment.</div>
+      {% endfor %}
+    </div>
 
-    <aside class="sidebar">
-        <!-- Statistiques -->
-        <div class="stat-box">
-            <span>{{ total_opportunites }}</span>
-            <span>Opportunités disponibles</span>
-        </div>
+    <!-- Manifestations d'intérêt -->
+    <div class="opp-block fade-up fade-up-2">
+      <div class="sec-header">
+        <h2>Manifestations d'intérêt</h2>
+        <span class="count">({{ derniers_amis|length }} récentes)</span>
+        <a href="{% url 'myAppli:opportunites' %}#amis" class="see-all">Voir tout &rarr;</a>
+      </div>
 
-        <!-- Alerte Emploi -->
-        <div class="sidebar-widget">
-            <h3><i class="fa fa-bell"></i> Alerte emploi</h3>
-            <div class="alert-box">
-                <p class="alert-title">📧 Recevez les nouvelles offres</p>
-                <p style="font-size: 12px;">Soyez informé dès qu'une opportunité correspond à votre profil</p>
-                <input type="email" placeholder="Votre email" style="width: 100%; padding: 8px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
-                <button style="background: var(--blue-main); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; width: 100%;">S'abonner</button>
-            </div>
+      {% for ami in derniers_amis %}
+      <div class="opp-row" id="ami-row-{{ forloop.counter }}">
+        <div class="opp-num">{{ forloop.counter|stringformat:"02d" }}</div>
+        <div class="opp-body">
+          <div class="opp-title">{{ ami.description|truncatechars:120 }}</div>
+          <div class="opp-meta">
+            <span class="tag tag-ami">AMI</span>
+            <span class="opp-ref">AMI-{{ ami.id }}</span>
+            {% if ami.date_limite %}
+              <span class="opp-loc">Échéance&nbsp;: {{ ami.date_limite|date:"d/m/Y" }}</span>
+            {% endif %}
+          </div>
         </div>
+        {% if ami.date_limite %}
+        <div class="opp-date">
+          <span class="date-lbl">Clôture</span>
+          <span class="date-val">{{ ami.date_limite|date:"d/m/Y" }}</span>
+        </div>
+        {% endif %}
+      </div>
+      {% empty %}
+      <div class="empty-state">Aucune manifestation d'intérêt disponible pour le moment.</div>
+      {% endfor %}
+    </div>
 
-        <!-- Mini Calendrier -->
-        <div class="sidebar-widget">
-            <h3><i class="fa fa-calendar"></i> Calendrier</h3>
-            <div class="mini-calendar">
-                <div class="calendar-month">Mars 2026</div>
-                <div class="calendar-days">
-                    <div class="calendar-day weekday">L</div>
-                    <div class="calendar-day weekday">M</div>
-                    <div class="calendar-day weekday">M</div>
-                    <div class="calendar-day weekday">J</div>
-                    <div class="calendar-day weekday">V</div>
-                    <div class="calendar-day weekday">S</div>
-                    <div class="calendar-day weekday">D</div>
-                    <div class="calendar-day">1</div>
-                    <div class="calendar-day">2</div>
-                    <div class="calendar-day">3</div>
-                    <div class="calendar-day">4</div>
-                    <div class="calendar-day">5</div>
-                    <div class="calendar-day">6</div>
-                    <div class="calendar-day">7</div>
-                    <div class="calendar-day">8</div>
-                    <div class="calendar-day">9</div>
-                    <div class="calendar-day">10</div>
-                    <div class="calendar-day">11</div>
-                    <div class="calendar-day">12</div>
-                    <div class="calendar-day">13</div>
-                    <div class="calendar-day">14</div>
-                    <div class="calendar-day">15</div>
-                    <div class="calendar-day today">16</div>
-                    <div class="calendar-day">17</div>
-                    <div class="calendar-day">18</div>
-                    <div class="calendar-day">19</div>
-                    <div class="calendar-day">20</div>
-                    <div class="calendar-day">21</div>
-                    <div class="calendar-day">22</div>
-                    <div class="calendar-day">23</div>
-                    <div class="calendar-day">24</div>
-                    <div class="calendar-day">25</div>
-                    <div class="calendar-day">26</div>
-                    <div class="calendar-day">27</div>
-                    <div class="calendar-day">28</div>
-                    <div class="calendar-day">29</div>
-                    <div class="calendar-day">30</div>
-                    <div class="calendar-day">31</div>
-                </div>
-            </div>
-        </div>
+    <!-- Offres d'emploi -->
+    <div class="opp-block fade-up fade-up-3">
+      <div class="sec-header">
+        <h2>Offres d'emploi</h2>
+        <span class="count">({{ derniers_emplois|length }} récentes)</span>
+        <a href="{% url 'myAppli:opportunites' %}#emplois" class="see-all">Voir tout &rarr;</a>
+      </div>
 
-        <!-- Compte à rebours (prochaine échéance) -->
-        <div class="sidebar-widget">
-            <h3><i class="fa fa-hourglass-half"></i> Prochaine échéance</h3>
-            <div class="countdown-box">
-                <div class="countdown-number">5 jours</div>
-                <div style="font-size: 12px;">avant la clôture de l'appel d'offres</div>
-                <div style="font-size: 11px; margin-top: 8px;">AO-2026-0042 - 31/03/2026</div>
-            </div>
+      {% for emploi in derniers_emplois %}
+      <div class="job-row" id="job-row-{{ forloop.counter }}">
+        <div class="opp-num">{{ forloop.counter|stringformat:"02d" }}</div>
+        <div class="opp-body">
+          <div class="opp-title">{{ emploi.titre }}</div>
+          <div class="opp-meta">
+            {% if emploi.type_contrat %}
+              <span class="tag {% if emploi.type_contrat == 'CDI' %}tag-cdi{% else %}tag-cdd{% endif %}">
+                {{ emploi.get_type_contrat_display }}
+              </span>
+            {% endif %}
+            <span class="opp-company">
+              {% if emploi.recruteur %}{{ emploi.recruteur.organisation }}
+              {% else %}{{ emploi.entreprise_nom|default:"Entreprise partenaire" }}{% endif %}
+            </span>
+            <span class="opp-loc">
+              {{ emploi.ville|default:emploi.localisation|default:"Non spécifiée" }}
+            </span>
+          </div>
         </div>
+        {% if emploi.date_limite %}
+        <div class="opp-date">
+          <span class="date-lbl">Clôture</span>
+          <span class="date-val">{{ emploi.date_limite|date:"d/m/Y" }}</span>
+        </div>
+        {% endif %}
+      </div>
+      {% empty %}
+      <div class="empty-state">Aucune offre d'emploi disponible pour le moment.</div>
+      {% endfor %}
+    </div>
 
-        <!-- Tendances du marché -->
-        <div class="sidebar-widget">
-            <h3><i class="fa fa-line-chart"></i> Tendances du marché</h3>
-            <div class="trend-item">
-                <span class="trend-title">📊 Secteurs les plus actifs</span>
-                <span class="trend-value">BTP (45%)</span>
-            </div>
-            <div class="trend-item">
-                <span class="trend-title">🏗️ Technologies</span>
-                <span class="trend-value">+28%</span>
-            </div>
-            <div class="trend-item">
-                <span class="trend-title">📈 Appels d'offres ce mois</span>
-                <span class="trend-value">124</span>
-            </div>
-            <div class="trend-item">
-                <span class="trend-title">🎯 Taux de participation</span>
-                <span class="trend-value">67%</span>
-            </div>
-        </div>
+  </main>
 
-        <!-- Progression de votre profil -->
-        <div class="sidebar-widget">
-            <h3><i class="fa fa-chart-simple"></i> Votre progression</h3>
-            <div class="progress-item">
-                <div class="progress-label">
-                    <span>Complétion du profil</span>
-                    <span>45%</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: 45%;"></div>
-                </div>
-            </div>
-            <div class="progress-item">
-                <div class="progress-label">
-                    <span>CV complété</span>
-                    <span>60%</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: 60%; background: #ff9800;"></div>
-                </div>
-            </div>
-            <div class="progress-item">
-                <div class="progress-label">
-                    <span>Candidatures envoyées</span>
-                    <span>3/10</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: 30%;"></div>
-                </div>
-            </div>
-            <a href="{% url 'myAppli:profil' %}" style="display: block; text-align: center; margin-top: 10px; color: var(--blue-main); font-size: 12px;">Compléter mon profil →</a>
-        </div>
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="col-aside fade-up fade-up-4">
 
-        <!-- Liens rapides -->
-        <div class="sidebar-widget">
-            <h3><i class="fa fa-link"></i> Liens rapides</h3>
-            <ul style="list-style: none; padding: 0; margin: 0;">
-                <li style="margin-bottom: 10px;"><a href="{% url 'myAppli:generer_cv' %}" style="color: #555; text-decoration: none;"><i class="fa fa-file-pdf-o" style="color: var(--blue-main); width: 25px;"></i> Générateur de CV</a></li>
-                <li style="margin-bottom: 10px;"><a href="{% url 'myAppli:generer_lettre_motivation' %}" style="color: #555; text-decoration: none;"><i class="fa fa-envelope-o" style="color: var(--blue-main); width: 25px;"></i> Lettre de motivation</a></li>
-                <li style="margin-bottom: 10px;"><a href="#" style="color: #555; text-decoration: none;"><i class="fa fa-handshake-o" style="color: var(--blue-main); width: 25px;"></i> Préparation entretien</a></li>
-                <li style="margin-bottom: 10px;"><a href="#" style="color: #555; text-decoration: none;"><i class="fa fa-question-circle" style="color: var(--blue-main); width: 25px;"></i> FAQ</a></li>
-            </ul>
-        </div>
+    <!-- Statistiques -->
+    <div class="stat-bloc">
+      <div class="stat-cell full">
+        <div class="n">{{ total_opportunites }}</div>
+        <div class="l">Opportunités disponibles</div>
+      </div>
+      <div class="stat-cell">
+        <div class="n">{{ dernieres_offres|length }}</div>
+        <div class="l">Appels d'offres</div>
+      </div>
+      <div class="stat-cell">
+        <div class="n">{{ derniers_emplois|length }}</div>
+        <div class="l">Emplois</div>
+      </div>
+      <div class="stat-cell">
+        <div class="n">{{ derniers_amis|length }}</div>
+        <div class="l">Manifestations</div>
+      </div>
+      <div class="stat-cell highlight">
+        <div class="n">+12%</div>
+        <div class="l">Ce mois-ci</div>
+      </div>
+    </div>
 
-        <!-- Assistance -->
-        <div class="sidebar-widget">
-            <h3><i class="fa fa-headphones"></i> Assistance</h3>
-            <p style="font-size: 14px; margin: 0 0 8px 0;">
-                <i class="fa fa-phone"></i> 📞 +226 25 30 00 00
-            </p>
-            <p style="font-size: 14px; margin: 0;">
-                <i class="fa fa-envelope"></i> 📧 contact@fasoia.com
-            </p>
-            <hr style="margin: 15px 0;">
-            <p style="font-size: 12px; color: #888; text-align: center;">
-                <i class="fa fa-clock-o"></i> Lun-Ven: 8h-18h
-            </p>
+    <!-- Alerte emploi -->
+    <div class="widget">
+      <div class="widget-head">Alerte emploi</div>
+      <div class="alert-widget">
+        <p>Recevez les nouvelles opportunités qui correspondent à votre profil directement par email.</p>
+        <div class="input-row">
+          <input type="email" placeholder="votre@email.com">
+          <button type="button">S'abonner aux alertes</button>
         </div>
-    </aside>
+      </div>
+    </div>
+
+    <!-- Prochaine échéance -->
+    <div class="widget">
+      <div class="widget-head">Prochaine échéance</div>
+      <div class="countdown-widget">
+        <div class="cd-lbl">Temps restant avant clôture</div>
+        <div class="cd-units">
+          <div class="cd-unit"><div class="n" id="cd-days">05</div><div class="u">Jours</div></div>
+          <div class="cd-unit"><div class="n" id="cd-hours">14</div><div class="u">Heures</div></div>
+          <div class="cd-unit"><div class="n" id="cd-mins">32</div><div class="u">Min</div></div>
+        </div>
+        <div class="cd-ref">AO-2026-042 &mdash; Clôture le 31/03/2026</div>
+      </div>
+    </div>
+
+    <!-- Progression -->
+    <div class="widget">
+      <div class="widget-head">
+        Votre progression
+        <a href="{% url 'myAppli:profil' %}">Compléter</a>
+      </div>
+      <div class="prog-item">
+        <div class="prog-labels"><span>Complétion du profil</span><span>45%</span></div>
+        <div class="prog-track"><div class="prog-fill" style="width:45%;background:var(--ink)"></div></div>
+      </div>
+      <div class="prog-item">
+        <div class="prog-labels"><span>CV complété</span><span>60%</span></div>
+        <div class="prog-track"><div class="prog-fill" style="width:60%;background:var(--teal)"></div></div>
+      </div>
+      <div class="prog-item">
+        <div class="prog-labels"><span>Candidatures envoyées</span><span>3 / 10</span></div>
+        <div class="prog-track"><div class="prog-fill" style="width:30%;background:var(--amber)"></div></div>
+      </div>
+    </div>
+
+    <!-- Liens rapides -->
+    <div class="widget">
+      <div class="widget-head">Liens rapides</div>
+      <ul class="quick-list">
+        <li>
+          <a href="{% url 'myAppli:generer_cv' %}">
+            Générateur de CV <span class="arrow">&rarr;</span>
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'myAppli:generer_lettre_motivation' %}">
+            Lettre de motivation <span class="arrow">&rarr;</span>
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            Préparation entretien <span class="arrow">&rarr;</span>
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            FAQ <span class="arrow">&rarr;</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Assistance -->
+    <div class="widget">
+      <div class="widget-head">Assistance</div>
+      <div class="assist-row">
+        <i class="fa fa-phone"></i>
+        <a href="tel:+22625300000">+226 25 30 00 00</a>
+      </div>
+      <div class="assist-row">
+        <i class="fa fa-envelope"></i>
+        <a href="mailto:contact@fasoia.com">contact@fasoia.com</a>
+      </div>
+      <div class="assist-row" style="color:var(--hint);font-size:12px;">
+        <i class="fa fa-clock"></i>
+        <span>Lun – Ven : 8h – 18h</span>
+      </div>
+    </div>
+
+  </aside>
 </div>
-<!-- ===== FIN SECTION OPPORTUNITÉS DYNAMIQUE ===== -->
 
-<!-- divider section -->
-<div class="container">
-	<div class="row">
-		<div class="col-md-1 col-sm-1"></div>
-		<div class="col-md-10 col-sm-10">
-			<hr>
-		</div>
-		<div class="col-md-1 col-sm-1"></div>
-	</div>
-</div>
-
-<!-- contact section -->
-<div id="contact">
-	<div class="container">
-		<div class="row">
-			<div class="col-md-12 col-sm-12">
-				<h2>Keep in touch</h2>
-			</div>
-			<form action="#" method="post" role="form">
-				<div class="col-md-1 col-sm-1"></div>
-				<div class="col-md-10 col-sm-10">
-					<div class="col-md-6 col-sm-6">
-						<input name="name" type="text" class="form-control" id="name" placeholder="Name">
-				  	</div>
-					<div class="col-md-6 col-sm-6">
-						<input name="email" type="email" class="form-control" id="email" placeholder="Email">
-				  	</div>
-                    <div class="col-md-12 col-sm-12">
-						<input name="subject" type="text" class="form-control" id="subject" placeholder="Subject">
-	    	  	  	</div>
-					<div class="col-md-12 col-sm-12">
-						<textarea name="message" rows="5" class="form-control" id="message" placeholder="Message"></textarea>
-					</div>
-					<div class="col-md-8 col-sm-8">
-						<p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy</p>
-					</div>
-					<div class="col-md-4 col-sm-4">
-						<input name="submit" type="submit" class="form-control" id="submit" value="SEND MESSAGE">
-					</div>
-				</div>
-				<div class="col-md-1 col-sm-1"></div>
-			</form>
-		</div>
-	</div>
-</div>
-
-<!-- divider section -->
-<div class="container">
-	<div class="row">
-		<div class="col-md-1 col-sm-1"></div>
-		<div class="col-md-10 col-sm-10">
-			<hr>
-		</div>
-		<div class="col-md-1 col-sm-1"></div>
-	</div>
+<!-- Section contact -->
+<div class="contact-section">
+  <h2>Nous contacter</h2>
+  <form action="#" method="post" role="form">
+    {% csrf_token %}
+    <div class="contact-grid">
+      <input name="name"    type="text"  placeholder="Nom complet">
+      <input name="email"   type="email" placeholder="Adresse email">
+      <input name="subject" type="text"  placeholder="Sujet" class="contact-full">
+      <textarea name="message" rows="4"  placeholder="Votre message…" class="contact-full"></textarea>
+      <div class="contact-full" style="display:flex;justify-content:flex-end">
+        <button type="submit">Envoyer le message</button>
+      </div>
+    </div>
+  </form>
 </div>
 
 {% endblock %}
 
-{% block extra_js  %}
+{% block extra_js %}
 <script>
-    
-    function filterResults() {
-        let input = document.getElementById('searchInput').value.toUpperCase();
-        let tables = document.querySelectorAll('table');
-        
-        tables.forEach(table => {
-            let tr = table.getElementsByTagName('tr');
-            for (let i = 0; i < tr.length; i++) {
-                let td = tr[i].getElementsByTagName('td')[0];
-                if (td) {
-                    let txtValue = td.textContent || td.innerText;
-                    tr[i].style.display = txtValue.toUpperCase().indexOf(input) > -1 ? "" : "none";
-                }
-            }
+  /* ===== RECHERCHE EN TEMPS RÉEL ===== */
+  function filterResults() {
+    var query = document.getElementById('searchInput').value.toUpperCase().trim();
+    var rows = document.querySelectorAll('.opp-row, .job-row');
+
+    rows.forEach(function (row) {
+      var text = row.textContent || row.innerText;
+      row.style.display = text.toUpperCase().indexOf(query) > -1 ? '' : 'none';
+    });
+
+    /* Masquer les sections vides */
+    document.querySelectorAll('.opp-block').forEach(function (block) {
+      var visible = block.querySelectorAll('.opp-row[style=""], .opp-row:not([style]), .job-row[style=""], .job-row:not([style])');
+      var header = block.querySelector('.sec-header');
+      if (query === '') {
+        block.style.display = '';
+      } else {
+        var anyVisible = false;
+        block.querySelectorAll('.opp-row, .job-row').forEach(function(r) {
+          if (r.style.display !== 'none') anyVisible = true;
         });
+        block.style.display = anyVisible ? '' : 'none';
+      }
+    });
+  }
+
+  /* ===== COMPTE À REBOURS ===== */
+  (function () {
+    var target = new Date('2026-03-31T23:59:59');
+
+    function update() {
+      var now  = new Date();
+      var diff = target - now;
+      if (diff <= 0) {
+        document.getElementById('cd-days').textContent  = '00';
+        document.getElementById('cd-hours').textContent = '00';
+        document.getElementById('cd-mins').textContent  = '00';
+        return;
+      }
+      var d = Math.floor(diff / 86400000);
+      var h = Math.floor((diff % 86400000) / 3600000);
+      var m = Math.floor((diff % 3600000)  / 60000);
+      document.getElementById('cd-days').textContent  = String(d).padStart(2,'0');
+      document.getElementById('cd-hours').textContent = String(h).padStart(2,'0');
+      document.getElementById('cd-mins').textContent  = String(m).padStart(2,'0');
     }
+    update();
+    setInterval(update, 30000);
+  })();
 </script>
 {% endblock %}
