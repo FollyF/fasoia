@@ -1,825 +1,397 @@
 {% extends "base_app.html" %}
 {% load static %}
+{% block title %}FASOIA — Tableau de bord recruteur{% endblock %}
+{% block breadcrumb %}Tableau de bord{% endblock %}
 
-{% block title %}Dashboard Recruteur{% endblock %}
-
-{% block extra_css %}
+{% block app_extra_css %}
 <style>
-    :root {
-        --primary-color: #007bff;
-        --secondary-color: #121212;
-        --card-bg: #1e1e1e;
-        --text-primary: #ffffff;
-        --text-secondary: #b3b3b3;
-    }
-    
-    body {
-        background-color: var(--secondary-color);
-        color: var(--text-primary);
-    }
-    
-    .dashboard-header {
-        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-        border-radius: 15px;
-        padding: 40px;
-        margin-bottom: 30px;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .dashboard-header::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-        animation: rotate 20s linear infinite;
-    }
-    
-    @keyframes rotate {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-    
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 20px;
-        margin-bottom: 30px;
-    }
-    
-    .stat-card {
-        background: var(--card-bg);
-        border: 1px solid #333;
-        border-radius: 10px;
-        padding: 25px;
-        text-align: center;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-    
-    .stat-card:hover {
-        transform: translateY(-5px);
-        border-color: var(--primary-color);
-        box-shadow: 0 10px 20px rgba(0, 123, 255, 0.2);
-    }
-    
-    .stat-card i {
-        font-size: 2.5rem;
-        color: var(--primary-color);
-        margin-bottom: 15px;
-    }
-    
-    .profile-completion {
-        background: var(--card-bg);
-        border: 1px solid #333;
-        border-radius: 10px;
-        padding: 30px;
-        margin-bottom: 30px;
-    }
-    
-    .progress-bar {
-        width: 100%;
-        height: 10px;
-        background: #333;
-        border-radius: 5px;
-        margin: 20px 0;
-        overflow: hidden;
-    }
-    
-    .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, var(--primary-color), #4dabff);
-        width: {{ progression }}%;
-        transition: width 0.5s ease;
-        position: relative;
-    }
-    
-    .progress-fill::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 10px;
-        height: 100%;
-        background: rgba(255,255,255,0.3);
-        animation: shimmer 2s infinite;
-    }
-    
-    @keyframes shimmer {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
-    }
-    
-    .form-section {
-        background: var(--card-bg);
-        border: 1px solid #333;
-        border-radius: 10px;
-        padding: 30px;
-        margin-bottom: 30px;
-    }
-    
-    .form-section h2 {
-        color: var(--primary-color);
-        margin-bottom: 20px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #333;
-    }
-    
-    .form-section h2 i {
-        margin-right: 10px;
-    }
-    
-    .form-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 20px;
-    }
-    
-    .form-group {
-        margin-bottom: 20px;
-    }
-    
-    .form-group label {
-        display: block;
-        color: white;
-        margin-bottom: 8px;
-        font-weight: 500;
-    }
-    
-    .form-group label i {
-        color: var(--primary-color);
-        margin-right: 8px;
-    }
-    
-    .form-group label.required::after {
-        content: " *";
-        color: #dc3545;
-    }
-    
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-        width: 100%;
-        background-color: #2a2a2a;
-        border: 1px solid #333;
-        border-radius: 5px;
-        padding: 12px;
-        color: white;
-        transition: all 0.3s ease;
-    }
-    
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
-        border-color: var(--primary-color);
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-    }
-    
-    .btn-save {
-        background-color: var(--primary-color);
-        color: white;
-        border: none;
-        border-radius: 25px;
-        padding: 15px 40px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    
-    .btn-save:hover {
-        background-color: #0056b3;
-        transform: scale(1.02);
-        box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
-    }
-    
-    .btn-save:disabled {
-        background-color: #6c757d;
-        cursor: not-allowed;
-        transform: none;
-    }
-    
-    .candidat-card {
-        background: var(--card-bg);
-        border: 1px solid #333;
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 15px;
-        transition: all 0.3s ease;
-    }
-    
-    .candidat-card:hover {
-        border-color: var(--primary-color);
-        transform: translateX(5px);
-        box-shadow: 0 5px 15px rgba(0, 123, 255, 0.1);
-    }
-    
-    .match-badge {
-        background: rgba(0, 123, 255, 0.2);
-        color: var(--primary-color);
-        padding: 5px 10px;
-        border-radius: 20px;
-        font-weight: bold;
-    }
-    
-    .badge-custom {
-        background: #2a2a2a;
-        color: var(--text-secondary);
-        padding: 3px 8px;
-        border-radius: 15px;
-        font-size: 12px;
-        margin-right: 5px;
-    }
-    
-    .filter-bar {
+    /* ===== EN-TÊTE ===== */
+    .dash-header {
+        background: var(--ink);
+        padding: 28px 32px;
+        margin-bottom: 24px;
         display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+        border-bottom: 3px solid var(--red);
+    }
+    .dash-header-left h1 {
+        font-family: var(--font-display);
+        font-size: 30px;
+        font-weight: 700;
+        color: #862323;
+        line-height: 1.1;
+        margin-bottom: 10px;
+    }
+    .dash-header-left h1 span { color: var(--red); }
+
+    .dash-tags {
+        display: flex;
+        gap: 8px;
         flex-wrap: wrap;
     }
-    
-    .filter-btn {
+    .dash-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border: 1px solid rgba(255,255,255,0.15);
+        color: var(--ink);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+    .dash-tag i { font-size: 10px; color: rgba(255,255,255,0.3); }
+
+    .dash-header-right {
+        text-align: right;
+        flex-shrink: 0;
+    }
+    .dash-completion-num {
+        font-family: var(--font-display);
+        font-size: 48px;
+        font-weight: 700;
+        color: var(--ink);
+        line-height: 1;
+    }
+    .dash-completion-num span { color: var(--red); }
+    .dash-completion-lbl {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--red);
+        margin-top: 4px;
+    }
+    .dash-prog-track {
+        height: 3px;
+        background: rgba(255,255,255,0.1);
+        margin-top: 10px;
+        width: 140px;
+        margin-left: auto;
+        overflow: hidden;
+    }
+    .dash-prog-fill {
+        height: 100%;
+        background: var(--red);
+        width: {{ progression }}%;
+    }
+
+    /* ===== BANNER PROFIL COMPLET ===== */
+    .success-banner {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--teal);
+        padding: 16px 20px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .success-banner i { color: var(--teal); font-size: 18px; flex-shrink: 0; }
+    .success-banner strong { font-size: 13px; color: var(--ink); }
+    .success-banner p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* ===== ONGLETS & FORM ===== */
+    .tabs-nav {
+        display: flex;
+        gap: 0;
+        margin-bottom: 0;
+        border-bottom: 2px solid var(--ink);
+        overflow-x: auto;
+    }
+    .tab-btn {
         background: transparent;
-        border: 1px solid #333;
-        color: var(--text-secondary);
-        padding: 8px 15px;
-        border-radius: 20px;
+        border: none;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        color: var(--muted);
+        padding: 10px 20px;
+        font-family: var(--font-body);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
         cursor: pointer;
-        transition: all 0.3s ease;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 7px;
     }
-    
-    .filter-btn:hover {
-        border-color: var(--primary-color);
-        color: white;
+    .tab-btn.active {
+        color: var(--ink);
+        border-bottom-color: var(--red);
     }
-    
-    .filter-btn.active {
-        background: var(--primary-color);
-        color: white;
-        border-color: var(--primary-color);
+
+    .form-grid-2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 18px;
     }
-    
-    .warning-message {
-        background-color: rgba(255, 193, 7, 0.1);
-        border: 1px solid #ffc107;
-        border-radius: 5px;
-        padding: 15px;
-        margin-bottom: 20px;
-        color: white;
+    .form-grid-2 .full { grid-column: 1 / -1; }
+    .field-note {
+        font-size: 11px;
+        color: var(--hint);
+        margin-top: 4px;
     }
-    
-    .info-message {
-        background-color: rgba(0, 123, 255, 0.1);
-        border: 1px solid var(--primary-color);
-        border-radius: 5px;
-        padding: 15px;
-        margin-bottom: 20px;
-        color: white;
+    .required-star::after { content: " *"; color: var(--red); }
+
+    .form-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 28px;
+        padding-top: 18px;
+        border-top: 1px solid var(--border);
+        flex-wrap: wrap;
+        gap: 12px;
     }
-    
-    .success-message {
-        background-color: rgba(40, 167, 69, 0.1);
-        border: 1px solid #28a745;
-        border-radius: 5px;
+
+    /* ===== OFFRES & CANDIDATS ===== */
+    .offer-card, .candidat-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
         padding: 20px;
-        margin-bottom: 20px;
-        color: white;
+        margin-bottom: 16px;
+        transition: all 0.2s ease;
     }
-    
-    .success-message i {
-        color: #28a745;
-        margin-right: 10px;
+    .offer-card:hover, .candidat-card:hover {
+        border-color: var(--red);
+        transform: translateY(-3px);
+    }
+
+    .match-badge {
+        font-family: var(--font-display);
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--teal);
+    }
+
+    .btn-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+        .dash-header { padding: 20px; }
+        .dash-header-left h1 { font-size: 26px; }
+        .dash-completion-num { font-size: 38px; }
+        .form-grid-2 { grid-template-columns: 1fr; }
+        .tabs-nav { flex-wrap: wrap; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-
-<div class="container-fluid mt-4">
-    <!-- En-tête spécifique recruteur -->
-    <div class="dashboard-header">
-        <h1>Espace Recruteur</h1>
-        <h3>{{ recruteur.organisation|default:"Organisation non définie" }}</h3>
-        <p>{{ recruteur.poste_occupe|default:"Poste non défini" }}</p>
-    </div>
-    
-    <!-- Statistiques recruteur -->
-    <div class="stats-grid">
-        <div class="stat-card" onclick="filterTalents('offres')">
-            <i class="fa fa-briefcase"></i>
-            <h3>{{ stats.offres_publiees|default:0 }}</h3>
-            <p>Offres publiées</p>
-        </div>
-        <div class="stat-card" onclick="filterTalents('candidatures')">
-            <i class="fa fa-users"></i>
-            <h3>{{ stats.candidatures_recues|default:0 }}</h3>
-            <p>Candidatures reçues</p>
-        </div>
-        <div class="stat-card" onclick="filterTalents('talents')">
-            <i class="fa fa-star"></i>
-            <h3>{{ talents_recommandes|length|default:0 }}</h3>
-            <p>Talents recommandés</p>
-        </div>
-        <div class="stat-card" onclick="filterTalents('entretiens')">
-            <i class="fa fa-calendar"></i>
-            <h3>0</h3>
-            <p>Entretiens planifiés</p>
-        </div>
-    </div>
-
-    <!-- Message de progression -->
-    <div class="profile-completion">
-        <h2><i class="fa fa-chart-line"></i> Complétion du profil</h2>
-        <div class="progress-bar">
-            <div class="progress-fill" style="width: {{ progression }}%"></div>
-        </div>
-        <div class="d-flex justify-content-between mt-2">
-            <span>{{ progression }}% complété</span>
-            <span>{{ champs_remplis|default:0 }}/{{ total_champs|default:6 }} champs</span>
-        </div>
-        
-        {% if not profil_complet %}
-        <div class="warning-message" style="margin-top: 20px;">
-            <i class="fa fa-exclamation-triangle"></i>
-            Complétez votre profil pour bénéficier de toutes les fonctionnalités.
-        </div>
-        {% endif %}
-    </div>
-
-    <!-- ===== FORMULAIRE DE COMPLÉTION - Visible uniquement si profil non complet ===== -->
-    {% if not profil_complet %}
-    <div class="form-section">
-        <h2><i class="fa fa-building"></i> Compléter votre profil recruteur</h2>
-        
-        <form method="POST" action="{% url 'myAppli:completer_profil_recruteur' %}" id="profile-form">
-            {% csrf_token %}
-            
-            <div class="form-grid">
-                <div class="form-group">
-                    <label class="required"><i class="fa fa-building"></i> Organisation</label>
-                    <input type="text" name="organisation" value="{{ recruteur.organisation }}" placeholder="Nom de l'entreprise/organisation" required>
-                </div>
-                
-                <div class="form-group">
-                    <label><i class="fa fa-industry"></i> Secteur d'activité</label>
-                    <input type="text" name="secteur" value="{{ recruteur.secteur }}" placeholder="Ex: Technologies, Finance, BTP...">
-                </div>
-                
-                <div class="form-group">
-                    <label><i class="fa fa-sitemap"></i> Type de structure</label>
-                    <select name="typeStructure" class="form-control bg-dark text-white">
-                        <option value="">Sélectionnez</option>
-                        <option value="PME" {% if recruteur.typeStructure == 'PME' %}selected{% endif %}>PME</option>
-                        <option value="Grande entreprise" {% if recruteur.typeStructure == 'Grande entreprise' %}selected{% endif %}>Grande entreprise</option>
-                        <option value="Startup" {% if recruteur.typeStructure == 'Startup' %}selected{% endif %}>Startup</option>
-                        <option value="Administration" {% if recruteur.typeStructure == 'Administration' %}selected{% endif %}>Administration</option>
-                        <option value="ONG" {% if recruteur.typeStructure == 'ONG' %}selected{% endif %}>ONG</option>
-                        <option value="Cabinet" {% if recruteur.typeStructure == 'Cabinet' %}selected{% endif %}>Cabinet de recrutement</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label><i class="fa fa-user-tie"></i> Poste occupé</label>
-                    <input type="text" name="poste_occupe" value="{{ recruteur.poste_occupe }}" placeholder="Ex: DRH, Recruteur, Manager...">
-                </div>
-                
-                <div class="form-group">
-                    <label><i class="fa fa-search"></i> Secteurs recherchés</label>
-                    <input type="text" name="secteurs_recherches" value="{{ recruteur.secteurs_recherches|join:', ' }}" placeholder="Ex: Informatique, Finance, Marketing...">
-                    <small class="text-secondary">Séparez par des virgules</small>
-                </div>
-                
-                <div class="form-group">
-                    <label><i class="fa fa-file-text"></i> Types de contrats proposés</label>
-                    <input type="text" name="types_contrats_proposes" value="{{ recruteur.types_contrats_proposes|join:', ' }}" placeholder="Ex: CDI, CDD, Stage, Freelance...">
-                    <small class="text-secondary">Séparez par des virgules</small>
-                </div>
+<!-- EN-TÊTE DASHBOARD -->
+<div class="dash-header">
+    <div class="dash-header-left">
+        <h1>Bienvenue, <span>{{ recruteur.organisation|default:"Recruteur" }}</span></h1>
+        <div class="dash-tags">
+            <div class="dash-tag">
+                <i class="fa fa-user-tie"></i>
+                {{ recruteur.poste_occupe|default:"Recruteur" }}
             </div>
-
-            <div class="text-center mt-4">
-                <button type="submit" class="btn-save" id="submit-btn">
-                    <i class="fa fa-save"></i> Enregistrer les modifications
-                </button>
-            </div>
-        </form>
-    </div>
-    {% else %}
-    <!-- Message quand le profil est complet -->
-    <div class="success-message">
-        <div class="d-flex align-items-center">
-            <i class="fa fa-check-circle fa-3x me-4"></i>
-            <div>
-                <h4 class="mb-2">Félicitations !</h4>
-                <p class="mb-2">Votre profil recruteur est maintenant complet à 100%.</p>
-                <p>Vous pouvez maintenant :</p>
-                <ul>
-                    <li>Publier des offres d'emploi</li>
-                    <li>Recevoir des recommandations de talents</li>
-                    <li>Gérer vos candidatures</li>
-                </ul>
-                <button class="btn btn-primary mt-2" onclick="toggleOffreForm()">
-                    <i class="fa fa-plus-circle"></i> Publier une offre
-                </button>
+            <div class="dash-tag">
+                <i class="fa fa-building"></i>
+                {{ recruteur.organisation|default:"Organisation non définie" }}
             </div>
         </div>
     </div>
-    {% endif %}
-
-    <!-- Section de publication d'offre -->
-    <div class="form-section" id="offre-section" style="display: none;">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2><i class="fa fa-briefcase"></i> Publier une nouvelle offre</h2>
-            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleOffreForm()">
-                <i class="fa fa-times"></i> Fermer
-            </button>
+    <div class="dash-header-right">
+        <div class="dash-completion-num">{{ progression }}<span>%</span></div>
+        <div class="dash-completion-lbl">Profil complété</div>
+        <div class="dash-prog-track">
+            <div class="dash-prog-fill"></div>
         </div>
-        
-        <form method="POST" action="{% url 'myAppli:publier_offre_emploi' %}" id="offre-form">
-            {% csrf_token %}
-            
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="form-group">
-                        <label class="required">Titre du poste</label>
-                        <input type="text" name="titre" class="form-control" placeholder="Ex: Développeur Python Senior" required>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label>Type de contrat</label>
-                        <select name="type_contrat" class="form-control">
-                            <option value="CDI">CDI</option>
-                            <option value="CDD">CDD</option>
-                            <option value="Stage">Stage</option>
-                            <option value="Alternance">Alternance</option>
-                            <option value="Freelance">Freelance</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="required">Localisation</label>
-                        <input type="text" name="localisation" class="form-control" placeholder="Ex: Ouagadougou" required>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Date limite</label>
-                        <input type="date" name="date_limite" class="form-control">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label>Description du poste</label>
-                <textarea name="description" class="form-control" rows="4" placeholder="Décrivez le poste..."></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label>Missions principales</label>
-                <textarea name="missions" class="form-control" rows="3" placeholder="Listez les missions..."></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label>Profil recherché</label>
-                <textarea name="profil_recherche" class="form-control" rows="3" placeholder="Décrivez le profil idéal..."></textarea>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Niveau d'expérience</label>
-                        <select name="niveau_experience" class="form-control">
-                            <option value="DEBUTANT">Débutant (moins de 2 ans)</option>
-                            <option value="CONFIRME">Intermédiaire (2-5 ans)</option>
-                            <option value="SENIOR">Confirmé (5-10 ans)</option>
-                            <option value="EXPERT">Expert (plus de 10 ans)</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Années d'expérience min.</label>
-                        <input type="number" name="annees_experience_min" class="form-control" value="0">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Compétences requises</label>
-                        <input type="text" name="competences_requises" class="form-control" placeholder="Ex: Python, Django, SQL (séparés par des virgules)">
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Compétences souhaitées</label>
-                        <input type="text" name="competences_souhaitees" class="form-control" placeholder="Ex: React, Docker, AWS">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Niveau d'étude requis</label>
-                        <input type="text" name="niveau_etude_requis" class="form-control" placeholder="Ex: Bac+5, Master...">
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-check mt-4">
-                        <input type="checkbox" name="teletravail" class="form-check-input" id="teletravail">
-                        <label class="form-check-label" for="teletravail">Télétravail possible</label>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label>Salaire minimum (FCFA)</label>
-                        <input type="number" name="salaire_min" class="form-control">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label>Salaire maximum (FCFA)</label>
-                        <input type="number" name="salaire_max" class="form-control">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label>Ou affichage libre</label>
-                        <input type="text" name="salaire_affiche" class="form-control" placeholder="Ex: À négocier">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="text-center mt-4">
-                <button type="submit" class="btn-save" id="publier-offre-btn">
-                    <i class="fa fa-paper-plane"></i> Publier l'offre
-                </button>
-            </div>
-        </form>
+    </div>
+</div>
+
+<!-- STATISTIQUES -->
+<div class="stats-row" style="margin-bottom:24px">
+    <div class="stat-cell">
+        <div class="n">{{ stats.offres_publiees|default:0 }}</div>
+        <div class="l">Offres publiées</div>
+    </div>
+    <div class="stat-cell">
+        <div class="n">{{ stats.candidatures_recues|default:0 }}</div>
+        <div class="l">Candidatures reçues</div>
+    </div>
+    <div class="stat-cell accent">
+        <div class="n">{{ talents_recommandes|length|default:0 }}</div>
+        <div class="l">Talents recommandés</div>
+    </div>
+    <div class="stat-cell">
+        <div class="n">0</div>
+        <div class="l">Entretiens planifiés</div>
+    </div>
+</div>
+
+<!-- BANNER PROFIL COMPLET -->
+{% if profil_complet %}
+<div class="success-banner">
+    <i class="fa fa-circle-check"></i>
+    <div>
+        <strong>Profil recruteur complété à 100%</strong>
+        <p>Vous pouvez maintenant publier des offres et recevoir des recommandations de talents.</p>
+    </div>
+    <button class="btn-app sm outline" onclick="toggleEditMode()">
+        <i class="fa fa-pen"></i> Modifier
+    </button>
+</div>
+{% endif %}
+
+<!-- FORMULAIRE DE COMPLÉTION DU PROFIL -->
+<div class="card-edit" id="profile-form-section" {% if profil_complet %}style="display:none;"{% endif %}>
+    <div class="card-edit-head">
+        <h3>{% if profil_complet %}Modifier{% else %}Compléter{% endif %} votre profil recruteur</h3>
+        <span style="font-size:11px;color:var(--hint)">
+            <span style="color:var(--red)">*</span> Champs obligatoires
+        </span>
     </div>
 
-    <!-- Mes offres publiées -->
-    <div class="form-section">
-        <h2><i class="fa fa-briefcase"></i> Mes offres publiées ({{ offres_publiees|length }})</h2>
-        
-        {% if offres_publiees %}
-            <div class="row">
-                {% for offre in offres_publiees %}
-                <div class="col-md-6 mb-3">
-                    <div class="candidat-card">
-                        <div class="d-flex justify-content-between">
-                            <h5>{{ offre.titre }}</h5>
-                            <span class="badge-custom">{{ offre.get_statut_display }}</span>
-                        </div>
-                        <p class="text-secondary">
-                            <i class="fa fa-map-marker"></i> {{ offre.localisation }}<br>
-                            <i class="fa fa-clock-o"></i> {{ offre.get_type_contrat_display }}
-                        </p>
-                        {% if offre.est_urgente %}
-                            <span class="badge bg-danger">Urgent</span>
-                        {% endif %}
-                        <p class="text-secondary">
-                            <small>Publiée le: {{ offre.date_publication|date:"d/m/Y" }}</small>
-                        </p>
-                        <div class="d-flex justify-content-end gap-2">
-                            <a href="{% url 'myAppli:detail_emploi' offre.id %}" class="btn btn-sm btn-outline-primary">Voir</a>
-                            <a href="#" class="btn btn-sm btn-outline-danger">Fermer</a>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
+    <form method="POST" action="{% url 'myAppli:completer_profil_recruteur' %}" id="profile-form">
+        {% csrf_token %}
+        <div class="form-grid-2">
+            <div class="form-field">
+                <label class="required-star">Organisation / Entreprise</label>
+                <input type="text" name="organisation" value="{{ recruteur.organisation }}" placeholder="Nom de votre organisation" required>
             </div>
-        {% else %}
-            <div class="info-message">
-                <i class="fa fa-info-circle"></i>
-                Vous n'avez pas encore publié d'offre d'emploi.
+            <div class="form-field">
+                <label>Secteur d'activité</label>
+                <input type="text" name="secteur" value="{{ recruteur.secteur }}" placeholder="Ex: Technologies, Finance, BTP...">
             </div>
-        {% endif %}
-    </div> 
-
-    
-    <!-- Talents recommandés -->
-    <div class="form-section">
-        <h2><i class="fa fa-star"></i> Talents recommandés</h2>
-        
-        {% if talents_recommandes %}
-        <div class="filter-bar">
-            <span class="filter-btn active" onclick="filterTalents('all')">Tous</span>
-            <span class="filter-btn" onclick="filterTalents('match')">Meilleur match</span>
-            <span class="filter-btn" onclick="filterTalents('recent')">Récents</span>
-        </div>
-        
-        <!-- Section avec JS pour tri et filtre -->
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <select class="form-control bg-dark text-white" id="sortSelect" onchange="sortCandidats()">
-                    <option value="match">Trier par match</option>
-                    <option value="date">Trier par date</option>
-                    <option value="nom">Trier par nom</option>
+            <div class="form-field">
+                <label>Type de structure</label>
+                <select name="typeStructure">
+                    <option value="">Sélectionnez...</option>
+                    <option value="PME" {% if recruteur.typeStructure == 'PME' %}selected{% endif %}>PME</option>
+                    <option value="Grande entreprise" {% if recruteur.typeStructure == 'Grande entreprise' %}selected{% endif %}>Grande entreprise</option>
+                    <option value="Startup" {% if recruteur.typeStructure == 'Startup' %}selected{% endif %}>Startup</option>
+                    <option value="Administration" {% if recruteur.typeStructure == 'Administration' %}selected{% endif %}>Administration</option>
+                    <option value="ONG" {% if recruteur.typeStructure == 'ONG' %}selected{% endif %}>ONG</option>
                 </select>
             </div>
-            <div class="col-md-4">
-                <input type="text" class="form-control bg-dark text-white" 
-                       placeholder="Rechercher un candidat..." id="searchInput"
-                       onkeyup="searchCandidats()">
+            <div class="form-field">
+                <label>Poste occupé</label>
+                <input type="text" name="poste_occupe" value="{{ recruteur.poste_occupe }}" placeholder="Ex: DRH, Talent Acquisition...">
             </div>
-            <div class="col-md-4 text-end">
-                <button class="btn btn-primary" onclick="toggleView()">
-                    <i class="fa fa-th-large" id="viewIcon"></i> Changer vue
-                </button>
+            <div class="form-field full">
+                <label>Secteurs recherchés</label>
+                <input type="text" name="secteurs_recherches" value="{{ recruteur.secteurs_recherches|join:', ' }}" placeholder="Informatique, Finance, Marketing...">
+                <div class="field-note">Séparez par des virgules</div>
+            </div>
+            <div class="form-field full">
+                <label>Types de contrats proposés</label>
+                <input type="text" name="types_contrats_proposes" value="{{ recruteur.types_contrats_proposes|join:', ' }}" placeholder="CDI, CDD, Stage, Freelance...">
+                <div class="field-note">Séparez par des virgules</div>
             </div>
         </div>
-        
-       
-        <!-- Liste des candidats -->
-        <div id="candidats-container">
-            {% for talent in talents_recommandes %}
-            <div class="candidat-card" data-nom="{{ talent.nom|default:'' }}" data-score="{{ talent.score|default:0 }}" data-date="{{ talent.date|default:0 }}">
-                <div class="row">
-                    <div class="col-md-8">
-                        <h4>{{ talent.prenom }} {{ talent.nom }}</h4>
-                        <p class="text-secondary">{{ talent.competences|truncatechars:100 }}</p>
-                        <p>
-                            <span class="badge-custom">{{ talent.niveauEtude|default:"Non spécifié" }}</span>
-                            <span class="badge-custom">{{ talent.experience|default:0 }} ans exp.</span>
-                        </p>
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <span class="match-badge">{{ talent.score|default:0 }}% match</span>
-                        <p class="mt-3">
-                            <a href="#" class="btn btn-sm btn-outline-primary">Voir profil</a>
-                            <a href="#" class="btn btn-sm btn-primary">Contacter</a>
-                        </p>
+
+        <div class="form-footer">
+            <button type="submit" class="btn-app" id="submit-btn">
+                <i class="fa fa-save"></i> Enregistrer le profil
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- SECTION OFFRES PUBLIÉES -->
+<div class="card-edit">
+    <div class="card-edit-head d-flex justify-content-between align-items-center">
+        <h3>Mes offres publiées ({{ offres_publiees|length }})</h3>
+        <button class="btn-app sm" onclick="toggleOffreForm()">
+            <i class="fa fa-plus"></i> Publier une offre
+        </button>
+    </div>
+
+    {% if offres_publiees %}
+        <div class="row">
+            {% for offre in offres_publiees %}
+            <div class="col-md-6 mb-3">
+                <div class="offer-card">
+                    <h5>{{ offre.titre }}</h5>
+                    <p class="text-muted">
+                        <i class="fa fa-map-marker"></i> {{ offre.localisation }} • 
+                        {{ offre.get_type_contrat_display }}
+                    </p>
+                    <div class="btn-actions mt-3">
+                        <a href="{% url 'myAppli:detail_emploi' offre.id %}" class="btn-app sm outline">Voir</a>
+                        <a href="#" class="btn-app sm outline">Fermer</a>
                     </div>
                 </div>
             </div>
             {% endfor %}
         </div>
-        {% else %}
-        <div class="info-message">
-            <i class="fa fa-info-circle"></i>
-            Aucun talent recommandé pour le moment. Les candidats correspondant à vos critères apparaîtront ici.
-        </div>
-        {% endif %}
-    </div>
+    {% else %}
+        <p style="padding:30px; text-align:center; color:var(--hint); font-style:italic;">
+            Vous n'avez pas encore publié d'offre.
+        </p>
+    {% endif %}
 </div>
 
+<!-- TALENTS RECOMMANDÉS -->
+<div class="card-edit">
+    <div class="card-edit-head">
+        <h3>Talents recommandés</h3>
+    </div>
+
+    {% if talents_recommandes %}
+        <!-- Ici tu peux ajouter des filtres plus tard si besoin -->
+        <div class="row">
+            {% for talent in talents_recommandes %}
+            <div class="col-md-6 mb-3">
+                <div class="candidat-card">
+                    <div class="d-flex justify-content-between">
+                        <h5>{{ talent.prenom }} {{ talent.nom }}</h5>
+                        <span class="match-badge">{{ talent.score|default:75 }}%</span>
+                    </div>
+                    <p class="text-muted">{{ talent.competences|truncatechars:120 }}</p>
+                    <div class="btn-actions">
+                        <a href="#" class="btn-app sm outline">Voir profil</a>
+                        <a href="#" class="btn-app sm">Contacter</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="padding:40px 20px; text-align:center; color:var(--hint);">
+            Aucun talent recommandé pour le moment.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
 <script>
-let currentView = 'list';
-
-// Personnalisation du message de bienvenue (optionnel)
-function personalizeWelcome() {
-    const hour = new Date().getHours();
-    const header = document.querySelector('.dashboard-header h1');
-    if (header) {
-        if (hour < 12) {
-            header.innerHTML = '☀️ Bonne matinée, Recruteur';
-        } else if (hour < 18) {
-            header.innerHTML = '⛅ Bon après-midi, Recruteur';
-        } else {
-            header.innerHTML = '🌙 Bonne soirée, Recruteur';
-        }
-    }
-}
-
-// Filtrage par statistiques
-function filterTalents(type) {
-    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-    
-    // Animation des statistiques
-    document.querySelectorAll('.stat-card').forEach(card => {
-        card.style.transform = 'scale(1)';
-        card.style.borderColor = '#333';
-    });
-    
-    if (type !== 'all') {
-        // Logique de filtrage selon le type
-        if (type === 'match') {
-            sortCandidats('match');
-        } else if (type === 'recent') {
-            sortCandidats('date');
-        }
-    }
-}
-
-// Tri des candidats
-function sortCandidats() {
-    const sortBy = document.getElementById('sortSelect').value;
-    const container = document.getElementById('candidats-container');
-    if (!container) return;
-    
-    const candidats = Array.from(container.children);
-    
-    candidats.sort((a, b) => {
-        if (sortBy === 'date') {
-            return (parseInt(b.dataset.date) || 0) - (parseInt(a.dataset.date) || 0);
-        } else if (sortBy === 'match') {
-            return (parseInt(b.dataset.score) || 0) - (parseInt(a.dataset.score) || 0);
-        } else if (sortBy === 'nom') {
-            return (a.dataset.nom || '').localeCompare(b.dataset.nom || '');
-        }
-    });
-    
-    // Réorganiser
-    container.innerHTML = '';
-    candidats.forEach(c => container.appendChild(c));
-}
-
-// Recherche de candidats
-function searchCandidats() {
-    const searchText = document.getElementById('searchInput').value.toLowerCase();
-    
-    document.querySelectorAll('.candidat-card').forEach(card => {
-        const nom = card.dataset.nom ? card.dataset.nom.toLowerCase() : '';
-        if (nom.includes(searchText)) {
-            card.style.display = 'block';
-        } else {
-            card.style.display = 'none';
-        }
-    });
-}
-
-// Changer la vue (grille/liste)
-function toggleView() {
-    const container = document.getElementById('candidats-container');
-    const icon = document.getElementById('viewIcon');
-    
-    if (currentView === 'list') {
-        container.className = 'row';
-        document.querySelectorAll('.candidat-card').forEach(card => {
-            card.className = 'candidat-card col-md-6';
-        });
-        icon.className = 'fa fa-th-list';
-        currentView = 'grid';
+function toggleEditMode() {
+    const section = document.getElementById('profile-form-section');
+    if (section.style.display === 'none' || section.style.display === '') {
+        section.style.display = 'block';
+        section.scrollIntoView({ behavior: 'smooth' });
     } else {
-        container.className = '';
-        document.querySelectorAll('.candidat-card').forEach(card => {
-            card.className = 'candidat-card';
-        });
-        icon.className = 'fa fa-th-large';
-        currentView = 'list';
+        section.style.display = 'none';
     }
 }
 
-// Validation du formulaire
-document.getElementById('profile-form')?.addEventListener('submit', function(e) {
-    const submitBtn = document.getElementById('submit-btn');
-    if(submitBtn){    
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Enregistrement en cours...';
-    }    
-});
-
-// Initialisation
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Dashboard recruteur chargé');
-    personalizeWelcome();
-    
-    // Animation d'entrée
-    document.querySelectorAll('.candidat-card').forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
-        setTimeout(() => {
-            card.style.transition = 'all 0.5s ease';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-        }, index * 100);
-    });
-});
-
-// Toggle du formulaire d'offre d'emploi
 function toggleOffreForm() {
-    const offreSection = document.getElementById('offre-section');
-    if (offreSection.style.display === 'none' || offreSection.style.display === '') {
-        offreSection.style.display = 'block';
-        offreSection.scrollIntoView({ behavior: 'smooth' });
-    } else {
-        offreSection.style.display = 'none';
-    }
+    alert("Fonctionnalité de publication d'offre en cours de développement.\n\nTu peux créer une page dédiée pour publier une offre.");
+    // Plus tard : rediriger vers une page de création d'offre
+    // window.location.href = "{% url 'myAppli:publier_offre_emploi' %}";
 }
 
-// Validation du formulaire d'offre
-document.getElementById('offre-form')?.addEventListener('submit', function(e) {
-    const submitBtn = document.getElementById('publier-offre-btn');
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Publication en cours...';
-    }    
-});
-
+// Loader sur soumission du profil
+const form = document.getElementById('profile-form');
+if (form) {
+    form.addEventListener('submit', function() {
+        const btn = document.getElementById('submit-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Enregistrement...';
+    });
+}
 </script>
 {% endblock %}
