@@ -1,0 +1,333 @@
+{% extends "base_app.html" %}
+{% load static %}
+
+{% block title %}Choisissez votre rôle - FasoIA{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #1ed760;
+        --primary-dark: #15b050;
+        --secondary-color: #121212;
+        --card-bg: #1e1e1e;
+        --border-color: #333;
+        --text-primary: #ffffff;
+        --text-secondary: #b3b3b3;
+    }
+    
+    body {
+        background: var(--secondary-color);
+        color: var(--text-primary);
+        min-height: 100vh;
+    }
+    
+    .choice-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0px 20px;
+    }
+    
+    /* En-tête */
+    .welcome-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: var(--card-bg);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+    }
+    
+    .welcome-header h1 {
+        font-size: 42px;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+    }
+    
+    .welcome-header p {
+        font-size: 18px;
+        color: var(--text-secondary);
+    }
+    
+    /* Cartes de choix */
+    .choice-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+        gap: 40px;
+        margin-top: 20px;
+    }
+    
+    .choice-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 45px 35px;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        color: var(--text-primary);
+        display: block;
+        position: relative;
+    }
+    
+    .choice-card:hover {
+        transform: translateY(-8px);
+        border-color: var(--primary-color);
+        box-shadow: 0 15px 30px rgba(30, 215, 96, 0.15);
+    }
+    
+    .card-icon {
+        font-size: 4.5rem;
+        color: var(--primary-color);
+        margin-bottom: 25px;
+    }
+    
+    .choice-card h2 {
+        font-size: 26px;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+    
+    .choice-card p {
+        color: var(--text-secondary);
+        margin-bottom: 25px;
+        line-height: 1.6;
+        font-size: 14px;
+    }
+    
+    .features-list {
+        text-align: left;
+        margin: 25px 0;
+        padding: 0;
+        list-style: none;
+    }
+    
+    .features-list li {
+        margin: 12px 0;
+        color: var(--text-secondary);
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .features-list li i {
+        color: var(--primary-color);
+        font-size: 14px;
+        width: 20px;
+    }
+    
+    .btn-choice {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: transparent;
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+        padding: 10px 28px;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 14px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        margin-top: 15px;
+        cursor: pointer;
+    }
+    
+    .choice-card:hover .btn-choice {
+        background: var(--primary-color);
+        color: black;
+    }
+    
+    /* Badge recommandé */
+    .recommended-badge {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: var(--primary-color);
+        color: black;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: bold;
+    }
+    
+    /* Section plus tard */
+    .skip-link {
+        text-align: center;
+        margin-top: 50px;
+    }
+    
+    .skip-link a {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 14px;
+        padding: 10px 20px;
+        border-radius: 30px;
+        background: rgba(255, 255, 255, 0.03);
+        transition: all 0.3s ease;
+    }
+    
+    .skip-link a:hover {
+        color: var(--primary-color);
+        background: rgba(30, 215, 96, 0.1);
+    }
+    
+    /* Animation d'entrée */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .choice-card {
+        animation: fadeInUp 0.5s ease forwards;
+        opacity: 0;
+    }
+    
+    .choice-card:nth-child(1) {
+        animation-delay: 0.1s;
+    }
+    
+    .choice-card:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .choice-container {
+            padding: 40px 20px;
+        }
+        
+        .welcome-header {
+            padding: 30px 20px;
+            margin-bottom: 40px;
+        }
+        
+        .welcome-header h1 {
+            font-size: 28px;
+        }
+        
+        .welcome-header p {
+            font-size: 16px;
+        }
+        
+        .choice-grid {
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+        
+        .choice-card {
+            padding: 35px 25px;
+        }
+        
+        .choice-card h2 {
+            font-size: 22px;
+        }
+        
+        .card-icon {
+            font-size: 3.5rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .welcome-header h1 {
+            font-size: 24px;
+        }
+        
+        .features-list li {
+            font-size: 12px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="choice-container">
+    <div class="welcome-header">
+        <h1>Bienvenue, {{ particulier.prenom }} {{ particulier.nom }} !</h1>
+        <p>Choisissez comment vous souhaitez utiliser FasoIA</p>
+    </div>
+
+    <div class="choice-grid">
+        <!-- Carte Demandeur d'emploi -->
+        <a href="{% url 'myAppli:activer_profil_candidat' %}" class="choice-card">
+            {% if not a_profil_candidat %}
+            <div class="recommended-badge">
+                <i class="fa fa-star"></i> Recommandé
+            </div>
+            {% endif %}
+            <div class="card-icon">
+                <i class="fa fa-user-graduate"></i>
+            </div>
+            <h2>Je cherche un emploi</h2>
+            <p>Accédez aux offres et postulez facilement</p>
+            
+            <ul class="features-list">
+                <li><i class="fa fa-check-circle"></i> Parcourir les offres d'emploi</li>
+                <li><i class="fa fa-check-circle"></i> Postuler en un clic</li>
+                <li><i class="fa fa-check-circle"></i> Suivre vos candidatures</li>
+                <li><i class="fa fa-check-circle"></i> Recevoir des recommandations IA</li>
+                <li><i class="fa fa-check-circle"></i> Créer et gérer vos CV</li>
+            </ul>
+            
+            <span class="btn-choice">
+                Commencer <i class="fa fa-arrow-right"></i>
+            </span>
+        </a>
+
+        <!-- Carte Recruteur -->
+        <a href="{% url 'myAppli:activer_profil_recruteur' %}" class="choice-card">
+            <div class="card-icon">
+                <i class="fa fa-building"></i>
+            </div>
+            <h2>Je recrute des talents</h2>
+            <p>Trouvez les meilleurs profils</p>
+            
+            <ul class="features-list">
+                <li><i class="fa fa-check-circle"></i> Publier des offres d'emploi</li>
+                <li><i class="fa fa-check-circle"></i> Gérer les candidatures</li>
+                <li><i class="fa fa-check-circle"></i> Rechercher des talents</li>
+                <li><i class="fa fa-check-circle"></i> Développer votre réseau</li>
+                <li><i class="fa fa-check-circle"></i> Analyser les candidatures</li>
+            </ul>
+            
+            <span class="btn-choice">
+                Commencer <i class="fa fa-arrow-right"></i>
+            </span>
+        </a>
+    </div>
+    
+    <!-- Option pour ceux qui veulent activer les deux plus tard -->
+    <div class="skip-link">
+        <a href="{% url 'myAppli:home' %}">
+            <i class="fa fa-clock-o"></i> Je choisis plus tard
+        </a>
+    </div>
+</div>
+
+<script>
+// Animation d'entrée simple
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.choice-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.4s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}
