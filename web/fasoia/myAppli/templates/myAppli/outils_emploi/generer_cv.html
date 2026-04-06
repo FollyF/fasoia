@@ -1,566 +1,686 @@
 {% extends "base_app.html" %}
 {% load static %}
 
-{% block title %}Générateur de CV - FasoIA{% endblock %}
+{% block title %}FASOIA — Générateur de CV{% endblock %}
+{% block breadcrumb %}Générateur de CV{% endblock %}
 
-{% block extra_css %}
+{% block app_extra_css %}
 <style>
-    :root {
-        --primary-color: #1ed760;
-        --secondary-color: #121212;
-        --card-bg: #1e1e1e;
-        --text-primary: #ffffff;
-        --text-secondary: #b3b3b3;
+  /* ===== EN-TÊTE ===== */
+  .dash-header {
+    background: var(--ink);
+    padding: 24px 28px;
+    margin-bottom: 20px;
+    border-bottom: 3px solid var(--red);
+  }
+  .dash-header h1 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--red);
+    line-height: 1.1;
+    margin-bottom: 4px;
+  }
+  .dash-header p { font-size: 13px; color: rgba(255,255,255,0.45); margin: 0; }
+
+  /* ===== BANNIÈRES ===== */
+  .info-banner {
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--teal);
+    background: #F0FDF4;
+    font-size: 12px;
+    color: #14532D;
+    line-height: 1.5;
+  }
+  .info-banner i { flex-shrink: 0; color: var(--teal); margin-top: 2px; }
+  .info-banner a { color: var(--teal); font-weight: 700; text-decoration: underline; }
+
+  .edit-banner {
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--amber);
+    background: #FFFBEB;
+    font-size: 12px;
+    color: #92400E;
+  }
+  .edit-banner i { flex-shrink: 0; color: var(--amber); }
+
+  /* ===== SECTIONS ===== */
+  .form-section-block {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .form-section-block:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+  .section-num {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .section-num .num {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--border);
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .section-num h3 {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0;
+    white-space: nowrap;
+  }
+  .section-line { flex: 1; height: 1px; background: var(--border); min-width: 0; }
+
+  /* ===== GRILLE STYLES ===== */
+  .style-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  .style-option {
+    border: 1px solid var(--border);
+    padding: 12px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--surface);
+    position: relative;
+  }
+  .style-option:hover { border-color: var(--ink); }
+  .style-option.selected {
+    border-color: var(--ink);
+    border-width: 2px;
+    background: var(--cream);
+  }
+  .style-option.selected::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--red);
+  }
+  .style-option.premium-verrouille { opacity: 0.55; cursor: not-allowed; }
+  .style-name { font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+  .style-badges { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; margin-bottom: 6px; }
+  .badge-populaire { background: var(--red);   color: #fff; font-size: 8px; font-weight: 700; padding: 2px 5px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .badge-premium   { background: var(--amber); color: #fff; font-size: 8px; font-weight: 700; padding: 2px 5px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .preview-btn {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--muted);
+    padding: 3px 7px; border: 1px solid var(--border);
+    display: inline-block; transition: all 0.15s; cursor: pointer;
+  }
+  .preview-btn:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* ===== GRILLE FORMULAIRE ===== */
+  .form-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  .form-grid-2 .full { grid-column: 1 / -1; }
+  .field-note { font-size: 11px; color: var(--hint); margin-top: 4px; }
+  .required-star::after { content: " *"; color: var(--red); }
+
+  /* ===== PHOTO ===== */
+  .photo-drop {
+    border: 1.5px dashed var(--border);
+    padding: 20px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    background: var(--cream);
+  }
+  .photo-drop:hover { border-color: var(--ink); }
+  .photo-drop input[type="file"] { display: none; }
+  .photo-drop-icon { font-size: 24px; color: var(--hint); margin-bottom: 8px; }
+  .photo-drop p { font-size: 11px; color: var(--muted); margin: 6px 0 0; }
+  .photo-preview-wrap { display: none; align-items: center; gap: 14px; margin-top: 12px; flex-wrap: wrap; }
+  .photo-preview-wrap.visible { display: flex; }
+  .photo-preview-img { width: 64px; height: 64px; border: 1.5px solid var(--border); object-fit: cover; flex-shrink: 0; }
+  .photo-meta { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+
+  /* ===== FORMAT ===== */
+  .format-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .format-btn {
+    border: 1px solid var(--border);
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--surface);
+    font-size: 13px; font-weight: 700;
+    color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px;
+  }
+  .format-btn:hover { border-color: var(--ink); color: var(--ink); }
+  .format-btn.selected { border-color: var(--ink); border-width: 2px; color: var(--ink); background: var(--cream); }
+  .format-btn i { font-size: 15px; }
+
+  /* ===== BOUTONS ===== */
+  .actions-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .actions-row .btn-app { min-width: 180px; justify-content: center; }
+
+  /* ===== MODAL ===== */
+  .modal-content { border-radius: 0; border: 1px solid var(--border); background: var(--surface); }
+  .modal-header {
+    background: var(--cream);
+    border-bottom: 2px solid var(--ink);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-title { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--ink); }
+  .modal-close {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--muted); width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 14px; transition: all 0.15s;
+  }
+  .modal-close:hover { border-color: var(--ink); color: var(--ink); }
+  .modal-body { padding: 0; }
+  .preview-iframe { width: 100%; height: 500px; border: none; display: block; background: #fff; }
+
+  /* ===== LOADER ===== */
+  .loading-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(28,25,23,0.75);
+    z-index: 2000; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .loading-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--red);
+    padding: 32px 28px;
+    text-align: center;
+    width: 100%; max-width: 320px;
+  }
+  .loading-box h3 { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .loading-box p { font-size: 12px; color: var(--muted); }
+  .loading-spinner {
+    width: 40px; height: 40px;
+    border: 2px solid var(--border); border-top-color: var(--red);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 18px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===========================
+     RESPONSIVE
+  =========================== */
+  @media (max-width: 768px) {
+    .dash-header { padding: 18px 16px; }
+    .dash-header h1 { font-size: 22px; }
+
+    /* Formulaire 1 colonne */
+    .form-grid-2 {
+      grid-template-columns: 1fr;
+    }
+    .form-grid-2 .full { grid-column: 1; }
+
+    /* Styles en 2 colonnes sur mobile */
+    .style-grid {
+      grid-template-columns: repeat(2, 1fr);
     }
 
-    body { background-color: var(--secondary-color); color: var(--text-primary); }
+    /* Format boutons empilés */
+    .format-grid { grid-template-columns: 1fr; }
 
-    .cv-container { max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
+    /* Boutons pleine largeur */
+    .actions-row { flex-direction: column; align-items: stretch; }
+    .actions-row .btn-app { width: 100%; min-width: unset; }
 
-    .info-message {
-        background-color: rgba(30, 215, 96, 0.1);
-        border: 1px solid #1ed760;
-        border-radius: 5px;
-        padding: 30px;
-        margin-bottom: 20px;
-        color: white;
-        text-align: center;
-    }
+    /* Section numéro réduit */
+    .section-num .num { font-size: 22px; }
+    .section-num h3 { font-size: 15px; white-space: normal; }
 
-    .style-selector { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    /* Modal plein écran */
+    .modal-dialog { margin: 8px; }
+    .preview-iframe { height: 380px; }
 
-    .style-option {
-        flex: 1; min-width: 120px; padding: 15px;
-        border: 1px solid #333; border-radius: 8px;
-        text-align: center; cursor: pointer;
-        transition: all 0.3s ease; background: #2a2a2a; color: white;
-    }
-    .style-option:hover { border-color: var(--primary-color); transform: translateY(-2px); }
-    .style-option.selected { background: var(--primary-color); border-color: var(--primary-color); color: black; }
+    /* Photo preview wrap */
+    .photo-preview-wrap { gap: 10px; }
+  }
 
+  @media (max-width: 480px) {
+    /* Styles en 1 colonne sur très petit écran */
+    .style-grid { grid-template-columns: 1fr; }
+
+    .dash-header h1 { font-size: 20px; }
+
+    /* Ligne section masquée sur xs */
+    .section-line { display: none; }
+
+    .preview-iframe { height: 300px; }
+  }
+
+  /* Amélioration tactile */
+  @media (hover: none) and (pointer: coarse) {
+    .style-option,
+    .format-btn,
+    .btn-app,
     .preview-btn {
-        margin-top: 5px; font-size: 0.9rem;
-        color: var(--primary-color); cursor: pointer;
-        background: rgba(30, 215, 96, 0.1);
-        padding: 4px 8px; border-radius: 5px; display: inline-block;
+      min-height: 44px;
     }
-    .preview-btn:hover { background: var(--primary-color); color: black; }
-
-    .cv-form { background: var(--card-bg); border-radius: 15px; padding: 30px; }
-
-    .form-section { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #333; }
-    .form-section h3 { color: var(--primary-color); margin-bottom: 20px; }
-
-    .form-group { margin-bottom: 20px; }
-    .form-group label { display: block; color: white; margin-bottom: 8px; font-weight: 500; }
-
-    .form-control {
-        width: 100%; background-color: #2a2a2a;
-        border: 1px solid #333; border-radius: 5px;
-        padding: 12px; color: white;
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+      font-size: 16px; /* évite le zoom iOS */
     }
-    .form-control:focus { border-color: var(--primary-color); outline: none; }
-    textarea.form-control { resize: vertical; min-height: 100px; }
-
-    /* ── Photo ── */
-    .photo-upload-area {
-        border: 2px dashed #333;
-        border-radius: 10px;
-        padding: 20px;
-        text-align: center;
-        transition: border-color 0.3s;
-        cursor: pointer;
-    }
-    .photo-upload-area:hover { border-color: var(--primary-color); }
-    .photo-upload-area input[type="file"] { display: none; }
-
-    .photo-preview-wrap {
-        display: none;
-        justify-content: center;
-        align-items: center;
-        gap: 15px;
-        margin-top: 12px;
-    }
-    .photo-preview-wrap.visible { display: flex; }
-
-    .photo-preview-img {
-        width: 90px; height: 90px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 3px solid var(--primary-color);
-    }
-
-    .photo-remove-btn {
-        background: #e74c3c; color: white;
-        border: none; border-radius: 20px;
-        padding: 6px 14px; cursor: pointer;
-        font-size: 12px;
-    }
-    .photo-remove-btn:hover { background: #c0392b; }
-
-    .photo-label-btn {
-        display: inline-block;
-        background: rgba(30, 215, 96, 0.1);
-        color: var(--primary-color);
-        border: 1px solid var(--primary-color);
-        border-radius: 20px;
-        padding: 10px 20px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: all 0.3s;
-    }
-    .photo-label-btn:hover { background: var(--primary-color); color: black; }
-
-    /* ── Format ── */
-    .format-selector { display: flex; gap: 10px; margin: 20px 0; }
-    .format-btn {
-        flex: 1; padding: 12px; border: 1px solid #333;
-        border-radius: 8px; background: #2a2a2a; color: white;
-        cursor: pointer; transition: all 0.3s; text-align: center;
-    }
-    .format-btn:hover { border-color: var(--primary-color); }
-    .format-btn.selected { background: var(--primary-color); color: black; }
-
-    /* ── Bouton générer ── */
-    .btn-generate {
-        background-color: var(--primary-color); color: black;
-        border: none; border-radius: 25px; padding: 15px 40px;
-        font-size: 16px; font-weight: 600; cursor: pointer;
-        transition: all 0.3s; width: 100%;
-    }
-    .btn-generate:hover:not(:disabled) { background-color: #15b050; transform: scale(1.02); }
-    .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    /* ── Modal ── */
-    .modal-content { background: var(--card-bg); color: white; border: 1px solid #333; }
-    .modal-header { border-bottom: 1px solid #333; padding: 15px 20px; }
-    .modal-header .close { color: white; font-size: 28px; opacity: 0.8; background: none; border: none; float: right; }
-    .modal-header .close:hover { color: var(--primary-color); }
-    .modal-title { color: var(--primary-color); }
-    .modal-body { padding: 20px; }
-    .preview-iframe { width: 100%; height: 500px; border: none; background: white; border-radius: 5px; }
-
-    /* ── Loader ── */
-    .loading {
-        display: none; position: fixed; z-index: 2000;
-        left: 0; top: 0; width: 100%; height: 100%;
-        background-color: rgba(0,0,0,0.8);
-        align-items: center; justify-content: center;
-    }
-    .loading-content {
-        text-align: center; color: white; max-width: 400px;
-        padding: 30px; background: var(--card-bg);
-        border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
-    .spinner {
-        border: 5px solid #f3f3f3; border-top: 5px solid var(--primary-color);
-        border-radius: 50%; width: 60px; height: 60px;
-        animation: spin 1s linear infinite; margin: 20px auto;
-    }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-    .badge-premium { background: gold; color: black; font-size: 10px; padding: 2px 6px; border-radius: 10px; margin-left: 5px; }
-    .badge-populaire { background: #ff4444; color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; margin-left: 5px; }
-    .style-option.premium-verrouille { opacity: 0.6; cursor: not-allowed; }
-
-    .row { display: flex; flex-wrap: wrap; gap: 15px; }
-    .col-md-6 { flex: 0 0 calc(50% - 15px); }
-    @media (max-width: 768px) {
-        .col-md-6 { flex: 0 0 100%; }
-        .cv-form { padding: 20px; }
-    }
-    .btn-secondary:hover { background-color: #5a6268 !important; transform: scale(1.02); }
-    .btn-warning:hover { background-color: #e0a800 !important; transform: scale(1.02); }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="cv-container">
 
-    <div class="info-message">
-        {% if user.is_authenticated %}
-            <span style="color: #1ed760;">
-                <i class="fa fa-save"></i> ✓ Mode sauvegarde automatique activé
-            </span>
-        {% else %}
-            <i class="fa fa-info-circle"></i>
-            Vous n'avez pas besoin de compte pour générer votre CV.
-            <a href="{% url 'myAppli:inscription' %}" style="color: #1ed760; text-decoration: underline;">Inscrivez-vous</a>
-            pour sauvegarder vos CV et postuler aux offres.
-        {% endif %}
-    </div>
-
-    <!-- ✅ enctype="multipart/form-data" obligatoire pour la photo -->
-    <form method="POST" class="cv-form" id="cvForm"
-          enctype="multipart/form-data" target="_blank">
-        {% csrf_token %}
-
-        {% if is_edit_mode %}
-        <div class="alert alert-warning"
-             style="background: rgba(255,193,7,0.1); border: 1px solid #ffc107; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-            <i class="fa fa-edit"></i> <strong>Mode édition</strong> — Vous modifiez : {{ cv_a_modifier.titre }}
-            <input type="hidden" name="cv_id" value="{{ cv_a_modifier.id }}">
-        </div>
-        {% endif %}
-
-        <!-- 1. STYLE -->
-        <div class="form-section">
-            <h3>1. Choisissez un style</h3>
-            <div class="style-selector">
-                {% for modele in modeles_cv %}
-                <div class="style-option
-                    {% if forloop.first %}selected{% endif %}
-                    {% if modele.est_premium and not user.is_authenticated %}premium-verrouille{% endif %}"
-                    data-style="{{ modele.categorie }}"
-                    onclick="selectStyle(this, '{{ modele.categorie }}', {{ modele.est_premium|yesno:'true,false' }})">
-                    {{ modele.nom }}
-                    {% if modele.est_populaire %}<span class="badge-populaire">🔥 Populaire</span>{% endif %}
-                    {% if modele.est_premium %}<span class="badge-premium">⭐ Premium</span>{% endif %}
-                    <div class="preview-btn"
-                         onclick="showPreview('{{ modele.categorie }}'); event.stopPropagation();">
-                        👁️ Aperçu
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            <input type="hidden" name="style" id="styleInput" value="executive">
-        </div>
-
-        <!-- 2. INFOS PERSONNELLES + PHOTO -->
-        <div class="form-section">
-            <h3>2. Informations personnelles</h3>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Prénom *</label>
-                        <input type="text" name="prenom" class="form-control" required>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Nom *</label>
-                        <input type="text" name="nom" class="form-control" required>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" name="email" class="form-control">
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Téléphone *</label>
-                        <input type="text" name="telephone" class="form-control" required>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Adresse</label>
-                        <input type="text" name="adresse" class="form-control">
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Ville</label>
-                        <input type="text" name="ville" class="form-control">
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Pays</label>
-                        <input type="text" name="pays" class="form-control">
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Permis de conduire</label>
-                        <input type="text" name="permis" class="form-control" placeholder="Ex: B">
-                    </div>
-                </div>
-
-                <!-- ── PHOTO DE PROFIL ── -->
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Photo de profil <span style="color:var(--text-secondary);font-weight:300;">(optionnelle)</span></label>
-                        <div class="photo-upload-area" onclick="document.getElementById('photoInput').click()">
-                            <input type="file" id="photoInput" name="photo"
-                                   accept="image/jpeg,image/png,image/webp"
-                                   onchange="handlePhotoChange(this)">
-                            <div id="photoPlaceholder">
-                                <div style="font-size:36px;margin-bottom:8px;">📷</div>
-                                <label class="photo-label-btn">Choisir une photo</label>
-                                <p style="color:var(--text-secondary);font-size:12px;margin-top:8px;">
-                                    JPG, PNG ou WEBP · Max 5 Mo
-                                </p>
-                            </div>
-                        </div>
-                        <!-- Prévisualisation -->
-                        <div class="photo-preview-wrap" id="photoPreviewWrap">
-                            <img id="photoPreviewImg" class="photo-preview-img" src="" alt="Aperçu">
-                            <div>
-                                <p style="color:white;margin-bottom:8px;font-size:13px;">Photo sélectionnée ✅</p>
-                                <button type="button" class="photo-remove-btn" onclick="removePhoto()">
-                                    ✕ Supprimer
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- 3. PROFIL -->
-        <div class="form-section">
-            <h3>3. Profil professionnel</h3>
-            <div class="form-group">
-                <label>Résumé / Objectif</label>
-                <textarea name="resume" class="form-control" rows="3"
-                          placeholder="Décrivez votre profil en quelques lignes..."></textarea>
-            </div>
-            <div class="form-group">
-                <label>Compétences <span style="color:var(--text-secondary)">(séparées par des virgules)</span></label>
-                <input type="text" name="competences" class="form-control"
-                       placeholder="Ex: Python, Django, JavaScript, Gestion de projet">
-            </div>
-            <div class="form-group">
-                <label>Langues <span style="color:var(--text-secondary)">(séparées par des virgules)</span></label>
-                <input type="text" name="langues" class="form-control"
-                       placeholder="Ex: Français (courant), Anglais (professionnel)">
-            </div>
-            <div class="form-group">
-                <label>Centres d'intérêt <span style="color:var(--text-secondary)">(séparés par des virgules)</span></label>
-                <input type="text" name="centres_interet" class="form-control"
-                       placeholder="Ex: Sport, Lecture, Voyages">
-            </div>
-        </div>
-
-        <!-- 4. EXPÉRIENCES -->
-        <div class="form-section">
-            <h3>4. Expériences professionnelles</h3>
-            <p style="color:var(--text-secondary);margin-bottom:10px;">
-                <i class="fa fa-info-circle"></i>
-                Format : <strong>Poste | Entreprise | Date début | Date fin | Description</strong>
-                (une ligne par expérience)
-            </p>
-            <div class="form-group">
-                <textarea name="experiences" class="form-control" rows="5"
-                          placeholder="Ex: Développeur Python | TechCorp | 2020 | 2023 | Développement d'applications web..."></textarea>
-            </div>
-        </div>
-
-        <!-- 5. FORMATIONS -->
-        <div class="form-section">
-            <h3>5. Formations</h3>
-            <p style="color:var(--text-secondary);margin-bottom:10px;">
-                <i class="fa fa-info-circle"></i>
-                Format : <strong>Diplôme | Établissement | Année</strong> (une ligne par formation)
-            </p>
-            <div class="form-group">
-                <textarea name="formations" class="form-control" rows="4"
-                          placeholder="Ex: Master en Informatique | Université de Ouagadougou | 2020"></textarea>
-            </div>
-        </div>
-
-        <!-- 6. FORMAT -->
-        <div class="form-section">
-            <h3>6. Choisissez le format</h3>
-            <div class="format-selector">
-                <div class="format-btn selected" data-format="pdf" onclick="selectFormat('pdf')">📄 PDF</div>
-                <div class="format-btn" data-format="docx" onclick="selectFormat('docx')">📝 Word (DOCX)</div>
-            </div>
-            <input type="hidden" name="format" id="formatInput" value="pdf">
-        </div>
-
-        <!-- BOUTONS -->
-        <div style="display:flex;justify-content:center;gap:15px;margin-top:20px;">
-            {% if is_edit_mode %}
-                <a href="{% url 'myAppli:mes_cvs' %}"
-                   style="background:#6c757d;color:white;border-radius:25px;padding:12px 30px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;">
-                    <i class="fa fa-times"></i> Annuler
-                </a>
-                <button type="submit"
-                        style="background:#ffc107;color:black;border-radius:25px;padding:12px 30px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-weight:600;">
-                    <i class="fa fa-save"></i> Mettre à jour
-                </button>
-            {% else %}
-                <button type="submit" id="generateBtn" class="btn-generate">
-                    <i class="fa fa-magic"></i> Générer mon CV
-                </button>
-            {% endif %}
-        </div>
-
-    </form>
+<!-- EN-TÊTE -->
+<div class="dash-header">
+  <h1>Générateur de CV</h1>
+  <p>Créez un CV professionnel en quelques minutes</p>
 </div>
 
-<!-- Modal aperçu -->
+<!-- BANNIÈRE INFO -->
+<div class="info-banner">
+  {% if user.is_authenticated %}
+    <i class="fa fa-circle-check"></i>
+    <span>Mode sauvegarde automatique activé — vos CV sont enregistrés dans votre espace.</span>
+  {% else %}
+    <i class="fa fa-circle-info"></i>
+    <span>
+      Vous n'avez pas besoin de compte pour générer votre CV.
+      <a href="{% url 'myAppli:inscription' %}">Inscrivez-vous</a>
+      pour sauvegarder vos CV et postuler aux offres.
+    </span>
+  {% endif %}
+</div>
+
+<!-- BANNIÈRE MODE ÉDITION -->
+{% if is_edit_mode %}
+<div class="edit-banner">
+  <i class="fa fa-pen"></i>
+  <span><strong>Mode édition</strong> — Vous modifiez : {{ cv_a_modifier.titre }}</span>
+</div>
+{% endif %}
+
+<!-- ===== FORMULAIRE ===== -->
+<form method="POST" class="card-edit" id="cvForm" enctype="multipart/form-data" target="_blank">
+  {% csrf_token %}
+  {% if is_edit_mode %}
+    <input type="hidden" name="cv_id" value="{{ cv_a_modifier.id }}">
+  {% endif %}
+
+  <!-- 01. STYLE -->
+  <div class="form-section-block">
+    <div class="section-num">
+      <div class="num">01</div>
+      <h3>Choisissez un style</h3>
+      <div class="section-line"></div>
+    </div>
+    <div class="style-grid">
+      {% for modele in modeles_cv %}
+      <div class="style-option
+          {% if forloop.first %}selected{% endif %}
+          {% if modele.est_premium and not user.is_authenticated %}premium-verrouille{% endif %}"
+          data-style="{{ modele.categorie }}"
+          onclick="selectStyle(this, '{{ modele.categorie }}', {{ modele.est_premium|yesno:'true,false' }})">
+        <div class="style-name">{{ modele.nom }}</div>
+        <div class="style-badges">
+          {% if modele.est_populaire %}<span class="badge-populaire">Populaire</span>{% endif %}
+          {% if modele.est_premium %}<span class="badge-premium">Premium</span>{% endif %}
+        </div>
+        <div class="preview-btn" onclick="showPreview('{{ modele.categorie }}'); event.stopPropagation();">
+          <i class="fa fa-eye"></i> Aperçu
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <input type="hidden" name="style" id="styleInput" value="executive">
+  </div>
+
+  <!-- 02. INFORMATIONS PERSONNELLES -->
+  <div class="form-section-block">
+    <div class="section-num">
+      <div class="num">02</div>
+      <h3>Informations personnelles</h3>
+      <div class="section-line"></div>
+    </div>
+    <div class="form-grid-2">
+      <div class="form-field">
+        <label class="required-star">Prénom</label>
+        <input type="text" name="prenom" placeholder="Votre prénom" required>
+      </div>
+      <div class="form-field">
+        <label class="required-star">Nom</label>
+        <input type="text" name="nom" placeholder="Votre nom" required>
+      </div>
+      <div class="form-field">
+        <label>Email</label>
+        <input type="email" name="email" placeholder="nom@domaine.com">
+      </div>
+      <div class="form-field">
+        <label class="required-star">Téléphone</label>
+        <input type="tel" name="telephone" placeholder="+226 XX XX XX XX" required>
+      </div>
+      <div class="form-field">
+        <label>Adresse</label>
+        <input type="text" name="adresse" placeholder="Votre adresse">
+      </div>
+      <div class="form-field">
+        <label>Ville</label>
+        <input type="text" name="ville" placeholder="Ex: Ouagadougou">
+      </div>
+      <div class="form-field">
+        <label>Pays</label>
+        <input type="text" name="pays" placeholder="Ex: Burkina Faso">
+      </div>
+      <div class="form-field">
+        <label>Permis de conduire</label>
+        <input type="text" name="permis" placeholder="Ex: B">
+      </div>
+
+      <!-- PHOTO -->
+      <div class="form-field full">
+        <label>Photo de profil <span style="font-weight:400;color:var(--hint)">(optionnelle)</span></label>
+        <div class="photo-drop" onclick="document.getElementById('photoInput').click()">
+          <input type="file" id="photoInput" name="photo"
+                 accept="image/jpeg,image/png,image/webp"
+                 onchange="handlePhotoChange(this)">
+          <div id="photoPlaceholder">
+            <div class="photo-drop-icon"><i class="fa fa-camera"></i></div>
+            <span class="btn-app sm outline" style="pointer-events:none">Choisir une photo</span>
+            <p>JPG, PNG ou WEBP &middot; Max 5 Mo</p>
+          </div>
+        </div>
+        <div class="photo-preview-wrap" id="photoPreviewWrap">
+          <img id="photoPreviewImg" class="photo-preview-img" src="" alt="Aperçu">
+          <div>
+            <div class="photo-meta">Photo sélectionnée</div>
+            <button type="button" class="btn-app sm danger" onclick="removePhoto()">
+              <i class="fa fa-times"></i> Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 03. PROFIL PROFESSIONNEL -->
+  <div class="form-section-block">
+    <div class="section-num">
+      <div class="num">03</div>
+      <h3>Profil professionnel</h3>
+      <div class="section-line"></div>
+    </div>
+    <div class="form-grid-2">
+      <div class="form-field full">
+        <label>Résumé / Objectif</label>
+        <textarea name="resume" rows="3" placeholder="Décrivez votre profil en quelques lignes…"></textarea>
+      </div>
+      <div class="form-field">
+        <label>Compétences</label>
+        <input type="text" name="competences" placeholder="Python, Django, JavaScript…">
+        <div class="field-note">Séparez par des virgules</div>
+      </div>
+      <div class="form-field">
+        <label>Langues</label>
+        <input type="text" name="langues" placeholder="Français (courant), Anglais (professionnel)">
+        <div class="field-note">Séparez par des virgules</div>
+      </div>
+      <div class="form-field full">
+        <label>Centres d'intérêt</label>
+        <input type="text" name="centres_interet" placeholder="Sport, Lecture, Voyages…">
+        <div class="field-note">Séparez par des virgules</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 04. EXPÉRIENCES -->
+  <div class="form-section-block">
+    <div class="section-num">
+      <div class="num">04</div>
+      <h3>Expériences professionnelles</h3>
+      <div class="section-line"></div>
+    </div>
+    <div class="info-banner" style="margin-bottom:14px">
+      <i class="fa fa-circle-info"></i>
+      <span>Format : <strong>Poste | Entreprise | Date début | Date fin | Description</strong> — une ligne par expérience</span>
+    </div>
+    <div class="form-field">
+      <textarea name="experiences" rows="5"
+                placeholder="Développeur Python | TechCorp | 2020 | 2023 | Développement d'applications web…"></textarea>
+    </div>
+  </div>
+
+  <!-- 05. FORMATIONS -->
+  <div class="form-section-block">
+    <div class="section-num">
+      <div class="num">05</div>
+      <h3>Formations</h3>
+      <div class="section-line"></div>
+    </div>
+    <div class="info-banner" style="margin-bottom:14px">
+      <i class="fa fa-circle-info"></i>
+      <span>Format : <strong>Diplôme | Établissement | Année</strong> — une ligne par formation</span>
+    </div>
+    <div class="form-field">
+      <textarea name="formations" rows="4"
+                placeholder="Master en Informatique | Université de Ouagadougou | 2020"></textarea>
+    </div>
+  </div>
+
+  <!-- 06. FORMAT -->
+  <div class="form-section-block">
+    <div class="section-num">
+      <div class="num">06</div>
+      <h3>Format de téléchargement</h3>
+      <div class="section-line"></div>
+    </div>
+    <div class="format-grid">
+      <div class="format-btn selected" data-format="pdf" onclick="selectFormat('pdf')">
+        <i class="fa fa-file-pdf"></i> PDF
+      </div>
+      <div class="format-btn" data-format="docx" onclick="selectFormat('docx')">
+        <i class="fa fa-file-word"></i> Word (DOCX)
+      </div>
+    </div>
+    <input type="hidden" name="format" id="formatInput" value="pdf">
+  </div>
+
+  <!-- BOUTONS -->
+  <div class="actions-row">
+    {% if is_edit_mode %}
+      <a href="{% url 'myAppli:mes_cvs' %}" class="btn-app outline">
+        <i class="fa fa-times"></i> Annuler
+      </a>
+      <button type="submit" class="btn-app" style="background:var(--amber)">
+        <i class="fa fa-floppy-disk"></i> Mettre à jour le CV
+      </button>
+    {% else %}
+      <button type="submit" class="btn-app" id="generateBtn">
+        <i class="fa fa-wand-magic-sparkles"></i> Générer mon CV
+      </button>
+    {% endif %}
+  </div>
+
+</form>
+
+<!-- ===== MODAL APERÇU ===== -->
 <div class="modal fade" id="previewModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title">Aperçu du style</h4>
-            </div>
-            <div class="modal-body">
-                <iframe id="previewIframe" class="preview-iframe"></iframe>
-            </div>
-        </div>
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Aperçu du style</div>
+        <button type="button" class="modal-close" data-dismiss="modal"><i class="fa fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <iframe id="previewIframe" class="preview-iframe"></iframe>
+      </div>
     </div>
+  </div>
 </div>
 
-<!-- Loader -->
-<div id="loadingOverlay" class="loading">
-    <div class="loading-content">
-        <div class="spinner"></div>
-        <h3>Génération de votre CV...</h3>
-        <p style="color:var(--text-secondary);">Cela ne prendra que quelques secondes</p>
-    </div>
+<!-- ===== LOADER ===== -->
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="loading-box">
+    <div class="loading-spinner"></div>
+    <h3>Génération en cours…</h3>
+    <p>Votre CV sera prêt dans quelques secondes</p>
+  </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// ── Pré-remplissage en mode édition ──────────────────────────────────────────
-{% if donnees_init %}
-document.addEventListener('DOMContentLoaded', function() {
-    const donnees = {
-        prenom:          "{{ donnees_init.prenom|default:''|escapejs }}",
-        nom:             "{{ donnees_init.nom|default:''|escapejs }}",
-        email:           "{{ donnees_init.email|default:''|escapejs }}",
-        telephone:       "{{ donnees_init.telephone|default:''|escapejs }}",
-        adresse:         "{{ donnees_init.adresse|default:''|escapejs }}",
-        ville:           "{{ donnees_init.ville|default:''|escapejs }}",
-        pays:            "{{ donnees_init.pays|default:''|escapejs }}",
-        permis:          "{{ donnees_init.permis|default:''|escapejs }}",
-        resume:          "{{ donnees_init.resume|default:''|escapejs }}",
-        competences:     "{{ donnees_init.competences|default:''|escapejs }}",
-        langues:         "{{ donnees_init.langues|default:''|escapejs }}",
-        centres_interet: "{{ donnees_init.centres_interet|default:''|escapejs }}",
-        experiences:     "{{ donnees_init.experiences|default:''|escapejs }}",
-        formations:      "{{ donnees_init.formations|default:''|escapejs }}",
-        style:           "{{ donnees_init.style|default:'executive'|escapejs }}"
+  /* ===== PRÉ-REMPLISSAGE MODE ÉDITION ===== */
+  {% if donnees_init %}
+  document.addEventListener('DOMContentLoaded', function () {
+    var d = {
+      prenom:          "{{ donnees_init.prenom|default:''|escapejs }}",
+      nom:             "{{ donnees_init.nom|default:''|escapejs }}",
+      email:           "{{ donnees_init.email|default:''|escapejs }}",
+      telephone:       "{{ donnees_init.telephone|default:''|escapejs }}",
+      adresse:         "{{ donnees_init.adresse|default:''|escapejs }}",
+      ville:           "{{ donnees_init.ville|default:''|escapejs }}",
+      pays:            "{{ donnees_init.pays|default:''|escapejs }}",
+      permis:          "{{ donnees_init.permis|default:''|escapejs }}",
+      resume:          "{{ donnees_init.resume|default:''|escapejs }}",
+      competences:     "{{ donnees_init.competences|default:''|escapejs }}",
+      langues:         "{{ donnees_init.langues|default:''|escapejs }}",
+      centres_interet: "{{ donnees_init.centres_interet|default:''|escapejs }}",
+      experiences:     "{{ donnees_init.experiences|default:''|escapejs }}",
+      formations:      "{{ donnees_init.formations|default:''|escapejs }}",
+      style:           "{{ donnees_init.style|default:'executive'|escapejs }}"
     };
-
-    for (const [champ, valeur] of Object.entries(donnees)) {
-        const input = document.querySelector(`[name="${champ}"]`);
-        if (input && valeur && valeur !== 'None') {
-            input.value = valeur;
-        }
-    }
-
-    const styleOption = document.querySelector(`.style-option[data-style="${donnees.style}"]`);
-    if (styleOption) styleOption.click();
-});
-{% endif %}
-
-// ── Sélection style ───────────────────────────────────────────────────────────
-function selectStyle(element, style, isPremium) {
-    if (isPremium && !{{ user.is_authenticated|yesno:"true,false" }}) {
-        alert('Ce style est réservé aux membres premium. Inscrivez-vous pour y accéder.');
-        return;
-    }
-    document.querySelectorAll('.style-option').forEach(opt => opt.classList.remove('selected'));
-    element.classList.add('selected');
-    document.getElementById('styleInput').value = style;
-}
-
-// ── Sélection format ──────────────────────────────────────────────────────────
-function selectFormat(format) {
-    document.querySelectorAll('.format-btn').forEach(btn => {
-        btn.classList.toggle('selected', btn.dataset.format === format);
+    Object.entries(d).forEach(function(kv) {
+      var el = document.querySelector('[name="' + kv[0] + '"]');
+      if (el && kv[1] && kv[1] !== 'None') el.value = kv[1];
     });
-    document.getElementById('formatInput').value = format;
-}
+    var styleEl = document.querySelector('.style-option[data-style="' + d.style + '"]');
+    if (styleEl) styleEl.click();
+  });
+  {% endif %}
 
-// ── Gestion photo ─────────────────────────────────────────────────────────────
-function handlePhotoChange(input) {
-    if (!input.files || !input.files[0]) return;
-
-    const file = input.files[0];
-
-    // Validation taille (5 Mo max)
-    if (file.size > 5 * 1024 * 1024) {
-        alert('La photo est trop lourde (max 5 Mo). Veuillez choisir une image plus légère.');
-        input.value = '';
-        return;
+  /* ===== SÉLECTION STYLE ===== */
+  function selectStyle(el, style, isPremium) {
+    if (isPremium && !{{ user.is_authenticated|yesno:"true,false" }}) {
+      alert('Ce style est réservé aux membres. Inscrivez-vous pour y accéder.');
+      return;
     }
+    document.querySelectorAll('.style-option').forEach(function(o) { o.classList.remove('selected'); });
+    el.classList.add('selected');
+    document.getElementById('styleInput').value = style;
+  }
 
-    const reader = new FileReader();
+  /* ===== SÉLECTION FORMAT ===== */
+  function selectFormat(fmt) {
+    document.querySelectorAll('.format-btn').forEach(function(b) {
+      b.classList.toggle('selected', b.dataset.format === fmt);
+    });
+    document.getElementById('formatInput').value = fmt;
+  }
+
+  /* ===== GESTION PHOTO ===== */
+  function handlePhotoChange(input) {
+    if (!input.files || !input.files[0]) return;
+    var file = input.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Photo trop lourde (max 5 Mo). Choisissez une image plus légère.');
+      input.value = '';
+      return;
+    }
+    var reader = new FileReader();
     reader.onload = function(e) {
-        document.getElementById('photoPreviewImg').src   = e.target.result;
-        document.getElementById('photoPreviewWrap').classList.add('visible');
-        document.getElementById('photoPlaceholder').style.display = 'none';
+      document.getElementById('photoPreviewImg').src = e.target.result;
+      document.getElementById('photoPreviewWrap').classList.add('visible');
+      document.getElementById('photoPlaceholder').style.display = 'none';
     };
     reader.readAsDataURL(file);
-}
+  }
 
-function removePhoto() {
+  function removePhoto() {
     document.getElementById('photoInput').value = '';
     document.getElementById('photoPreviewImg').src = '';
     document.getElementById('photoPreviewWrap').classList.remove('visible');
     document.getElementById('photoPlaceholder').style.display = 'block';
-}
+  }
 
-// ── Aperçu style ──────────────────────────────────────────────────────────────
-function showPreview(style) {
+  /* ===== APERÇU STYLE ===== */
+  function showPreview(style) {
     $('#previewModal').modal('show');
-    const iframe = document.getElementById('previewIframe');
+    var iframe = document.getElementById('previewIframe');
+    iframe.srcdoc = '<html><body style="background:#FAFAF9;padding:40px;text-align:center;font-family:sans-serif;color:#78716C"><p style="margin-top:80px">Chargement de l\'aperçu…</p></body></html>';
+    fetch('/cv/apercu/style/' + style + '/')
+      .then(function(r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+      .then(function(html) { iframe.srcdoc = html; })
+      .catch(function() {
+        iframe.srcdoc = '<html><body style="padding:40px;color:#C0392B">Impossible de charger l\'aperçu.</body></html>';
+      });
+  }
 
-    iframe.srcdoc = `<html><body style="background:white;padding:40px;text-align:center;font-family:Arial;">
-        <div style="margin-top:80px;">
-            <div style="border:3px solid #1ed760;width:50px;height:50px;border-radius:50%;
-                 border-top-color:transparent;margin:0 auto 20px;animation:spin 1s linear infinite;"></div>
-            <p>Chargement du style <strong>${style}</strong>...</p>
-        </div>
-        <style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
-    </body></html>`;
-
-    fetch(`/cv/apercu/style/${style}/`)
-        .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
-        .then(html => { iframe.srcdoc = html; })
-        .catch(err => {
-            console.error('Erreur aperçu :', err);
-            iframe.srcdoc = '<html><body style="padding:40px;color:red;">Impossible de charger l\'aperçu.</body></html>';
-        });
-}
-
-// ── Soumission formulaire ─────────────────────────────────────────────────────
-document.getElementById('cvForm').addEventListener('submit', function(e) {
-    const prenom = document.querySelector('input[name="prenom"]').value;
-    const nom    = document.querySelector('input[name="nom"]').value;
-
+  /* ===== SOUMISSION ===== */
+  document.getElementById('cvForm').addEventListener('submit', function(e) {
+    var prenom = document.querySelector('[name="prenom"]').value.trim();
+    var nom    = document.querySelector('[name="nom"]').value.trim();
     if (!prenom || !nom) {
-        e.preventDefault();
-        alert('Veuillez remplir votre prénom et votre nom.');
-        return false;
+      e.preventDefault();
+      alert('Veuillez remplir votre prénom et votre nom.');
+      return;
     }
-
     document.getElementById('loadingOverlay').style.display = 'flex';
-
-    const btn = document.getElementById('generateBtn');
+    var btn = document.getElementById('generateBtn');
     if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Génération en cours...';
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Génération en cours…';
     }
-
     setTimeout(function() {
-        document.getElementById('loadingOverlay').style.display = 'none';
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa fa-magic"></i> Générer mon CV';
-        }
-    }, 6000);
-});
-
-window.addEventListener('load', function() {
-    const loader = document.getElementById('loadingOverlay');
-    if (loader) loader.style.display = 'none';
-    const btn = document.getElementById('generateBtn');
-    if (btn) {
+      document.getElementById('loadingOverlay').style.display = 'none';
+      if (btn) {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa fa-magic"></i> Générer mon CV';
+        btn.innerHTML = '<i class="fa fa-wand-magic-sparkles"></i> Générer mon CV';
+      }
+    }, 7000);
+  });
+
+  /* Masquer loader au chargement */
+  window.addEventListener('load', function() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+    var btn = document.getElementById('generateBtn');
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-wand-magic-sparkles"></i> Générer mon CV';
     }
-});
+  });
 </script>
 {% endblock %}

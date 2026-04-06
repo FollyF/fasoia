@@ -224,18 +224,6 @@
     <div class="spinner-ring"></div>
   </div>
 
-  <!-- Messages Django -->
-  {% if messages %}
-  <div class="django-messages">
-    {% for message in messages %}
-    <div class="django-msg {{ message.tags }}">
-      <span>{{ message }}</span>
-      <span class="django-msg-close" onclick="this.parentElement.remove()">&times;</span>
-    </div>
-    {% endfor %}
-  </div>
-  {% endif %}
-
   <!-- Header + Navbar -->
   {% if not no_header_footer %}
     {% include "partials/navbar.html" %}

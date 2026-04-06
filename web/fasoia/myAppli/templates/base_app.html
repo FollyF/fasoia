@@ -383,17 +383,6 @@
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-{% if messages %}
-<div class="django-messages">
-  {% for message in messages %}
-  <div class="django-msg {{ message.tags }}">
-    <span>{{ message }}</span>
-    <span class="django-msg-close" onclick="this.parentElement.remove()">&times;</span>
-  </div>
-  {% endfor %}
-</div>
-{% endif %}
-
 <div class="app-wrapper">
 
   <aside class="app-sidebar" id="appSidebar">
