@@ -8,14 +8,23 @@ import spacy
 import re
 import time  # AJOUTER CET IMPORT
 from pathlib import Path
-import django
+
+# --- CONFIGURATION DYNAMIQUE DU CHEMIN ---
 import os
 import sys
+import django
 
-# Configuration Django
-sys.path.append('/media/folly/28DC9DDE2CA969AD/DOCS/SEA/UJKZ/COURS/MEMOIRE/fasoia/web/fasoia')
+# Récupère le chemin du dossier où se trouve ce script (analyse_ia/)
+current_file_path = os.path.abspath(__file__)
+# Remonte d'un cran pour atteindre la racine du projet (là où est manage.py)
+project_root = os.path.dirname(os.path.dirname(current_file_path))
+
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'fasoia.settings')
 django.setup()
+# -----------------------------------------
 
 from django.contrib.contenttypes.models import ContentType
 from analyse_ia.models import AnalyseDocument, DocumentSource
@@ -163,7 +172,8 @@ class AnalyseurHybride:
         debut_doc = time.time()  # AJOUT
         
         # 1. Vérifier que le fichier existe
-        chemin_complet = f"/media/folly/28DC9DDE2CA969AD/DOCS/SEA/UJKZ/COURS/MEMOIRE/fasoia/web/fasoia/myAppli/pdfs/{doc_source.nom_fichier}"
+        # Construit le chemin dynamiquement
+        chemin_complet = os.path.join(project_root, "media", "pdfs", os.path.basename(doc_source.nom_fichier))
         
         if not os.path.exists(chemin_complet):
             print(f"   ❌ Fichier non trouvé: {chemin_complet}")

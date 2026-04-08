@@ -4,6 +4,7 @@ from urllib.parse import urljoin
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  
 
+
 def scraping(objects):
     data =[]
     for element in objects:

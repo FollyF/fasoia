@@ -343,23 +343,6 @@ class Opportunite(models.Model):
     def __str__(self):
         return self.titre
 
-class AppelOffre(Opportunite):
-    typeAppel = models.CharField(max_length=100)
-    criteresTechniques = models.TextField()
-    criteresFinanciers = models.TextField()
-    caution = models.DecimalField(max_digits=15, decimal_places=2)
-
-class MarchePublic(Opportunite):
-    autoriteContractant = models.CharField(max_length=100)
-    typeMarche = models.CharField(max_length=100)
-    montantEstime = models.DecimalField(max_digits=15, decimal_places=2)
-    procedure = models.TextField()
-
-class AMI(Opportunite):
-    objet = models.CharField(max_length=100)
-    conditions = models.TextField()
-    documentsRequis = models.TextField()
-
 class Offre_uemoa(models.Model):
     description = models.TextField()
     date_limite = models.DateTimeField(null=True, blank=True)
@@ -391,90 +374,6 @@ class Ami_uemoa(models.Model):
 
     def __str__(self):
         return self.description[:50] + "..."
-
-class ModeleDocument(models.Model):
-    """Modèles de documents pour les soumissions"""
-    CATEGORIE_CHOICES = [
-        ('TECHNIQUE', 'Dossier Technique'),
-        ('FINANCIER', 'Dossier Financier'),
-        ('ADMINISTRATIF', 'Dossier Administratif'),
-        ('CANDIDATURE', 'Dossier de Candidature'),
-    ]
-    
-    nom = models.CharField(max_length=200)
-    categorie = models.CharField(max_length=50, choices=CATEGORIE_CHOICES)
-    description = models.TextField(blank=True)
-    fichier_template = models.FileField(upload_to='templates/documents/')
-    types_opportunites = models.JSONField(default=list)  # ['Offre_uemoa', 'Ami_uemoa']
-    date_creation = models.DateTimeField(auto_now_add=True)
-    actif = models.BooleanField(default=True)
-    
-    def __str__(self):
-        return f"{self.nom} ({self.get_categorie_display()})"
-
-class DossierSoumission(models.Model):
-    """Dossier de soumission pour une opportunité"""
-    STATUT_CHOICES = [
-        ('EN_PREPARATION', 'En préparation'),
-        ('COMPLET', 'Complet'),
-        ('SOUMIS', 'Soumis'),
-    ]
-    
-    # Entreprise qui soumissionne
-    entreprise = models.ForeignKey('Entreprise', on_delete=models.CASCADE, related_name='dossiers')
-    
-    # Opportunité ciblée (polymorphique)
-    opportunite_type = models.CharField(max_length=50)  # 'Offre_uemoa' ou 'Ami_uemoa'
-    opportunite_id = models.PositiveIntegerField()
-    
-    # Métadonnées
-    reference = models.CharField(max_length=100, unique=True)
-    statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='EN_PREPARATION')
-    date_soumission_prevue = models.DateField()
-    date_soumission_effective = models.DateTimeField(null=True, blank=True)
-    date_creation = models.DateTimeField(auto_now_add=True)
-    date_modification = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        unique_together = ['entreprise', 'opportunite_type', 'opportunite_id']
-        indexes = [
-            models.Index(fields=['entreprise', 'statut']),
-        ]
-    
-    def __str__(self):
-        return f"Dossier {self.reference} - {self.entreprise.raisonSociale}"
-    
-    @property
-    def opportunite(self):
-        """Récupère l'objet opportunité"""
-        if self.opportunite_type == 'Offre_uemoa':
-            return Offre_uemoa.objects.get(id=self.opportunite_id)
-        else:
-            return Ami_uemoa.objects.get(id=self.opportunite_id)
-
-class DocumentSoumission(models.Model):
-    """Document généré pour un dossier"""
-    STATUT_CHOICES = [
-        ('BROUILLON', 'Brouillon'),
-        ('VALIDE', 'Validé'),
-        ('A_REVOIR', 'À réviser'),
-    ]
-    
-    dossier = models.ForeignKey(DossierSoumission, on_delete=models.CASCADE, related_name='documents')
-    modele = models.ForeignKey(ModeleDocument, on_delete=models.SET_NULL, null=True)
-    
-    nom_document = models.CharField(max_length=255)
-    fichier_genere = models.FileField(upload_to='soumissions/documents/', max_length=255)
-    taille_fichier = models.IntegerField(default=0)
-    donnees_saisies = models.JSONField(default=dict)  # Données personnalisées
-    statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='BROUILLON')
-    
-    date_generation = models.DateTimeField(auto_now_add=True)
-    date_modification = models.DateTimeField(auto_now=True)
-    
-    def __str__(self):
-        return self.nom_document
-    
 
 class OffreEmploi(models.Model):
     """
@@ -1205,3 +1104,116 @@ class CVGenere(models.Model):
         if self.utilisateur:
             return f"CV de {self.utilisateur.username} - {self.modele.nom if self.modele else 'Sans style'}"
         return f"CV anonyme - {self.date_generation.strftime('%d/%m/%Y')}"
+    
+
+# ==========================================
+# 1. RÉFÉRENTIEL DES DOCUMENTS (TEMPLATES)
+# ==========================================
+class ModeleDocument(models.Model):
+    CATEGORIE_CHOICES = [
+        ('TECHNIQUE', 'Dossier Technique'),
+        ('FINANCIER', 'Dossier Financier'),
+        ('ADMINISTRATIF', 'Dossier Administratif'),
+        ('CANDIDATURE', 'Dossier de Candidature'),
+    ]
+    
+    nom = models.CharField(max_length=200)
+    categorie = models.CharField(max_length=50, choices=CATEGORIE_CHOICES)
+    description = models.TextField(blank=True)
+    fichier_template = models.FileField(upload_to='templates/documents/')
+    
+    # Indispensable pour lier le bouton "Générer" au bon formulaire
+    code_technique = models.SlugField(max_length=100, unique=True, help_text="Ex: liste-materiel")
+    
+    # Filtrage flexible : ['Offre_uemoa', 'Ami_uemoa']
+    types_opportunites = models.JSONField(default=list)  
+    
+    date_creation = models.DateTimeField(auto_now_add=True)
+    actif = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"{self.nom} ({self.get_categorie_display()})"
+
+
+# ==========================================
+# 2. DONNÉES DE RÉFÉRENCE (REMPLISSAGE PDF)
+# ==========================================
+
+class MaterielEntreprise(models.Model):
+    """Données pour le tableau page 5 du PDF APEX-B"""
+    entreprise = models.ForeignKey('Entreprise', on_delete=models.CASCADE, related_name='parc_materiel')
+    designation = models.CharField(max_length=200)
+    quantite = models.PositiveIntegerField(default=1)
+    etat_fonctionnement = models.CharField(max_length=100, default="Bon état")
+    observations = models.CharField(max_length=200, blank=True)
+
+class PersonnelCle(models.Model):
+    """Données pour le tableau page 4 du PDF APEX-B"""
+    entreprise = models.ForeignKey('Entreprise', on_delete=models.CASCADE, related_name='equipe')
+    nom_prenom = models.CharField(max_length=200)
+    poste = models.CharField(max_length=200)
+    qualification = models.CharField(max_length=200)
+    annees_experience = models.PositiveIntegerField()
+
+class ReferenceTechnique(models.Model):
+    """Données pour les expériences page 3 du PDF APEX-B"""
+    entreprise = models.ForeignKey('Entreprise', on_delete=models.CASCADE, related_name='liste_references')
+    projet_nom = models.CharField(max_length=255)
+    client = models.CharField(max_length=200)
+    annee = models.IntegerField()
+    attestation_bonne_fin = models.FileField(upload_to='attestations/', blank=True, null=True)
+
+
+# ==========================================
+# 3. LE DOSSIER DE SOUMISSION (LE MODÈLE)
+# ==========================================
+class DossierSoumission(models.Model):
+    STATUT_CHOICES = [
+        ('EN_PREPARATION', 'En préparation'),
+        ('COMPLET', 'Complet'),
+        ('SOUMIS', 'Soumis'),
+    ]
+    
+    entreprise = models.ForeignKey('Entreprise', on_delete=models.CASCADE, related_name='dossiers')
+    
+    # Opportunité ciblée (Polymorphique)
+    opportunite_type = models.CharField(max_length=50)  # 'Offre_uemoa' ou 'Ami_uemoa'
+    opportunite_id = models.PositiveIntegerField()
+    
+    reference = models.CharField(max_length=100, unique=True)
+    statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='EN_PREPARATION')
+    
+    date_soumission_prevue = models.DateField()
+    date_soumission_effective = models.DateTimeField(null=True, blank=True)
+    date_creation = models.DateTimeField(auto_now_add=True)
+    date_modification = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['entreprise', 'opportunite_type', 'opportunite_id']
+        indexes = [
+            models.Index(fields=['entreprise', 'statut']),
+        ]
+    
+    def __str__(self):
+        return f"Dossier {self.reference} - {self.entreprise.raisonSociale}"
+
+
+# ==========================================
+# 4. INSTANCES DE DOCUMENTS GÉNÉRÉS
+# ==========================================
+class DocumentGenere(models.Model):
+    STATUT_CHOICES = [('BROUILLON', 'Brouillon'), ('VALIDE', 'Validé')]
+    
+    dossier = models.ForeignKey(DossierSoumission, on_delete=models.CASCADE, related_name='documents_prepares')
+    modele_origine = models.ForeignKey(ModeleDocument, on_delete=models.CASCADE)
+    nom_document = models.CharField(max_length=255)
+    
+    fichier_docx = models.FileField(upload_to='documents_generes/docx/', null=True, blank=True)
+    fichier_pdf = models.FileField(upload_to='documents_generes/pdf/', null=True, blank=True)
+    
+    statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='BROUILLON')
+    date_generation = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.nom_document} ({self.statut})"
+    

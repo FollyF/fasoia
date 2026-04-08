@@ -7,5 +7,7 @@ class MyAppliConfig(AppConfig):
     name = 'myAppli'
     
     def ready(self):
-        # C'est ici que les signaux sont chargés
-        pass
+        import myAppli.signals  # <--- Ajoute ça dans la méthode ready
+        
+
+    

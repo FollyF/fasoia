@@ -1037,7 +1037,7 @@ def completer_profil_entreprise(request):
         print(f"ERREUR: {str(e)}")
         messages.error(request, f"Erreur lors de la sauvegarde : {str(e)}")
     
-    return redirect('myAppli:tableau_bord_entreprise')
+    return redirect('myAppli:dashboard_entreprise')
 
 def detail_offre(request, pk):
     """

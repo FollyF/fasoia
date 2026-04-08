@@ -41,6 +41,17 @@
                     "description": "Extraction des données structurées"
                 }
             ]
+        },
+
+        "recommandation": {
+            "description": "Matching IA des offres",
+            "commandes": [
+                {
+                    "type": "python",
+                    "chemin": "analyse_ia/moteur_recommandation.py",
+                    "args": []
+                }
+            ]
         }
     },
     

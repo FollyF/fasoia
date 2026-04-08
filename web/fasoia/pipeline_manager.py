@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 """
-Pipeline Manager - Version simplifiée
+Pipeline Manager - Version Complète (FasoIA)
 Utilisation:
-    python pipeline_manager.py --all          # Exécute tout
-    python pipeline_manager.py --scraping     # Scraping seulement
-    python pipeline_manager.py --analyse      # Analyse seulement
-    python pipeline_manager.py --extraction   # Extraction seulement
+    python pipeline_manager.py --all             # Tout le cycle (Scraping -> Reco)
+    python pipeline_manager.py --scraping        # Scraping seulement
+    python pipeline_manager.py --analyse         # Analyse seulement
+    python pipeline_manager.py --extraction      # Extraction seulement
+    python pipeline_manager.py --recommandation  # Matching seulement
 """
 
 import os
@@ -41,7 +42,7 @@ class PipelineManager:
         
         if cmd_config['type'] == 'django':
             commande = f"python {self.manage_py} {cmd_config['commande']}"
-        else:  # python
+        else:  # type python
             args = ' '.join(cmd_config.get('args', []))
             commande = f"python {cmd_config['chemin']} {args}"
         
@@ -85,26 +86,27 @@ class PipelineManager:
         return True
     
     def executer_all(self):
-        print(f"\n🚀 PIPELINE COMPLET")
-        print(f"   Étapes: scraping → analyse → extraction")
+        print(f"\n🚀 PIPELINE COMPLET FASOIA")
+        print(f"   Étapes: scraping → analyse → extraction → recommandation") # <-- Ajouté
         print(f"{'='*50}")
         
-        etapes = ["scraping", "analyse", "extraction"]
+        # Liste mise à jour avec la 4ème étape
+        etapes = ["scraping", "analyse", "extraction", "recommandation"] 
         for i, etape in enumerate(etapes, 1):
-            print(f"\n📋 Étape {i}/3")
+            print(f"\n📋 Étape {i}/4") # <-- Changé 3 en 4
             if not self.executer_etape(etape):
                 print(f"\n❌ Pipeline arrêté à l'étape {i}")
                 return False
         
-        print(f"\n🎉 Pipeline terminé avec succès!")
+        print(f"\n🎉 Pipeline terminé avec succès! Les offres sont prêtes.")
         return True
 
 def main():
     manager = PipelineManager()
     
     parser = argparse.ArgumentParser(
-        description='Pipeline Manager',
-        usage='python pipeline_manager.py [--all | --scraping | --analyse | --extraction]'
+        description='Pipeline Manager FasoIA',
+        usage='python pipeline_manager.py [--all | --scraping | --analyse | --extraction | --recommandation]'
     )
     
     group = parser.add_mutually_exclusive_group(required=True)
@@ -112,6 +114,7 @@ def main():
     group.add_argument('--scraping', action='store_true', help='Exécute seulement le scraping')
     group.add_argument('--analyse', action='store_true', help='Exécute seulement l\'analyse')
     group.add_argument('--extraction', action='store_true', help='Exécute seulement l\'extraction')
+    group.add_argument('--recommandation', action='store_true', help='Exécute seulement le matching') # <-- Ajouté
     
     args = parser.parse_args()
     
@@ -123,6 +126,8 @@ def main():
         manager.executer_etape('analyse')
     elif args.extraction:
         manager.executer_etape('extraction')
+    elif args.recommandation: # <-- Ajouté
+        manager.executer_etape('recommandation')
 
 if __name__ == '__main__':
     main()

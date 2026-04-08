@@ -4,9 +4,17 @@ import sys
 import re
 from datetime import datetime
 
-sys.path.append('/media/folly/28DC9DDE2CA969AD/DOCS/SEA/UJKZ/COURS/MEMOIRE/fasoia/web/fasoia')
+# --- CONFIGURATION DYNAMIQUE ---
+# On récupère le chemin racine du projet (le dossier qui contient manage.py)
+current_path = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_path)
+
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'fasoia.settings')
 django.setup()
+# -------------------------------
 
 from analyse_ia.models import AnalyseDocument, ElementsExtraits
 
