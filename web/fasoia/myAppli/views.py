@@ -11,11 +11,13 @@ from urllib.parse import quote
 from django.utils import timezone
 from django.core.files.base import ContentFile
 from django.http import FileResponse
+from datetime import datetime
 
 import os
 import json
 import csv
 import logging
+import re
 
 from .forms import InscriptionForm, ConnexionForm
 from .models import *
@@ -729,7 +731,6 @@ def completer_profil_candidat(request):
         # Date de naissance (optionnelle)
         date_naissance = request.POST.get('date_naissance')
         if date_naissance:
-            from datetime import datetime
             particulier.date_naissance = datetime.strptime(date_naissance, '%Y-%m-%d').date()
         
         particulier.adresse = request.POST.get('adresse', particulier.adresse)
@@ -1071,179 +1072,212 @@ def detail_emploi(request, pk):
     except OffreEmploi.DoesNotExist:
         messages.error(request, "Cette offre d'emploi n'existe pas.")
         return redirect('myAppli:opportunites')
-    
+
+
 @login_required
 def commencer_soumission(request, opportunite_type, opportunite_id):
     """
-    Point d'entrée quand l'entreprise clique sur "Postuler"
-    Crée ou récupère le dossier et redirige vers la préparation
+    Page de pré-soumission - Permet de renseigner matériels, personnel, etc.
     """
-    try:
-        entreprise = Entreprise.objects.get(user=request.user)
-    except Entreprise.DoesNotExist:
-        messages.error(request, "Vous devez être une entreprise pour soumissionner")
-        return redirect('dashboard')
-    
     # Récupérer l'opportunité
     if opportunite_type == 'Offre_uemoa':
         opportunite = get_object_or_404(Offre_uemoa, id=opportunite_id)
-        date_limite = opportunite.date_limite
+        type_nom = "Appel d'offres"
     else:
         opportunite = get_object_or_404(Ami_uemoa, id=opportunite_id)
-        date_limite = opportunite.date_limite
+        type_nom = "Appel à manifestation d'intérêt"
     
-    # Créer ou récupérer le dossier
-    dossier, created = DossierSoumission.objects.get_or_create(
-        entreprise=entreprise,
-        opportunite_type=opportunite_type,
-        opportunite_id=opportunite_id,
-        defaults={
-            'reference': f"DOS-{opportunite_id}-{entreprise.id}-{timezone.now().strftime('%Y%m%d%H%M%S')}",
-            'date_soumission_prevue': date_limite if date_limite else timezone.now().date(),
-        }
-    )
+    # Récupérer l'entreprise
+    entreprise = request.user.entreprise if hasattr(request.user, 'entreprise') else None
     
-    # Marquer la recommandation comme "candidatée"
-    Recommandation.objects.filter(
+    if not entreprise:
+        messages.error(request, "Vous devez avoir une entreprise associée à votre compte.")
+        return redirect('myAppli:home')
+    
+    # Traitement des formulaires POST
+    if request.method == 'POST':
+        # Ajout de matériel
+        if 'ajouter_materiel' in request.POST:
+            MaterielEntreprise.objects.create(
+                entreprise=entreprise,
+                designation=request.POST.get('designation'),
+                quantite=request.POST.get('quantite', 1),
+                etat_fonctionnement=request.POST.get('etat_fonctionnement', 'Bon état'),
+                observations=request.POST.get('observations', '')
+            )
+            messages.success(request, "Matériel ajouté avec succès!")
+            return redirect('myAppli:commencer_soumission', opportunite_type=opportunite_type, opportunite_id=opportunite_id)
+        
+        # Ajout de personnel
+        elif 'ajouter_personnel' in request.POST:
+            PersonnelCle.objects.create(
+                entreprise=entreprise,
+                nom_prenom=request.POST.get('nom_prenom'),
+                poste=request.POST.get('poste'),
+                qualification=request.POST.get('qualification'),
+                annees_experience=request.POST.get('annees_experience', 0)
+            )
+            messages.success(request, "Personnel ajouté avec succès!")
+            return redirect('myAppli:commencer_soumission', opportunite_type=opportunite_type, opportunite_id=opportunite_id)
+        
+        # Ajout de référence technique
+        elif 'ajouter_reference' in request.POST:
+            ReferenceTechnique.objects.create(
+                entreprise=entreprise,
+                client=request.POST.get('client'),
+                projet=request.POST.get('projet'),
+                montant=request.POST.get('montant'),
+                annee=request.POST.get('annee'),
+                description=request.POST.get('description', '')
+            )
+            messages.success(request, "Référence technique ajoutée!")
+            return redirect('myAppli:commencer_soumission', opportunite_type=opportunite_type, opportunite_id=opportunite_id)
+        
+        # Suppression
+        elif 'supprimer_materiel' in request.POST:
+            MaterielEntreprise.objects.filter(id=request.POST.get('materiel_id'), entreprise=entreprise).delete()
+            messages.success(request, "Matériel supprimé")
+            return redirect('myAppli:commencer_soumission', opportunite_type=opportunite_type, opportunite_id=opportunite_id)
+        
+        elif 'supprimer_personnel' in request.POST:
+            PersonnelCle.objects.filter(id=request.POST.get('personnel_id'), entreprise=entreprise).delete()
+            messages.success(request, "Personnel supprimé")
+            return redirect('myAppli:commencer_soumission', opportunite_type=opportunite_type, opportunite_id=opportunite_id)
+        
+        # Soumission finale
+        elif 'soumettre_dossier' in request.POST:
+            lettre_motivation = request.POST.get('lettre_motivation', '')
+            
+            # Vérifier que l'entreprise a au moins du matériel et du personnel
+            has_materiel = MaterielEntreprise.objects.filter(entreprise=entreprise).exists()
+            has_personnel = PersonnelCle.objects.filter(entreprise=entreprise).exists()
+            
+            if not has_materiel:
+                messages.warning(request, "Veuillez renseigner au moins un équipement/matériel")
+                return redirect('myAppli:commencer_soumission', opportunite_type=opportunite_type, opportunite_id=opportunite_id)
+            
+            if not has_personnel:
+                messages.warning(request, "Veuillez renseigner au moins un personnel clé")
+                return redirect('myAppli:commencer_soumission', opportunite_type=opportunite_type, opportunite_id=opportunite_id)
+            
+            # Créer ou mettre à jour le dossier
+            dossier, created = DossierSoumission.objects.update_or_create(
+                entreprise=entreprise,
+                opportunite_type=opportunite_type,
+                opportunite_id=opportunite_id,
+                defaults={
+                    'reference': f"DOS-{timezone.now().strftime('%Y%m%d')}-{entreprise.id}",
+                    'lettre_motivation': lettre_motivation,
+                    'statut': 'SOUMIS',
+                    'date_soumission_effective': timezone.now()
+                }
+            )
+            
+            # Mettre à jour les statistiques
+            entreprise.nb_candidatures_emises += 1
+            entreprise.save()
+            
+            messages.success(request, f"✅ Votre candidature pour {type_nom} a été soumise avec succès !")
+            return redirect('myAppli:dashboard_entreprise')
+    
+    # Récupérer les données existantes
+    materiels = MaterielEntreprise.objects.filter(entreprise=entreprise)
+    personnels = PersonnelCle.objects.filter(entreprise=entreprise)
+    references_tech = ReferenceTechnique.objects.filter(entreprise=entreprise)
+    
+    # Vérifier si un dossier existe déjà
+    dossier = DossierSoumission.objects.filter(
         entreprise=entreprise,
         opportunite_type=opportunite_type,
         opportunite_id=opportunite_id
-    ).update(candidatee=True)
-    
-    messages.success(request, "Dossier de soumission créé. Commencez à préparer vos documents.")
-    return redirect('myAppli:preparer_soumission', dossier_id=dossier.id)
-
-@login_required
-def preparer_soumission(request, dossier_id):
-    """Page de préparation du dossier"""
-    dossier = get_object_or_404(DossierSoumission, id=dossier_id)
-    
-    # Vérifier que l'entreprise a le droit
-    if dossier.entreprise.user != request.user:
-        messages.error(request, "Accès non autorisé")
-        return redirect('dashboard')
-    
-    # Récupérer l'opportunité
-    opportunite = dossier.opportunite
-    
-    # Récupérer les modèles de documents disponibles
-    modeles = ModeleDocument.objects.filter(
-        types_opportunites__contains=[dossier.opportunite_type],
-        actif=True
-    )
-    
-    # Récupérer les documents déjà générés
-    documents = dossier.documents.all()
-    
-    # Vérifier la complétude
-    documents_requis = modeles.count()
-    documents_presents = documents.filter(statut='VALIDE').count()
-    complet = documents_presents == documents_requis and documents_requis > 0
+    ).first()
     
     context = {
-        'dossier': dossier,
         'opportunite': opportunite,
-        'opportunite_type': dossier.opportunite_type,
-        'modeles': modeles,
-        'documents': documents,
-        'progression': {
-            'total': documents_requis,
-            'valides': documents_presents,
-            'complet': complet,
-            'pourcentage': int((documents_presents / documents_requis * 100)) if documents_requis > 0 else 0
-        }
+        'opportunite_type': opportunite_type,
+        'type_nom': type_nom,
+        'entreprise': entreprise,
+        'dossier': dossier,
+        'materiels': materiels,
+        'personnels': personnels,
+        'references_tech': references_tech,
+        'profil_complet': entreprise.profil_complet,
+        'has_materiel': materiels.exists(),
+        'has_personnel': personnels.exists(),
+        'has_references': references_tech.exists(),
     }
-    return render(request, 'myAppli/soumission/preparer_soumission.html', context)
+    
+    return render(request, 'myAppli/soumission/commencer_soumission.html', context)
 
 @login_required
-def generer_document(request, dossier_id, modele_id):
-    """Génère un document pour le dossier"""
-    print(f"\n{'='*50}")
-    print(f"🚀 GÉNÉRATION DOCUMENT - Dossier {dossier_id}, Modèle {modele_id}")
-    print(f"Méthode: {request.method}")
-    print(f"{'='*50}")
+def valider_soumission(request, opportunite_type, opportunite_id):
+    """
+    Valide et soumet le dossier de candidature
+    """
     
-    dossier = get_object_or_404(DossierSoumission, id=dossier_id)
-    modele = get_object_or_404(ModeleDocument, id=modele_id)
+    if request.method != 'POST':
+        return redirect('myAppli:dashboard_entreprise')
     
-    print(f"📁 Dossier: {dossier.reference}")
-    print(f"📄 Modèle: {modele.nom}")
-    print(f"📂 Template path: {modele.fichier_template.path}")
-    print(f"📂 Template existe? {os.path.exists(modele.fichier_template.path)}")
+    # Récupérer le dossier
+    try:
+        dossier = DossierSoumission.objects.get(
+            entreprise=request.user.entreprise,
+            opportunite_type=opportunite_type,
+            opportunite_id=opportunite_id
+        )
+    except DossierSoumission.DoesNotExist:
+        messages.error(request, "Dossier non trouvé")
+        return redirect('myAppli:dashboard_entreprise')
     
-    if dossier.entreprise.user != request.user:
-        print("❌ Non autorisé")
-        return JsonResponse({'error': 'Non autorisé'}, status=403)
+    # Récupérer la lettre de motivation
+    lettre_motivation = request.POST.get('lettre_motivation', '')
     
+    # Mettre à jour le dossier
+    dossier.lettre_motivation = lettre_motivation
+    dossier.statut = 'SOUMIS'
+    dossier.date_soumission_effective = timezone.now()
+    dossier.save()
+    
+    # Mettre à jour les statistiques de l'entreprise
+    entreprise = request.user.entreprise
+    entreprise.nb_candidatures_emises += 1
+    entreprise.save()
+    
+    messages.success(request, f"✅ Votre candidature pour {opportunite_type}#{opportunite_id} a été soumise avec succès !")
+    
+    return redirect('myAppli:dashboard_entreprise')
+
+
+@login_required
+def ajouter_materiel(request, entreprise_id):
+    """Ajoute du matériel à l'entreprise"""
     if request.method == 'POST':
-        print("✅ Requête POST reçue")
-        print(f"📦 Données POST: {dict(request.POST)}")
-        
-        # Récupérer les données personnalisées
-        donnees_supp = {}
-        for key, value in request.POST.items():
-            if key.startswith('var_'):
-                donnees_supp[key[4:]] = value
-                print(f"  📝 Variable: {key[4:]} = {value}")
-        
-        try:
-            print("🔄 Initialisation du générateur...")
-            generateur = GenerateurDocument()
-            
-            print("🔄 Récupération de l'opportunité...")
-            opportunite = dossier.opportunite
-            print(f"✅ Opportunité: {opportunite}")
-            
-            print("🔄 Génération du document...")
-            chemin, nom_fichier, taille = generateur.generer(
-                modele=modele,
-                entreprise=dossier.entreprise,
-                opportunite=opportunite,
-                opportunite_type=dossier.opportunite_type,
-                donnees_supp=donnees_supp
-            )
-            
-            print(f"✅ Document généré: {nom_fichier}")
-            print(f"📊 Taille: {taille} octets")
-            print(f"📁 Chemin: {chemin}")
-            
-            # Vérifier que le fichier existe
-            if os.path.exists(chemin):
-                print(f"✅ Fichier trouvé sur le disque")
-            else:
-                print(f"❌ Fichier NON trouvé sur le disque")
-            
-            # Sauvegarder en base
-            print("🔄 Sauvegarde en base de données...")
-            document = DocumentSoumission.objects.create(
-                dossier=dossier,
-                modele=modele,
-                nom_document=nom_fichier,
-                fichier_genere=chemin,
-                taille_fichier=taille,
-                donnees_saisies=donnees_supp
-            )
-            print(f"✅ Document sauvegardé en base (ID: {document.id})")
-            
-            messages.success(request, f"Document '{modele.nom}' généré avec succès!")
-            print("✅ SUCCÈS - Redirection vers preparer_soumission")
-            
-        except Exception as e:
-            print(f"❌ ERREUR: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            messages.error(request, f"Erreur lors de la génération: {str(e)}")
-        
-        return redirect('myAppli:preparer_soumission', dossier_id=dossier.id)
-    
-    # GET : Afficher le formulaire de personnalisation
-    print("ℹ️ Requête GET - Affichage du formulaire")
-    context = {
-        'dossier': dossier,
-        'modele': modele,
-        'opportunite': dossier.opportunite,
-    }
-    return render(request, 'myAppli/soumission/generer_document.html', context)
+        entreprise = get_object_or_404(Entreprise, id=entreprise_id)
+        MaterielEntreprise.objects.create(
+            entreprise=entreprise,
+            designation=request.POST.get('designation'),
+            quantite=request.POST.get('quantite', 1),
+            etat_fonctionnement=request.POST.get('etat', 'Bon état'),
+            observations=request.POST.get('observations', '')
+        )
+        messages.success(request, "Matériel ajouté avec succès!")
+    return redirect(request.META.get('HTTP_REFERER', 'myAppli:dashboard_entreprise'))
+
+
+@login_required
+def ajouter_personnel(request, entreprise_id):
+    """Ajoute du personnel clé à l'entreprise"""
+    if request.method == 'POST':
+        entreprise = get_object_or_404(Entreprise, id=entreprise_id)
+        PersonnelCle.objects.create(
+            entreprise=entreprise,
+            nom_prenom=request.POST.get('nom_prenom'),
+            poste=request.POST.get('poste'),
+            qualification=request.POST.get('qualification'),
+            annees_experience=request.POST.get('annees_experience', 0)
+        )
+        messages.success(request, "Personnel ajouté avec succès!")
+    return redirect(request.META.get('HTTP_REFERER', 'myAppli:dashboard_entreprise'))
 
 @login_required
 def telecharger_document(request, document_id):
@@ -1323,6 +1357,333 @@ def soumettre_dossier(request, dossier_id):
     }
     return render(request, 'myAppli/soumission/confirmer_soumission.html', context)
 
+
+@login_required
+def generer_document_soumission(request, type_doc):
+    """
+    Génère la première page avec la description complète en majuscules
+    """
+    if type_doc != 'entete':
+        return JsonResponse({'error': 'Type non supporté'}, status=400)
+    
+    opportunite_type = request.GET.get('opportunite_type')
+    opportunite_id = request.GET.get('opportunite_id')
+    
+    # Récupérer l'opportunité
+    if opportunite_type == 'Offre_uemoa':
+        opportunite = get_object_or_404(Offre_uemoa, id=opportunite_id)
+    else:
+        opportunite = get_object_or_404(Ami_uemoa, id=opportunite_id)
+    
+    description = opportunite.description or ""
+    
+    # Nettoyer la description
+    description = description.replace('\n', ' ').replace('\r', ' ')
+    description = description.strip()
+    
+    # Enlever "Avis à manifestation d'intérêt" qui est déjà dans le titre
+    description = re.sub(r'Avis à manifestation d[’\']intérêt\s+', '', description, flags=re.IGNORECASE)
+    description = re.sub(r'AVIS À MANIFESTATION D[’\']INTÉRÊT\s+', '', description, flags=re.IGNORECASE)
+    
+    # Mettre en majuscules
+    description = description.upper()
+    
+    # Créer le document Word
+    from docx import Document
+    from docx.shared import Pt, Inches
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from io import BytesIO
+    
+    doc = Document()
+    
+    # Marges
+    section = doc.sections[0]
+    section.top_margin = Inches(1)
+    section.bottom_margin = Inches(1)
+    section.left_margin = Inches(1)
+    section.right_margin = Inches(1)
+    
+    # ===== TITRE =====
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    
+    texte_complet = f"RÉPONSE À LA MANIFESTATION D'INTÉRÊT {description}"
+    
+    run = p.add_run(texte_complet)
+    run.font.size = Pt(22)
+    run.font.bold = True
+    
+    # Sauvegarder
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    
+    filename = f"page_garde_AMI_{opportunite_id}.docx"
+    
+    response = FileResponse(
+        buffer,
+        as_attachment=True,
+        filename=filename,
+        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    )
+    return response
+
+@login_required
+def apercu_document_soumission(request, type_doc):
+    """
+    Retourne l'aperçu HTML du document
+    """
+    if type_doc != 'entete':
+        return JsonResponse({'error': 'Type non supporté'}, status=400)
+    
+    opportunite_type = request.GET.get('opportunite_type')
+    opportunite_id = request.GET.get('opportunite_id')
+    
+    if opportunite_type == 'Offre_uemoa':
+        opportunite = get_object_or_404(Offre_uemoa, id=opportunite_id)
+    else:
+        opportunite = get_object_or_404(Ami_uemoa, id=opportunite_id)
+    
+    description = opportunite.description or ""
+    description = description.replace('\n', ' ').replace('\r', ' ')
+    description = description.strip()
+    description = re.sub(r'Avis à manifestation d[’\']intérêt\s+', '', description, flags=re.IGNORECASE)
+    description = re.sub(r'AVIS À MANIFESTATION D[’\']INTÉRÊT\s+', '', description, flags=re.IGNORECASE)
+    description = description.upper()
+    
+    html = f'''
+    <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background: white;">
+        <div style="text-align: justify; font-weight: bold; font-size: 22px; line-height: 1.5;">
+            RÉPONSE À LA MANIFESTATION D'INTÉRÊT {description}
+        </div>
+    </div>
+    '''
+    
+    return JsonResponse({'html': html, 'success': True})
+
+@login_required
+def get_donnees_document(request, type_doc):
+    """
+    Récupère les données existantes pour l'édition
+    """
+    opportunite_type = request.GET.get('opportunite_type')
+    opportunite_id = request.GET.get('opportunite_id')
+    
+    if opportunite_type == 'Offre_uemoa':
+        opportunite = get_object_or_404(Offre_uemoa, id=opportunite_id)
+    else:
+        opportunite = get_object_or_404(Ami_uemoa, id=opportunite_id)
+    
+    entreprise = request.user.entreprise
+    donnees = {}
+    
+    if type_doc == 'entete':
+        donnees = {
+            'reference': getattr(opportunite, 'reference', ''),
+            'date_ami': getattr(opportunite, 'date_publication', ''),
+            'beneficiaire': getattr(opportunite, 'beneficiaire', ''),
+        }
+    elif type_doc == 'lettre':
+        dossier = DossierSoumission.objects.filter(
+            entreprise=entreprise,
+            opportunite_type=opportunite_type,
+            opportunite_id=opportunite_id
+        ).first()
+        donnees = {
+            'lettre_motivation': dossier.lettre_motivation if dossier else ''
+        }
+    elif type_doc == 'presentation':
+        donnees = {
+            'presentation': entreprise.description or ''
+        }
+    elif type_doc == 'fiche':
+        donnees = {
+            'ifu': getattr(entreprise, 'ifu', ''),
+            'rccm': getattr(entreprise, 'rccm', ''),
+            'telephone': entreprise.telephone or '',
+            'email': entreprise.email or '',
+            'adresse': entreprise.localisation or '',
+        }
+    else:
+        return JsonResponse({'success': False, 'error': 'Type non supporté'})
+    
+    return JsonResponse({'success': True, 'donnees': donnees})
+
+@login_required
+def telecharger_document_soumission(request, type_doc):
+    """
+    Télécharge le document au format choisi (DOCX ou PDF)
+    """
+    if type_doc != 'entete':
+        return JsonResponse({'error': 'Type non supporté'}, status=400)
+    
+    format_doc = request.GET.get('format', 'docx')
+    opportunite_type = request.GET.get('opportunite_type')
+    opportunite_id = request.GET.get('opportunite_id')
+    
+    if opportunite_type == 'Offre_uemoa':
+        opportunite = get_object_or_404(Offre_uemoa, id=opportunite_id)
+    else:
+        opportunite = get_object_or_404(Ami_uemoa, id=opportunite_id)
+    
+    description = opportunite.description or ""
+    description = description.replace('\n', ' ').replace('\r', ' ')
+    description = description.strip()
+    description = re.sub(r'Avis à manifestation d[’\']intérêt\s+', '', description, flags=re.IGNORECASE)
+    description = re.sub(r'AVIS À MANIFESTATION D[’\']INTÉRÊT\s+', '', description, flags=re.IGNORECASE)
+    description = description.upper()
+    
+    if format_doc == 'pdf':
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.units import mm
+        from reportlab.pdfgen import canvas
+        from io import BytesIO
+        
+        buffer = BytesIO()
+        c = canvas.Canvas(buffer, pagesize=A4)
+        width, height = A4
+        
+        c.setFont("Helvetica-Bold", 22)
+        
+        margin = 20 * mm
+        y = height - margin
+        x = margin
+        
+        text = f"RÉPONSE À LA MANIFESTATION D'INTÉRÊT {description}"
+        
+        words = text.split()
+        lines = []
+        current_line = ""
+        for word in words:
+            if c.stringWidth(current_line + " " + word, "Helvetica-Bold", 22) < (width - 2 * margin):
+                current_line += " " + word if current_line else word
+            else:
+                lines.append(current_line)
+                current_line = word
+        if current_line:
+            lines.append(current_line)
+        
+        for line in lines:
+            c.drawString(x, y, line)
+            y -= 30
+        
+        c.save()
+        buffer.seek(0)
+        
+        response = FileResponse(
+            buffer,
+            as_attachment=True,
+            filename=f"page_garde_AMI_{opportunite_id}.pdf",
+            content_type='application/pdf'
+        )
+        return response
+    
+    else:
+        from docx import Document
+        from docx.shared import Pt, Inches
+        from docx.enum.text import WD_ALIGN_PARAGRAPH
+        from io import BytesIO
+        
+        doc = Document()
+        
+        section = doc.sections[0]
+        section.top_margin = Inches(0.5)
+        section.bottom_margin = Inches(0.5)
+        section.left_margin = Inches(0.5)
+        section.right_margin = Inches(0.5)
+        
+        p = doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        
+        texte_complet = f"RÉPONSE À LA MANIFESTATION D'INTÉRÊT {description}"
+        
+        run = p.add_run(texte_complet)
+        run.font.size = Pt(22)
+        run.font.bold = True
+        
+        buffer = BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+        
+        response = FileResponse(
+            buffer,
+            as_attachment=True,
+            filename=f"page_garde_AMI_{opportunite_id}.docx",
+            content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+        return response
+
+@login_required
+@require_http_methods(["POST"])
+def sauvegarder_donnees_soumission(request):
+    """
+    Sauvegarde les données de l'en-tête saisies dans le modal
+    """
+    try:
+        data = request.POST
+        doc_type = data.get('type')
+        opportunite_type = data.get('opportunite_type')
+        opportunite_id = data.get('opportunite_id')
+        
+        if doc_type != 'entete':
+            return JsonResponse({'error': 'Type non supporté'}, status=400)
+        
+        # Récupérer l'opportunité
+        if opportunite_type == 'Offre_uemoa':
+            opportunite = get_object_or_404(Offre_uemoa, id=opportunite_id)
+        else:
+            opportunite = get_object_or_404(Ami_uemoa, id=opportunite_id)
+        
+        # Sauvegarder la référence
+        if data.get('reference_ami'):
+            opportunite.reference = data.get('reference_ami')
+        
+        # Sauvegarder la date
+        if data.get('date_ami'):
+            from datetime import datetime
+            try:
+                opportunite.date_publication = datetime.strptime(data.get('date_ami'), '%Y-%m-%d').date()
+            except:
+                pass
+        
+        # Sauvegarder le bénéficiaire
+        if data.get('beneficiaire'):
+            opportunite.beneficiaire = data.get('beneficiaire')
+        
+        opportunite.save()
+        
+        return JsonResponse({'success': True})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def etat_documents_soumission(request):
+    """
+    Retourne l'état des documents déjà générés
+    """
+    opportunite_type = request.GET.get('opportunite_type')
+    opportunite_id = request.GET.get('opportunite_id')
+    
+    if opportunite_type == 'Offre_uemoa':
+        opportunite = get_object_or_404(Offre_uemoa, id=opportunite_id)
+    else:
+        opportunite = get_object_or_404(Ami_uemoa, id=opportunite_id)
+    
+    # Pour l'en-tête, on considère que c'est toujours possible
+    # (pas de champs obligatoires spécifiques)
+    etat = {
+        'entete': True,  # Toujours disponible
+        'lettre': False,
+        'presentation': False,
+        'fiche': False,
+        'materiel': False,
+        'personnel': False,
+    }
+    
+    return JsonResponse(etat)
+
 @login_required
 def mes_soumissions(request):
     """Liste tous les dossiers de l'entreprise"""
@@ -1349,235 +1710,6 @@ def mes_soumissions(request):
     return render(request, 'myAppli/soumission/mes_soumissions.html', context)
 
 
-# =============================================
-# FONCTIONS UTILITAIRES WHATSAPP
-# =============================================
-
-def construire_message_whatsapp(entreprise, recommandations):
-    """
-    Construit un message WhatsApp avec toutes les recommandations d'une entreprise
-    """
-    # Récupérer le prénom du contact
-    prenom = entreprise.prenom if entreprise.prenom else "cher partenaire"
-    
-    # En-tête du message
-    message = f"🔔 *RECOMMANDATIONS FASOIA POUR {entreprise.raisonSociale.upper()}*\n\n"
-    message += f"Bonjour {prenom},\n\n"
-    message += f"Nous avons trouvé *{len(recommandations)} opportunités* qui correspondent à votre profil :\n\n"
-    
-    # Liste des recommandations
-    for i, reco in enumerate(recommandations, 1):
-        opportunite = reco.opportunite
-        
-        # Type d'opportunité
-        if reco.opportunite_type == 'Offre_uemoa':
-            type_opp = "📄 APPEL D'OFFRE"
-        else:
-            type_opp = "📋 AMI"
-        
-        # Titre (description courte)
-        titre = opportunite.description[:80] + "..." if len(opportunite.description) > 80 else opportunite.description
-        
-        message += f"{i}. *{type_opp}*\n"
-        message += f"   📌 {titre}\n"
-        
-        # Date limite
-        if opportunite.date_limite:
-            if hasattr(opportunite.date_limite, 'strftime'):
-                date_limite = opportunite.date_limite.strftime('%d/%m/%Y')
-            else:
-                date_limite = str(opportunite.date_limite)
-            message += f"   ⏰ Date limite: {date_limite}\n"
-        
-        # Score de matching
-        message += f"   🎯 Score de matching: {reco.score_global}%\n"
-        
-        # Compétences matchées
-        if reco.competences_match:
-            competences = ", ".join(reco.competences_match[:3])
-            message += f"   🔑 Vos compétences: {competences}\n"
-        
-        message += "\n"
-    
-    # Instructions
-    message += "💡 *Comment postuler ?*\n"
-    message += "1. Connectez-vous sur https://fasoia.com\n"
-    message += "2. Allez dans 'Mes recommandations'\n"
-    message += "3. Cliquez sur l'opportunité qui vous intéresse\n"
-    message += "4. Suivez les instructions pour soumissionner\n\n"
-    
-    # Contact
-    message += "📞 *Besoin d'aide ?*\n"
-    message += "Répondez à ce message ou contactez-nous au +225 07070707\n\n"
-    
-    message += "Cordialement,\n"
-    message += "L'équipe FasoIA"
-    
-    return message
-
-
-@login_required
-def get_whatsapp_link(request, entreprise_id):
-    """
-    Génère un lien WhatsApp pour une entreprise spécifique
-    API endpoint pour usage AJAX
-    """
-    try:
-        entreprise = Entreprise.objects.get(id=entreprise_id)
-    except Entreprise.DoesNotExist:
-        return JsonResponse({'error': 'Entreprise non trouvée'}, status=404)
-    
-    # Récupérer les recommandations (top 5)
-    recommandations = Recommandation.objects.filter(
-        entreprise=entreprise
-    ).order_by('-score_global')[:5]
-    
-    if not recommandations:
-        return JsonResponse({'error': 'Aucune recommandation pour cette entreprise'}, status=404)
-    
-    # Construire le message
-    message = construire_message_whatsapp(entreprise, recommandations)
-    
-    # Encoder pour URL
-    message_encoded = quote(message)
-    
-    # Formater le numéro (enlever + et espaces)
-    telephone = str(entreprise.telephone).replace('+', '').replace(' ', '')
-    
-    # Créer le lien WhatsApp
-    whatsapp_link = f"https://wa.me/{telephone}?text={message_encoded}"
-    
-    return JsonResponse({
-        'success': True,
-        'entreprise_id': entreprise.id,
-        'entreprise': entreprise.raisonSociale,
-        'contact': f"{entreprise.prenom} {entreprise.nom}",
-        'telephone': str(entreprise.telephone),
-        'nb_recommandations': len(recommandations),
-        'whatsapp_link': whatsapp_link,
-        'message_preview': message[:200] + "..."  # Aperçu
-    })
-
-@login_required
-def tous_liens_whatsapp(request):
-    """
-    Page admin avec tous les liens WhatsApp pour toutes les entreprises
-    """
-    # Vérifier que l'utilisateur est admin
-    if not request.user.is_staff:
-        messages.error(request, "Accès réservé aux administrateurs")
-        return redirect('myAppli:home')
-    
-    # Récupérer toutes les entreprises avec profil complet
-    entreprises = Entreprise.objects.filter(profil_complet=True).order_by('raisonSociale')
-    
-    entreprises_data = []
-    
-    for entreprise in entreprises:
-        # Récupérer les recommandations
-        recommandations = Recommandation.objects.filter(
-            entreprise=entreprise
-        ).order_by('-score_global')[:5]
-        
-        if recommandations:
-            # Construire le message et le lien
-            message = construire_message_whatsapp(entreprise, recommandations)
-            message_encoded = quote(message)
-            telephone = str(entreprise.telephone).replace('+', '').replace(' ', '')
-            whatsapp_link = f"https://wa.me/{telephone}?text={message_encoded}"
-            
-            entreprises_data.append({
-                'id': entreprise.id,
-                'raisonSociale': entreprise.raisonSociale,
-                'prenom': entreprise.prenom,
-                'nom': entreprise.nom,
-                'telephone': entreprise.telephone,
-                'email': entreprise.email,
-                'nb_recommandations': len(recommandations),
-                'recommandations': recommandations,
-                'whatsapp_link': whatsapp_link,
-                'message': message  # Message complet pour aperçu
-            })
-    
-    # Statistiques
-    stats = {
-        'total_entreprises': entreprises.count(),
-        'avec_recommandations': len(entreprises_data),
-        'sans_recommandations': entreprises.count() - len(entreprises_data),
-        'total_messages': sum([e['nb_recommandations'] for e in entreprises_data])
-    }
-    
-    return render(request, 'myAppli/admin/whatsapp_links.html', {
-        'entreprises': entreprises_data,
-        'stats': stats
-    })
-
-@login_required
-def exporter_liens_whatsapp_csv(request):
-    """Exporte tous les liens WhatsApp au format CSV"""
-    
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="liens_whatsapp.csv"'
-    
-    writer = csv.writer(response)
-    writer.writerow(['Entreprise', 'Contact', 'Téléphone', 'Email', 'Nb Recommandations', 'Lien WhatsApp'])
-    
-    entreprises = Entreprise.objects.filter(profil_complet=True)
-    
-    for entreprise in entreprises:
-        recommandations = Recommandation.objects.filter(
-            entreprise=entreprise
-        ).order_by('-score_global')[:5]
-        
-        if recommandations:
-            message = construire_message_whatsapp(entreprise, recommandations)
-            message_encoded = quote(message)
-            telephone = str(entreprise.telephone).replace('+', '').replace(' ', '')
-            lien = f"https://wa.me/{telephone}?text={message_encoded}"
-            
-            writer.writerow([
-                entreprise.raisonSociale,
-                f"{entreprise.prenom} {entreprise.nom}",
-                entreprise.telephone,
-                entreprise.email,
-                len(recommandations),
-                lien
-            ])
-    
-    return response
-
-@login_required
-def exporter_liens_whatsapp_txt(request):
-    """Exporte tous les liens WhatsApp au format texte"""
-    
-    response = HttpResponse(content_type='text/plain')
-    response['Content-Disposition'] = 'attachment; filename="liens_whatsapp.txt"'
-    
-    response.write("🔗 LIENS WHATSAPP POUR ENVOI DES RECOMMANDATIONS\n")
-    response.write("="*80 + "\n\n")
-    
-    entreprises = Entreprise.objects.filter(profil_complet=True)
-    
-    for entreprise in entreprises:
-        recommandations = Recommandation.objects.filter(
-            entreprise=entreprise
-        ).order_by('-score_global')[:5]
-        
-        if recommandations:
-            message = construire_message_whatsapp(entreprise, recommandations)
-            message_encoded = quote(message)
-            telephone = str(entreprise.telephone).replace('+', '').replace(' ', '')
-            lien = f"https://wa.me/{telephone}?text={message_encoded}"
-            
-            response.write(f"🏢 {entreprise.raisonSociale}\n")
-            response.write(f"👤 {entreprise.prenom} {entreprise.nom}\n")
-            response.write(f"📞 {entreprise.telephone}\n")
-            response.write(f"📧 {entreprise.email}\n")
-            response.write(f"📊 {len(recommandations)} recommandations\n")
-            response.write(f"🔗 {lien}\n")
-            response.write("-"*80 + "\n\n")
-    
-    return response
 
 def trouver_emploi(request):
     """
@@ -2191,7 +2323,7 @@ def generer_lettre_pdf(request):
     
     # Date
     from datetime import datetime
-    date_obj = datetime.now()
+    date_obj = timezone.now()()
     story.append(Paragraph(f"Le {date_obj.strftime('%d/%m/%Y')}", styles['Normal']))
     story.append(Spacer(1, 20))
     

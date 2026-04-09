@@ -364,7 +364,7 @@ class Ami_uemoa(models.Model):
     date_limite = models.DateTimeField(null=True, blank=True)
     download_url = models.URLField(max_length=500)
     fichier_local = models.FileField(
-        upload_to='pdfs',
+        upload_to='pdfs/',
         null=True,
         blank=True,
         help_text="Fichier PDF stocké en local"
@@ -1201,19 +1201,32 @@ class DossierSoumission(models.Model):
 # ==========================================
 # 4. INSTANCES DE DOCUMENTS GÉNÉRÉS
 # ==========================================
+    
 class DocumentGenere(models.Model):
-    STATUT_CHOICES = [('BROUILLON', 'Brouillon'), ('VALIDE', 'Validé')]
+    TYPE_CHOICES = [
+        ('ENTETE', 'En-tête'),
+        ('LETTRE', 'Lettre de motivation'),
+        ('PRESENTATION', 'Présentation entreprise'),
+        ('FICHE', 'Fiche de renseignement'),
+        ('MATERIEL', 'Liste matériel'),
+        ('PERSONNEL', 'Liste personnel'),
+    ]
     
-    dossier = models.ForeignKey(DossierSoumission, on_delete=models.CASCADE, related_name='documents_prepares')
-    modele_origine = models.ForeignKey(ModeleDocument, on_delete=models.CASCADE)
-    nom_document = models.CharField(max_length=255)
+    STATUT_CHOICES = [
+        ('BROUILLON', 'Brouillon'),
+        ('VALIDE', 'Validé'),
+    ]
     
+    dossier = models.ForeignKey('DossierSoumission', on_delete=models.CASCADE, related_name='documents_prepares')
+    type_document = models.CharField(max_length=20, choices=TYPE_CHOICES, default='ENTETE')
+    version = models.PositiveIntegerField(default=1)
+    contenu_html = models.TextField(blank=True, null=True)
     fichier_docx = models.FileField(upload_to='documents_generes/docx/', null=True, blank=True)
     fichier_pdf = models.FileField(upload_to='documents_generes/pdf/', null=True, blank=True)
-    
     statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='BROUILLON')
     date_generation = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.nom_document} ({self.statut})"
     
+    # Pas de unique_together pour éviter les erreurs
+    
+    def __str__(self):
+        return f"{self.get_type_document()} v{self.version} - {self.dossier.reference}"
