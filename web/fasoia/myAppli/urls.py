@@ -71,9 +71,6 @@ urlpatterns = [
      path('soumission/<str:opportunite_type>/<int:opportunite_id>/commencer/', 
                views.commencer_soumission, name='commencer_soumission'),
 
-     path('soumission/generer/document/<str:type_doc>/', 
-          views.generer_document_soumission, name='generer_document_soumission'),
-
      path('soumission/apercu/document/<str:type_doc>/', 
           views.apercu_document_soumission, name='apercu_document_soumission'),
      
@@ -89,20 +86,8 @@ urlpatterns = [
      path('soumission/etat/documents/', 
           views.etat_documents_soumission, name='etat_documents_soumission'),
 
-     path('entreprise/ajouter/materiel/<int:entreprise_id>/', 
-               views.ajouter_materiel, name='ajouter_materiel'),
-
-     path('entreprise/ajouter/personnel/<int:entreprise_id>/', 
-               views.ajouter_personnel, name='ajouter_personnel'),
-
-     path('soumission/confirmer/<str:opportunite_type>/<int:opportunite_id>/valider/', 
-          views.valider_soumission, name='valider_soumission'),
-
-     path('soumission/document/<int:document_id>/valider/', 
-          views.valider_document, name='valider_document'),
-
      path('soumission/dossier/<int:dossier_id>/soumettre/', 
-          views.soumettre_dossier, name='soumettre_dossier'),
+          views.soumettre_dossier_soumission, name='soumettre_dossier_soumission'),
 
      path('mes_soumissions/', 
           views.mes_soumissions, name='mes_soumissions'),
@@ -124,6 +109,5 @@ urlpatterns = [
      path('generer/lettre/modele/', views.telecharger_modele_lettre, name='telecharger_modele_lettre'),
      path('lettre/apercu/style/<str:style>/', views.apercu_style_lettre, name='apercu_style_lettre'),
      path('soumission/dossier/<int:dossier_id>/documents/', views.get_dossier_documents, name='get_dossier_documents'),
-     path('soumission/document/<int:document_id>/telecharger/', views.telecharger_document, name='telecharger_document'),
      path('recruteur/publier/offre/', views.publier_offre_emploi, name='publier_offre_emploi'),
 ]
