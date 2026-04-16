@@ -82,7 +82,13 @@ class Entreprise(Utilisateur):
     description = models.TextField(blank=True, help_text="Présentation de l'entreprise", default='')
     site_web = models.URLField(blank=True, default='')
     annee_creation = models.IntegerField(null=True, blank=True, default=None)
-    
+    entete_image = models.ImageField(
+        upload_to='entetes/',
+        null=True,
+        blank=True,
+        help_text="Image d'en-tête (contenant logo + infos entreprise)"
+    )
+
     # Capacité financière
     chiffre_affaires = models.DecimalField(
         max_digits=15, 
@@ -1194,6 +1200,22 @@ class DossierSoumission(models.Model):
             models.Index(fields=['entreprise', 'statut']),
         ]
     
+    def est_complet(self):
+        """Vérifie si tous les documents sont prêts"""
+        documents = self.documents_prepares.all()
+        if documents.count() < 6:  # 6 types de documents
+            return False
+        return all(doc.est_prete() for doc in documents)
+    
+    def get_document_par_type(self, type_document):
+        """Récupère ou crée un DocumentGenere pour un type donné"""
+        doc, created = DocumentGenere.objects.get_or_create(
+            dossier=self,
+            type_document=type_document,
+            defaults={'statut': 'MISSING'}
+        )
+        return doc
+    
     def __str__(self):
         return f"Dossier {self.reference} - {self.entreprise.raisonSociale}"
 
@@ -1204,7 +1226,7 @@ class DossierSoumission(models.Model):
     
 class DocumentGenere(models.Model):
     TYPE_CHOICES = [
-        ('ENTETE', 'En-tête'),
+        ('ENVELOPPE', 'Message enveloppe'),
         ('LETTRE', 'Lettre de motivation'),
         ('PRESENTATION', 'Présentation entreprise'),
         ('FICHE', 'Fiche de renseignement'),
@@ -1213,20 +1235,45 @@ class DocumentGenere(models.Model):
     ]
     
     STATUT_CHOICES = [
-        ('BROUILLON', 'Brouillon'),
-        ('VALIDE', 'Validé'),
+        ('MISSING', 'Manquant'),
+        ('GENERATED', 'Généré'),
+        ('IMPORTED', 'Importé'),
+        ('MODIFIED', 'Modifié'),
+        ('ARCHIVED', 'Archivé'),
     ]
     
+    # Relations
     dossier = models.ForeignKey('DossierSoumission', on_delete=models.CASCADE, related_name='documents_prepares')
-    type_document = models.CharField(max_length=20, choices=TYPE_CHOICES, default='ENTETE')
+    type_document = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    
+    # Statut et versions
+    statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='MISSING')
     version = models.PositiveIntegerField(default=1)
-    contenu_html = models.TextField(blank=True, null=True)
+    
+    # Contenu (selon le type de document)
+    contenu_html = models.TextField(blank=True, null=True, help_text="Pour les documents textuels modifiables")
     fichier_docx = models.FileField(upload_to='documents_generes/docx/', null=True, blank=True)
     fichier_pdf = models.FileField(upload_to='documents_generes/pdf/', null=True, blank=True)
-    statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='BROUILLON')
-    date_generation = models.DateTimeField(auto_now_add=True)
+    fichier_source = models.FileField(upload_to='documents/sources/', null=True, blank=True, help_text="Fichier original importé")
     
-    # Pas de unique_together pour éviter les erreurs
+    # Métadonnées
+    date_generation = models.DateTimeField(auto_now_add=True)
+    date_modification = models.DateTimeField(auto_now=True)
+    date_archivage = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        unique_together = ['dossier', 'type_document']
+        ordering = ['type_document']
     
     def __str__(self):
-        return f"{self.get_type_document()} v{self.version} - {self.dossier.reference}"
+        return f"{self.get_type_document_display()} - {self.get_statut_display()} - {self.dossier.reference}"
+    
+    def archiver(self):
+        """Suppression douce"""
+        self.statut = 'ARCHIVED'
+        self.date_archivage = timezone.now()
+        self.save()
+    
+    def est_prete(self):
+        """Vérifie si le document est prêt pour la soumission"""
+        return self.statut in ['GENERATED', 'IMPORTED', 'MODIFIED']

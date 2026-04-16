@@ -10,14 +10,22 @@ from django.conf import settings
 from urllib.parse import quote
 from django.utils import timezone
 from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import UploadedFile
 from django.http import FileResponse
 from datetime import datetime, timedelta
+import tempfile
+import subprocess
 
+from io import BytesIO
+from weasyprint import HTML
+from html2docx import html2docx
+
+import re
 import os
 import json
 import csv
 import logging
-import re
+
 
 from .forms import InscriptionForm, ConnexionForm
 from .models import *
@@ -65,7 +73,6 @@ def opportunites(request):
     }
     return render(request, 'myAppli/opportunites.html', context)
 
-
 @login_required
 def dashboard_opportunites(request):
     """
@@ -107,7 +114,6 @@ def dashboard_opportunites(request):
         'total_opportunites': total_opportunites,
     }
     return render(request, 'myAppli/dashboard_opportunites.html', context)
-
 
 @require_http_methods(["GET", "POST"])
 @csrf_protect
@@ -189,7 +195,6 @@ def inscription(request):
         'title': 'Inscription',
         'no_header_footer': True
     })
-
 
 @require_http_methods(["GET", "POST"])
 @csrf_protect
@@ -285,7 +290,6 @@ def deconnexion(request):
     messages.success(request, "Vous avez été déconnecté avec succès")
     logger.info(f"Déconnexion : {email}")
     return redirect('myAppli:connexion')
-
 
 @login_required
 def profil(request):
@@ -668,7 +672,6 @@ def activer_profil_candidat(request):
     
     messages.success(request, "Profil candidat activé avec succès !")
     return redirect('myAppli:dashboard_candidat')
-
 
 @login_required
 def activer_profil_recruteur(request):
@@ -1073,965 +1076,951 @@ def detail_emploi(request, pk):
         messages.error(request, "Cette offre d'emploi n'existe pas.")
         return redirect('myAppli:opportunites')
 
-
 @login_required
-def commencer_soumission(request, opportunite_type, opportunite_id):
+def nouvelle_soumission(request, opportunite_type, opportunite_id):
     """
-    Page de génération de dossier de candidature
-    """
-    # Récupérer l'opportunité
-    if opportunite_type == 'Offre_uemoa':
-        opportunite = get_object_or_404(Offre_uemoa, id=opportunite_id)
-        type_nom = "Appel d'offres"
-    else:
-        opportunite = get_object_or_404(Ami_uemoa, id=opportunite_id)
-        type_nom = "Appel à manifestation d'intérêt"
+    Page principale de génération de dossier de candidature
+    Version propre - chaque offre a son propre dossier
     
-    # Récupérer l'entreprise
+    Pour l'instant : uniquement les AMI (Appels à Manifestation d'Intérêt)
+    Les appels d'offres seront ajoutés ultérieurement
+    """
+    
+    # ============================================
+    # 1. Vérifier que c'est un AMI (pour l'instant)
+    # ============================================
+    if opportunite_type != 'Ami_uemoa':
+        messages.warning(
+            request, 
+            "La soumission pour les appels d'offres sera disponible prochainement. "
+            "Pour l'instant, seuls les AMI sont supportés."
+        )
+        return redirect('myAppli:opportunites')
+    
+    # ============================================
+    # 2. Récupérer l'opportunité (AMI)
+    # ============================================
+    opportunite = get_object_or_404(Ami_uemoa, id=opportunite_id)
+    type_nom = "Appel à manifestation d'intérêt"
+    
+    # ============================================
+    # 3. Récupérer l'entreprise connectée
+    # ============================================
     try:
         entreprise = Entreprise.objects.get(user=request.user)
     except Entreprise.DoesNotExist:
         messages.error(request, "Vous devez avoir une entreprise associée à votre compte.")
         return redirect('myAppli:home')
     
-    # Traitement des formulaires POST
-    if request.method == 'POST':
-        # Ajout de matériel
-        if 'ajouter_materiel' in request.POST:
-            MaterielEntreprise.objects.create(
-                entreprise=entreprise,
-                designation=request.POST.get('designation'),
-                quantite=request.POST.get('quantite', 1),
-                etat_fonctionnement=request.POST.get('etat_fonctionnement', 'Bon état'),
-                observations=request.POST.get('observations', '')
-            )
-            messages.success(request, "Matériel ajouté avec succès!")
-            return redirect('myAppli:commencer_soumission', opportunite_type=opportunite_type, opportunite_id=opportunite_id)
-        
-        # Ajout de personnel
-        elif 'ajouter_personnel' in request.POST:
-            PersonnelCle.objects.create(
-                entreprise=entreprise,
-                nom_prenom=request.POST.get('nom_prenom'),
-                poste=request.POST.get('poste'),
-                qualification=request.POST.get('qualification'),
-                annees_experience=request.POST.get('annees_experience', 0)
-            )
-            messages.success(request, "Personnel ajouté avec succès!")
-            return redirect('myAppli:commencer_soumission', opportunite_type=opportunite_type, opportunite_id=opportunite_id)
-        
-        # Suppression
-        elif 'supprimer_materiel' in request.POST:
-            MaterielEntreprise.objects.filter(id=request.POST.get('materiel_id'), entreprise=entreprise).delete()
-            messages.success(request, "Matériel supprimé")
-            return redirect('myAppli:commencer_soumission', opportunite_type=opportunite_type, opportunite_id=opportunite_id)
-        
-        elif 'supprimer_personnel' in request.POST:
-            PersonnelCle.objects.filter(id=request.POST.get('personnel_id'), entreprise=entreprise).delete()
-            messages.success(request, "Personnel supprimé")
-            return redirect('myAppli:commencer_soumission', opportunite_type=opportunite_type, opportunite_id=opportunite_id)
-    
-    # Récupérer les données existantes
-    materiels = MaterielEntreprise.objects.filter(entreprise=entreprise)
-    personnels = PersonnelCle.objects.filter(entreprise=entreprise)
-    references_tech = ReferenceTechnique.objects.filter(entreprise=entreprise)
-    
-    # Vérifier si un dossier existe déjà
-    dossier = DossierSoumission.objects.filter(
+    # ============================================
+    # 4. Récupérer ou créer le dossier de soumission
+    # ============================================
+    dossier, created = DossierSoumission.objects.get_or_create(
         entreprise=entreprise,
         opportunite_type=opportunite_type,
-        opportunite_id=opportunite_id
-    ).first()
+        opportunite_id=opportunite_id,
+        defaults={
+            'reference': f"AMI-{opportunite_id}-{entreprise.id}-{timezone.now().strftime('%Y%m%d%H%M%S')}",
+            'statut': 'EN_PREPARATION',
+            'date_soumission_prevue': timezone.now().date() + timezone.timedelta(days=30),
+        }
+    )
     
+    # ============================================
+    # 5. Définir les 6 documents requis pour un AMI
+    # ============================================
+    types_documents = [
+        'ENVELOPPE',      # Message à coller sur l'enveloppe
+        'LETTRE',         # Lettre de manifestation d'intérêt
+        'PRESENTATION',   # Présentation de l'entreprise
+        'FICHE',          # Fiche de renseignement
+        'MATERIEL',       # Liste du matériel
+        'PERSONNEL',      # Liste du personnel cadre
+    ]
+    
+    # ============================================
+    # 6. Créer automatiquement les documents manquants
+    # ============================================
+    if created:
+        for type_doc in types_documents:
+            DocumentGenere.objects.create(
+                dossier=dossier,
+                type_document=type_doc,
+                statut='MISSING'
+            )
+    
+    # ============================================
+    # 7. Contexte pour le template
+    # ============================================
     context = {
         'opportunite': opportunite,
         'opportunite_type': opportunite_type,
         'type_nom': type_nom,
-        'entreprise': entreprise,
         'dossier': dossier,
-        'materiels': materiels,
-        'personnels': personnels,
-        'references_tech': references_tech,
+        'entreprise': entreprise,
+        'types_documents': types_documents,
     }
     
-    return render(request, 'myAppli/soumission/commencer_soumission.html', context)
+    return render(request, 'myAppli/soumission/nouvelle_soumission.html', context)
+
+def get_entete_image_html(request, entreprise):
+    """Retourne le HTML de l'image d'en-tête avec URL absolue"""
+    if entreprise.entete_image and entreprise.entete_image.url:
+        image_url = request.build_absolute_uri(entreprise.entete_image.url)
+        return f'<img src="{image_url}" style="width: 100%; margin-bottom: 20px;">'
+    return ""
+
+def construire_html_enveloppe(texte):
+    """Construit le HTML pour le message enveloppe avec la mise en forme centrale"""
+    texte_maj = texte.upper()
+    return f"""
+        <div style="font-family: Arial, sans-serif; padding: 20px; text-align: center;">
+            <div style="font-weight: bold; font-size: 32px; line-height: 1.8;">
+                {texte_maj}
+            </div>
+        </div>
+        """
+
+def construire_html_lettre(request, entreprise, description, responsable, date_actuelle, domaines):
+    """Construit le HTML pour la lettre de manifestation"""
+    
+    entete_image_html = get_entete_image_html(request, entreprise)
+
+    return f"""<div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;">
+        {entete_image_html}
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+            <tr><td style="width: 50%; padding: 4px 0;"><strong>{entreprise.raisonSociale}</strong></td>
+                <td style="width: 50%; padding: 4px 0; text-align: right;"><strong>BURKINA FASO</strong></td>
+            </tr>
+            <tr><td style="padding: 4px 0;">Tel: {entreprise.telephone or '+226 XX XX XX XX'}</td>
+                <td style="padding: 4px 0; text-align: right;">La Patrie ou, La Mort, Nous vaincrons</td>
+            </tr>
+            <tr><td style="padding: 4px 0;">Email: {entreprise.email or 'contact@entreprise.com'}</td>
+                <td style="padding: 4px 0; text-align: right;">A</td>
+            </tr>
+            <tr><td style="padding: 4px 0;"></td>
+                <td style="padding: 4px 0; text-align: right;">La Personne Responsable des Marchés</td>
+            </tr>
+        </table>
+        <div style="margin: 20px 0;"><strong>Objet : LETTRE DE MANIFESTATION D'INTERET</strong></div>
+        <div style="margin: 20px 0; text-align: justify;">
+        <p>Nous, L'ENTREPRISE <strong>{entreprise.raisonSociale}</strong>, montrons notre intérêt face à {description} dans les domaines suivants :</p>
+        <p style="margin: 15px 0; font-weight: bold;">PRESTATIONS DE SERVICES</p>
+        <p style="margin: 10px 0; padding-left: 20px;">{domaines}</p>
+        <p style="margin-top: 20px;">Dans l'espoir de retenir votre attention lors de vos consultations, nous vous prions de croire, en l'assurance de nos sentiments les plus dévoués.</p>
+        </div>
+        <div style="margin-top: 50px;">
+        <div style="float: right; text-align: right;">
+        Ouagadougou, le {date_actuelle}<br><br>Le responsable<br><br><strong>{responsable}</strong>
+        </div>
+        <div style="clear: both;"></div>
+        </div>
+        </div>"""
+
+def construire_html_presentation(request, entreprise, description):
+    """Construit le HTML pour la présentation de l'entreprise"""
+    
+    entete_image_html = get_entete_image_html(request, entreprise)
+   
+    return f"""<div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;">
+        {entete_image_html}
+        <h2 style="text-align: center; margin-bottom: 20px;">PRÉSENTATION DE L'ENTREPRISE</h2>
+        <div style="margin-bottom: 15px;">
+        <strong>Raison sociale :</strong> {entreprise.raisonSociale}
+        </div>
+        <div style="margin-bottom: 15px;">
+        <strong>Domaine d'activité :</strong> {entreprise.domaineActive or 'Non renseigné'}
+        </div>
+        <div style="margin-bottom: 15px;">
+        <strong>Localisation :</strong> {entreprise.localisation or 'Non renseignée'}
+        </div>
+        <div style="margin-bottom: 15px;">
+        <strong>Année de création :</strong> {entreprise.annee_creation or 'Non renseignée'}
+        </div>
+        <div style="margin-bottom: 15px;">
+        <strong>Taille :</strong> {entreprise.taille or 'Non renseignée'} employés
+        </div>
+        <div style="margin-bottom: 15px;">
+        <strong>Chiffre d'affaires :</strong> {entreprise.chiffre_affaires or 'Non renseigné'} FCFA
+        </div>
+        <div style="margin-bottom: 15px;">
+        <strong>Capital social :</strong> {entreprise.capital_social or 'Non renseigné'} FCFA
+        </div>
+        <div style="margin-bottom: 15px;">
+        <strong>Contact :</strong><br>
+        Tél : {entreprise.telephone or 'Non renseigné'}<br>
+        Email : {entreprise.email or 'Non renseigné'}<br>
+        Site web : {entreprise.site_web or 'Non renseigné'}
+        </div>
+        <div style="margin-bottom: 15px;">
+        <strong>Compétences clés :</strong><br>
+        {entreprise.competencesCles or 'Non renseignées'}
+        </div>
+        <div style="margin-bottom: 15px;">
+        <strong>Présentation :</strong><br>
+        {entreprise.description or 'Aucune description fournie'}
+        </div>
+        </div>"""
+
+def construire_html_fiche(request, entreprise):
+    """Construit le HTML pour la fiche de renseignement"""
+    
+    entete_image_html = get_entete_image_html(request, entreprise)
+    
+    # Récupérer les informations
+    raison_sociale = entreprise.raisonSociale
+    adresse = entreprise.localisation or "Non renseignée"
+    telephone = str(entreprise.telephone) if entreprise.telephone else "Non renseigné"
+    email = entreprise.email or "Non renseigné"
+    rccm = getattr(entreprise, 'rccm', 'Non renseigné')
+    ifu = getattr(entreprise, 'ifu', 'Non renseigné')
+    domaine_activite = entreprise.domaineActive or "Non renseigné"
+    responsable = getattr(entreprise, 'responsable_nom', 'Non renseigné')
+    
+    return f"""<div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;">
+        {entete_image_html}
+        <h2 style="text-align: center; margin-bottom: 30px;">FICHE DE RENSEIGNEMENT</h2>
+        <div style="margin-bottom: 15px;">
+        <strong>1. Nom ou raison sociale :</strong> {raison_sociale}
+        </div>
+        <div style="margin-bottom: 15px;">
+        <strong>2. Adresse :</strong> {adresse}
+        </div>
+        <div style="margin-bottom: 15px;">
+        <strong>3. Téléphone :</strong> {telephone}
+        </div>
+        <div style="margin-bottom: 15px;">
+        <strong>4. E-mail :</strong> {email}
+        </div>
+        <div style="margin-bottom: 15px;">
+        <strong>5. RCCM :</strong> {rccm}
+        </div>
+        <div style="margin-bottom: 15px;">
+        <strong>6. IFU :</strong> {ifu}
+        </div>
+        <div style="margin-bottom: 15px;">
+        <strong>7. Principale activité :</strong> {domaine_activite}
+        </div>
+        <div style="margin-bottom: 15px;">
+        <strong>8. Personne responsable :</strong> {responsable}
+        </div>
+        </div>"""
+
+def construire_html_materiel(request, entreprise):
+    """Construit le HTML pour la liste du matériel"""
+    
+    entete_image_html = get_entete_image_html(request, entreprise)
+    
+    # Récupérer la liste du matériel
+    materiels = MaterielEntreprise.objects.filter(entreprise=entreprise)
+    
+    # Générer les lignes du tableau
+    lignes = ""
+    for i, m in enumerate(materiels, 1):
+        lignes += f"""
+        <tr style="border-bottom: 1px solid #ccc;">
+            <td style="padding: 8px; text-align: center;">{i:02d}</td>
+            <td style="padding: 8px;">{m.designation}</td>
+            <td style="padding: 8px; text-align: center;">{m.quantite}</td>
+        </tr>
+        """
+    
+    if not lignes:
+        lignes = '<tr><td colspan="3" style="padding: 20px; text-align: center;">Aucun matériel renseigné</td></tr>'
+    
+    date_actuelle = timezone.now().strftime('%d/%m/%Y')
+    responsable = request.user.get_full_name() or request.user.username or entreprise.raisonSociale
+    
+    return f"""<div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;">
+        {entete_image_html}
+        <h2 style="text-align: center; margin-bottom: 30px;">LISTE DE MATÉRIELS</h2>
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
+            <thead>
+                <tr style="background-color: #f0f0f0; border-bottom: 1px solid #000;">
+                    <th style="padding: 10px; text-align: center; border: 1px solid #000;">N°</th>
+                    <th style="padding: 10px; text-align: center; border: 1px solid #000;">Type, capacité et caractéristiques du matériel</th>
+                    <th style="padding: 10px; text-align: center; border: 1px solid #000;">Nombre</th>
+                </tr>
+            </thead>
+            <tbody>
+                {lignes}
+            </tbody>
+        </table>
+        <div style="margin-top: 40px;">
+        <div style="float: right; text-align: right;">
+        Ouagadougou, le {date_actuelle}<br><br>
+        Le responsable<br><br>
+        <strong>{responsable}</strong>
+        </div>
+        <div style="clear: both;"></div>
+        </div>
+        </div>"""
+
+def generer_message_enveloppe(entreprise, opportunite):
+    """
+    Génère le message à coller sur l'enveloppe
+    Contenu: RÉPONSE + description de l'AMI (en majuscules, en gras)
+    """
+    # Récupérer la description de l'AMI
+    description = opportunite.description or ""
+    
+    # Nettoyer la description
+    description = description.replace('\n', ' ').replace('\r', ' ')
+    description = description.strip()
+    
+    # Supprimer les préfixes
+    description = re.sub(r'Avis à manifestation d[’\']intérêt\s+', '', description, flags=re.IGNORECASE)
+    description = re.sub(r'AVIS À MANIFESTATION D[’\']INTÉRÊT\s+', '', description, flags=re.IGNORECASE)
+    
+    # Mettre en majuscules
+    description = description.upper()
+    
+    # Utiliser la fonction centralisée
+    texte_brut = f"RÉPONSE {description}"
+    return construire_html_enveloppe(texte_brut)
+
+def generer_pdf(html_content, filename):
+    """Génère un PDF à partir du HTML avec WeasyPrint"""
+    buffer = BytesIO()
+    
+    # WeasyPrint peut écrire directement dans un buffer
+    HTML(string=html_content).write_pdf(buffer)
+    buffer.seek(0)
+    
+    return FileResponse(buffer, as_attachment=True, filename=filename, content_type='application/pdf')
+
+def generer_docx(html_content, filename):
+    """Génère un DOCX à partir du HTML avec html2docx"""
+    buffer = BytesIO()
+    
+    # html2docx écrit dans un buffer
+    html2docx(html_content, buffer)
+    buffer.seek(0)
+    
+    return FileResponse(
+        buffer,
+        as_attachment=True,
+        filename=filename,
+        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    )
+
+def generer_lettre_manifestation(request, entreprise, opportunite):
+    """Génère la lettre de manifestation d'intérêt"""
+    
+    description = opportunite.description or ""
+    description = description.strip()
+    
+    domaines = entreprise.domaineActive or "Fournitures et équipements ; Services courants ; Prestations intellectuelles"
+    date_actuelle = timezone.now().strftime('%d/%m/%Y')
+    responsable = request.user.get_full_name() or request.user.username or entreprise.raisonSociale
+    
+    return construire_html_lettre(request, entreprise, description, responsable, date_actuelle, domaines)
+
+def generer_presentation_entreprise(request, entreprise):
+    """Génère la présentation de l'entreprise"""
+    
+    return construire_html_presentation(request, entreprise, entreprise.description or "")
+
+def generer_fiche_renseignement(request, entreprise):
+    """Génère la fiche de renseignement de l'entreprise"""
+    
+    return construire_html_fiche(request, entreprise)
+
+def generer_liste_materiel(request, entreprise):
+    """Génère la liste du matériel"""
+    
+    return construire_html_materiel(request, entreprise)
 
 @login_required
-def apercu_document_soumission(request, type_doc):
-    """
-    Retourne l'aperçu HTML du document
-    """
-    try:
-        opportunite_type = request.GET.get('opportunite_type')
-        opportunite_id = request.GET.get('opportunite_id')
-        
-        # Vérification des paramètres
-        if not opportunite_type or not opportunite_id:
-            return JsonResponse({'error': 'Paramètres manquants'}, status=400)
-        
-        # Récupérer l'opportunité
-        try:
-            if opportunite_type == 'Offre_uemoa':
-                opportunite = get_object_or_404(Offre_uemoa, id=opportunite_id)
-                description_opportunite = opportunite.description or ""
-            else:
-                opportunite = get_object_or_404(Ami_uemoa, id=opportunite_id)
-                description_opportunite = opportunite.description or ""
-        except Exception as e:
-            return JsonResponse({'error': f'Opportunité non trouvée: {str(e)}'}, status=404)
-        
-        # Récupérer l'entreprise
-        try:
-            entreprise = Entreprise.objects.get(user=request.user)
-        except Entreprise.DoesNotExist:
-            return JsonResponse({'error': 'Entreprise non trouvée'}, status=404)
-        
-        html = ''
-        
-        if type_doc == 'entete':
-            description = description_opportunite
-            description = description.replace('\n', ' ').replace('\r', ' ')
-            description = description.strip()
-            description = re.sub(r'Avis à manifestation d[’\']intérêt\s+', '', description, flags=re.IGNORECASE)
-            description = re.sub(r'AVIS À MANIFESTATION D[’\']INTÉRÊT\s+', '', description, flags=re.IGNORECASE)
-            description = description.upper()
-            
-            html = f'''
-            <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background: white;">
-                <div style="text-align: justify; font-weight: bold; font-size: 22px; line-height: 1.5;">
-                    RÉPONSE À LA MANIFESTATION D'INTÉRÊT {description}
-                </div>
-            </div>
-            '''
-        
-        elif type_doc == 'lettre':
-            # Nettoyer la description pour l'utiliser dans la lettre
-            description_clean = description_opportunite
-            description_clean = description_clean.replace('\n', ' ').replace('\r', ' ')
-            description_clean = description_clean.strip()
-            
-            # Récupérer les domaines d'activité de l'entreprise
-            domaines = ""
-            if entreprise.domaineActive:
-                domaines_list = [d.strip() for d in entreprise.domaineActive.split(',')]
-                domaines = " ; ".join(domaines_list)
-            else:
-                domaines = "Prestations de services ; Fournitures et équipements ; Services courants ; Prestations intellectuelles"
-            
-            html = f'''
-            <div style="font-family: 'Times New Roman', Arial, sans-serif; padding: 30px; max-width: 800px; margin: 0 auto; background: white; line-height: 1.5;">
-                
-                <!-- En-tête -->
-                <div style="display: flex; justify-content: space-between; margin-bottom: 40px; border-bottom: 2px solid #000; padding-bottom: 10px;">
-                    <div style="text-align: left;">
-                        <strong>{entreprise.raisonSociale}</strong><br>
-                        Tél : {entreprise.telephone or '+226 XX XX XX XX'}<br>
-                        Email : {entreprise.email or 'contact@entreprise.com'}
-                    </div>
-                    <div style="text-align: right;">
-                        <strong>BURKINA FASO</strong><br>
-                        La Patrie ou, La Mort, Nous vaincrons
-                    </div>
-                </div>
-                
-                <!-- Destinataire -->
-                <div style="margin-bottom: 30px; text-align: right;">
-                    A<br>
-                    La Personne Responsable des Marchés
-                </div>
-                
-                <!-- Objet -->
-                <div style="margin-bottom: 20px;">
-                    <strong>Objet : LETTRE DE MANIFESTATION D'INTERET</strong>
-                </div>
-                
-                <!-- Corps -->
-                <div style="margin-bottom: 30px; text-align: justify;">
-                    <p>Nous, L'ENTREPRISE <strong>{entreprise.raisonSociale}</strong>, montrons notre intérêt face à l'{description_clean} dans les domaines suivants :</p>
-                    
-                    <p style="margin: 15px 0; padding-left: 20px;">
-                        <strong>{domaines}</strong>
-                    </p>
-                    
-                    <p>Dans l'espoir de retenir votre attention lors de vos consultations, nous vous prions de croire, en l'assurance de nos sentiments les plus dévoués.</p>
-                </div>
-                
-                <!-- Signature -->
-                <div style="margin-top: 50px; text-align: right;">
-                    <p>Ouagadougou, le {timezone.now().strftime('%d/%m/%Y')}</p>
-                    <p style="margin-top: 30px;"><strong>Le responsable</strong></p>
-                    <p style="margin-top: 20px;"><strong>{request.user.get_full_name() or entreprise.raisonSociale}</strong></p>
-                </div>
-                
-                <!-- Pied de page -->
-                <div style="margin-top: 60px; text-align: center; font-size: 10px; border-top: 1px solid #ccc; padding-top: 10px;">
-                    Document généré par FASOIA
-                </div>
-            </div>
-            '''
-        
-        elif type_doc == 'presentation':
-            presentation = entreprise.description or "Présentation de l'entreprise non disponible."
-            html = f'''
-            <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background: white;">
-                <h2 style="color: #003366;">Présentation de {entreprise.raisonSociale}</h2>
-                <div style="margin-top: 20px;">
-                    {presentation.replace(chr(10), '<br>')}
-                </div>
-            </div>
-            '''
-        
-        elif type_doc == 'fiche':
-            html = f'''
-            <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background: white;">
-                <h2 style="color: #003366;">Fiche de renseignement</h2>
-                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-                    <tr style="border-bottom: 1px solid #ddd;">
-                        <td style="padding: 10px; font-weight: bold; width: 30%;">Raison sociale</td>
-                        <td style="padding: 10px;">{entreprise.raisonSociale}</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid #ddd;">
-                        <td style="padding: 10px; font-weight: bold;">Domaine d'activité</td>
-                        <td style="padding: 10px;">{entreprise.domaineActive or 'Non renseigné'}</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid #ddd;">
-                        <td style="padding: 10px; font-weight: bold;">Téléphone</td>
-                        <td style="padding: 10px;">{entreprise.telephone or 'Non renseigné'}</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid #ddd;">
-                        <td style="padding: 10px; font-weight: bold;">Email</td>
-                        <td style="padding: 10px;">{entreprise.email or 'Non renseigné'}</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid #ddd;">
-                        <td style="padding: 10px; font-weight: bold;">Adresse</td>
-                        <td style="padding: 10px;">{entreprise.localisation or 'Non renseigné'}</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid #ddd;">
-                        <td style="padding: 10px; font-weight: bold;">Site web</td>
-                        <td style="padding: 10px;">{entreprise.site_web or 'Non renseigné'}</td>
-                    </tr>
-                </table>
-            </div>
-            '''
-        
-        elif type_doc == 'materiel':
-            materiels = MaterielEntreprise.objects.filter(entreprise=entreprise)
-            if materiels.exists():
-                rows = ''
-                for m in materiels:
-                    rows += f'''
-                    <tr style="border-bottom: 1px solid #ddd;">
-                        <td style="padding: 8px;">{m.designation}</td>
-                        <td style="padding: 8px; text-align: center;">{m.quantite}</td>
-                        <td style="padding: 8px;">{m.etat_fonctionnement}</td>
-                        <td style="padding: 8px;">{m.observations or '-'}</td>
-                    </tr>
-                    '''
-                html = f'''
-                <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background: white;">
-                    <h2 style="color: #003366;">Liste du matériel</h2>
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-                        <thead>
-                            <tr style="background-color: #003366; color: white;">
-                                <th style="padding: 10px;">Désignation</th>
-                                <th style="padding: 10px;">Quantité</th>
-                                <th style="padding: 10px;">État</th>
-                                <th style="padding: 10px;">Observations</th>
-                            </tr>
-                        </thead>
-                        <tbody>{rows}</tbody>
-                    </table>
-                </div>
-                '''
-            else:
-                html = '<div class="alert alert-warning">Aucun matériel renseigné. Veuillez ajouter du matériel.</div>'
-        
-        elif type_doc == 'personnel':
-            personnels = PersonnelCle.objects.filter(entreprise=entreprise)
-            if personnels.exists():
-                rows = ''
-                for p in personnels:
-                    rows += f'''
-                    <tr style="border-bottom: 1px solid #ddd;">
-                        <td style="padding: 8px;">{p.nom_prenom}</td>
-                        <td style="padding: 8px;">{p.poste}</td>
-                        <td style="padding: 8px;">{p.qualification}</td>
-                        <td style="padding: 8px; text-align: center;">{p.annees_experience}</td>
-                    </tr>
-                    '''
-                html = f'''
-                <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background: white;">
-                    <h2 style="color: #003366;">Liste du personnel cadre</h2>
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-                        <thead>
-                            <tr style="background-color: #003366; color: white;">
-                                <th style="padding: 10px;">Nom et prénom</th>
-                                <th style="padding: 10px;">Poste</th>
-                                <th style="padding: 10px;">Qualification</th>
-                                <th style="padding: 10px;">Années d'exp.</th>
-                            </tr>
-                        </thead>
-                        <tbody>{rows}</tbody>
-                    </table>
-                </div>
-                '''
-            else:
-                html = '<div class="alert alert-warning">Aucun personnel renseigné. Veuillez ajouter du personnel.</div>'
-        
-        else:
-            return JsonResponse({'error': f'Type {type_doc} non supporté'}, status=400)
-        
-        return JsonResponse({'html': html, 'success': True})
-        
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return JsonResponse({'error': str(e), 'trace': traceback.format_exc()}, status=500)
-@login_required
-def get_donnees_document(request, type_doc):
-    """
-    Récupère les données existantes pour l'édition
-    """
-    opportunite_type = request.GET.get('opportunite_type')
-    opportunite_id = request.GET.get('opportunite_id')
+def api_document_generer(request):
     
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        print(f"✅ JSON décodé: {data}")
+    except json.JSONDecodeError as e:
+        print(f"❌ Erreur JSON: {e}")
+        return JsonResponse({'error': 'JSON invalide'}, status=400)
+    
+    opportunite_type = data.get('opportunite_type')
+    opportunite_id = data.get('opportunite_id')
+    type_document = data.get('type_document')
+    
+    # Vérifier chaque paramètre individuellement
+    if not opportunite_type:
+        print("❌ opportunite_type manquant")
+        return JsonResponse({'error': 'opportunite_type manquant'}, status=400)
+    
+    if not opportunite_id:
+        print("❌ opportunite_id manquant")
+        return JsonResponse({'error': 'opportunite_id manquant'}, status=400)
+    
+    if not type_document:
+        print("❌ type_document manquant")
+        return JsonResponse({'error': 'type_document manquant'}, status=400)
+    
+    print("✅ Tous les paramètres sont présents")
+    
+    # Convertir en majuscules pour la base de données
+    type_document_upper = type_document.upper()
+    print(f"🔄 type_document converti: {type_document} -> {type_document_upper}")
+    
+    # Vérifier que c'est un AMI
+    if opportunite_type != 'Ami_uemoa':
+        print(f"❌ Type non supporté: {opportunite_type}")
+        return JsonResponse({'error': 'Seuls les AMI sont supportés'}, status=400)
+    
+    # Récupérer l'entreprise
     try:
         entreprise = Entreprise.objects.get(user=request.user)
+        print(f"✅ Entreprise trouvée: {entreprise.raisonSociale}")
     except Entreprise.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Entreprise non trouvée'})
+        print("❌ Entreprise non trouvée")
+        return JsonResponse({'error': 'Entreprise non trouvée'}, status=404)
     
-    donnees = {}
+    # Récupérer l'opportunité
+    try:
+        opportunite = Ami_uemoa.objects.get(id=opportunite_id)
+        print(f"✅ Opportunité trouvée: AMI #{opportunite_id}")
+    except Ami_uemoa.DoesNotExist:
+        print(f"❌ AMI #{opportunite_id} non trouvé")
+        return JsonResponse({'error': 'AMI non trouvé'}, status=404)
     
-    if type_doc == 'entete':
-        if opportunite_type == 'Offre_uemoa':
-            opportunite = get_object_or_404(Offre_uemoa, id=opportunite_id)
-        else:
-            opportunite = get_object_or_404(Ami_uemoa, id=opportunite_id)
-        donnees = {
-            'reference': getattr(opportunite, 'reference', ''),
-            'date_ami': getattr(opportunite, 'datePublication', ''),
-            'beneficiaire': '',
-        }
-    elif type_doc == 'lettre':
-        dossier = DossierSoumission.objects.filter(
+    # Récupérer le dossier
+    try:
+        dossier = DossierSoumission.objects.get(
             entreprise=entreprise,
             opportunite_type=opportunite_type,
             opportunite_id=opportunite_id
-        ).first()
-        if dossier:
-            doc_genere = DocumentGenere.objects.filter(
-                dossier=dossier,
-                type_document='LETTRE'
-            ).first()
-            donnees = {
-                'lettre_motivation': doc_genere.contenu_html if doc_genere else ''
-            }
-        else:
-            donnees = {'lettre_motivation': ''}
-    elif type_doc == 'presentation':
-        donnees = {
-            'presentation': entreprise.description or ''
-        }
-    elif type_doc == 'fiche':
-        donnees = {
-            'ifu': getattr(entreprise, 'ifu', ''),
-            'rccm': getattr(entreprise, 'rccm', ''),
-            'telephone': str(entreprise.telephone) if entreprise.telephone else '',
-            'email': entreprise.email or '',
-            'adresse': entreprise.localisation or '',
-        }
-    else:
-        return JsonResponse({'success': False, 'error': 'Type non supporté'})
-    
-    return JsonResponse({'success': True, 'donnees': donnees})
-
-
-@login_required
-@require_http_methods(["POST"])
-def sauvegarder_donnees_soumission(request):
-    """
-    Sauvegarde les données saisies dans le modal
-    """
-    try:
-        data = request.POST
-        doc_type = data.get('type')
-        opportunite_type = data.get('opportunite_type')
-        opportunite_id = data.get('opportunite_id')
-        
-        try:
-            entreprise = Entreprise.objects.get(user=request.user)
-        except Entreprise.DoesNotExist:
-            return JsonResponse({'error': 'Entreprise non trouvée'}, status=404)
-        
-        # Créer ou récupérer le dossier
-        dossier, created = DossierSoumission.objects.get_or_create(
-            entreprise=entreprise,
-            opportunite_type=opportunite_type,
-            opportunite_id=opportunite_id,
-            defaults={
-                'reference': f"DOS-{timezone.now().strftime('%Y%m%d')}-{entreprise.id}",
-                'date_soumission_prevue': timezone.now().date() + datetime.timedelta(days=30),
-                'statut': 'EN_PREPARATION'
-            }
         )
-        
-        if doc_type == 'entete':
-            if opportunite_type == 'Offre_uemoa':
-                opportunite = get_object_or_404(Offre_uemoa, id=opportunite_id)
-            else:
-                opportunite = get_object_or_404(Ami_uemoa, id=opportunite_id)
-            
-            if data.get('reference_ami'):
-                opportunite.reference = data.get('reference_ami')
-            if data.get('date_ami'):
-                from datetime import datetime
-                try:
-                    opportunite.datePublication = datetime.strptime(data.get('date_ami'), '%Y-%m-%d').date()
-                except:
-                    pass
-            opportunite.save()
-        
-        elif doc_type == 'lettre':
-            # Sauvegarder dans DocumentGenere
-            doc_genere, created = DocumentGenere.objects.get_or_create(
-                dossier=dossier,
-                type_document='LETTRE',
-                defaults={'version': 1, 'statut': 'BROUILLON'}
-            )
-            doc_genere.contenu_html = data.get('lettre_motivation', '')
-            doc_genere.save()
-        
-        elif doc_type == 'presentation':
-            entreprise.description = data.get('presentation_texte', '')
-            entreprise.save()
-        
-        elif doc_type == 'fiche':
-            if data.get('ifu'):
-                entreprise.ifu = data.get('ifu')
-            if data.get('rccm'):
-                entreprise.rccm = data.get('rccm')
-            if data.get('telephone'):
-                entreprise.telephone = data.get('telephone')
-            if data.get('email'):
-                entreprise.email = data.get('email')
-            if data.get('adresse'):
-                entreprise.localisation = data.get('adresse')
-            entreprise.save()
-        
-        return JsonResponse({'success': True})
-        
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
+        print(f"✅ Dossier trouvé: #{dossier.id}")
+    except DossierSoumission.DoesNotExist:
+        print("❌ Dossier non trouvé")
+        return JsonResponse({'error': 'Dossier non trouvé'}, status=404)
+    
+    # Vérifier que le dossier n'est pas déjà soumis
+    if dossier.statut == 'SOUMIS':
+        print("❌ Dossier déjà soumis")
+        return JsonResponse({'error': 'Dossier déjà soumis, modification impossible'}, status=400)
+    
+    # Récupérer ou créer le document
+    doc, created = DocumentGenere.objects.get_or_create(
+        dossier=dossier,
+        type_document=type_document_upper,
+        defaults={'statut': 'MISSING', 'version': 1}
+    )
+    print(f"📄 Document: {'créé' if created else 'existait déjà'}")
+    
+    # Génération selon le type
+    if type_document == 'enveloppe':
+        print("🎨 Génération du message enveloppe...")
+        contenu = generer_message_enveloppe(entreprise, opportunite)
+        doc.contenu_html = contenu
+        doc.statut = 'GENERATED'
+        doc.save()
+        print("✅ Message enveloppe généré avec succès")
+        return JsonResponse({'success': True, 'message': 'Message enveloppe généré avec succès'})
+    
+    elif type_document == 'lettre':
+        contenu = generer_lettre_manifestation(request, entreprise, opportunite)
+        doc.contenu_html = contenu
+        doc.statut = 'GENERATED'
+        doc.save()
+        return JsonResponse({'success': True, 'message': 'Lettre générée avec succès'})
+    
+    elif type_document == 'presentation':
+        contenu = generer_presentation_entreprise(request, entreprise)
+        doc.contenu_html = contenu
+        doc.statut = 'GENERATED'
+        doc.save()
+        return JsonResponse({'success': True, 'message': 'Présentation générée avec succès'})
+    
+    elif type_document == 'fiche':
+        contenu = generer_fiche_renseignement(request, entreprise)
+        doc.contenu_html = contenu
+        doc.statut = 'GENERATED'
+        doc.save()
+        return JsonResponse({'success': True, 'message': 'Fiche de renseignement générée avec succès'})
+    
+    elif type_document == 'materiel':
+        contenu = generer_liste_materiel(request, entreprise)
+        doc.contenu_html = contenu
+        doc.statut = 'GENERATED'
+        doc.save()
+        return JsonResponse({'success': True, 'message': 'Liste du matériel générée avec succès'})
+    
+    else:
+        print(f"❌ Type de document non supporté: {type_document}")
+        return JsonResponse({'error': f'Type de document non supporté: {type_document}'}, status=400) 
 
 @login_required
-def etat_documents_soumission(request):
+def api_document_apercu(request):
     """
-    Retourne l'état des documents déjà générés
+    GET /api/document/apercu/?opportunite_type=Ami_uemoa&opportunite_id=66&type_document=enveloppe
+    Retourne le HTML du document pour aperçu
     """
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+    
     opportunite_type = request.GET.get('opportunite_type')
     opportunite_id = request.GET.get('opportunite_id')
+    type_document = request.GET.get('type_document')
     
+    if not all([opportunite_type, opportunite_id, type_document]):
+        return JsonResponse({'error': 'Paramètres manquants'}, status=400)
+    
+    # Récupérer l'entreprise
     try:
         entreprise = Entreprise.objects.get(user=request.user)
     except Entreprise.DoesNotExist:
-        return JsonResponse({'documents': {}, 'dossier_soumis': False})
+        return JsonResponse({'error': 'Entreprise non trouvée'}, status=404)
     
-    dossier = DossierSoumission.objects.filter(
-        entreprise=entreprise,
-        opportunite_type=opportunite_type,
-        opportunite_id=opportunite_id
-    ).first()
-    
-    # Vérifier l'état de chaque document
-    etat = {
-        'entete': True,  # Toujours disponible
-        'lettre': False,
-        'presentation': bool(entreprise.description),
-        'fiche': bool(getattr(entreprise, 'ifu', '') or getattr(entreprise, 'rccm', '')),
-        'materiel': MaterielEntreprise.objects.filter(entreprise=entreprise).exists(),
-        'personnel': PersonnelCle.objects.filter(entreprise=entreprise).exists(),
-    }
-    
-    # Vérifier la lettre
-    if dossier:
-        doc_lettre = DocumentGenere.objects.filter(dossier=dossier, type_document='LETTRE').first()
-        etat['lettre'] = bool(doc_lettre and doc_lettre.contenu_html)
-    
-    # Vérifier si le dossier est déjà soumis
-    dossier_soumis = dossier and dossier.statut == 'SOUMIS' if dossier else False
-    date_soumission = dossier.date_soumission_effective if dossier and dossier_soumis else None
-    
-    return JsonResponse({
-        'documents': etat,
-        'dossier_soumis': dossier_soumis,
-        'date_soumission': date_soumission.strftime('%d/%m/%Y à %H:%M') if date_soumission else None
-    })
-
-
-@login_required
-def marquer_document_genere(request):
-    """
-    Marque un document comme généré
-    """
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
-    
+    # Récupérer le dossier
     try:
-        data = json.loads(request.body)
-        doc_type = data.get('type_document')
-        est_genere = data.get('est_genere', True)
-        
-        # Pour l'instant, on ne stocke pas l'état
-        return JsonResponse({'success': True})
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
-
-@login_required
-def soumettre_dossier_soumission(request):
-    """
-    Soumet le dossier complet
-    """
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
-    
-    try:
-        data = json.loads(request.body)
-        opportunite_type = data.get('opportunite_type')
-        opportunite_id = data.get('opportunite_id')
-        
-        try:
-            entreprise = Entreprise.objects.get(user=request.user)
-        except Entreprise.DoesNotExist:
-            return JsonResponse({'error': 'Entreprise non trouvée'}, status=404)
-        
-        # Vérifier que tous les documents sont prêts
-        materiels = MaterielEntreprise.objects.filter(entreprise=entreprise).exists()
-        personnels = PersonnelCle.objects.filter(entreprise=entreprise).exists()
-        
-        if not materiels:
-            return JsonResponse({'error': 'Veuillez renseigner au moins un équipement/matériel'}, status=400)
-        
-        if not personnels:
-            return JsonResponse({'error': 'Veuillez renseigner au moins un personnel clé'}, status=400)
-        
-        # Récupérer ou créer le dossier
-        dossier, created = DossierSoumission.objects.get_or_create(
+        dossier = DossierSoumission.objects.get(
             entreprise=entreprise,
             opportunite_type=opportunite_type,
-            opportunite_id=opportunite_id,
-            defaults={
-                'reference': f"DOS-{timezone.now().strftime('%Y%m%d')}-{entreprise.id}",
-                'date_soumission_prevue': timezone.now().date() + datetime.timedelta(days=30),
-                'statut': 'EN_PREPARATION'
-            }
+            opportunite_id=opportunite_id
         )
-        
-        # Mettre à jour le dossier
-        dossier.statut = 'SOUMIS'
-        dossier.date_soumission_effective = timezone.now()
-        dossier.save()
-        
-        # Mettre à jour les statistiques
-        entreprise.nb_candidatures_emises += 1
-        entreprise.save()
-        
-        return JsonResponse({
-            'success': True,
-            'message': 'Votre dossier a été soumis avec succès !',
-            'date_soumission': dossier.date_soumission_effective.strftime('%d/%m/%Y à %H:%M')
-        })
-        
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
+    except DossierSoumission.DoesNotExist:
+        return JsonResponse({'error': 'Dossier non trouvé'}, status=404)
+    
+    # Récupérer le document
+    type_document_upper = type_document.upper()
+    try:
+        doc = DocumentGenere.objects.get(
+            dossier=dossier,
+            type_document=type_document_upper
+        )
+    except DocumentGenere.DoesNotExist:
+        return JsonResponse({'error': 'Document non trouvé'}, status=404)
+    
+    # Retourner le contenu HTML
+    if doc.contenu_html:
+        print("="*50)
+        print(f"APERÇU LETTRE - Premier 500 caractères:")
+        print(doc.contenu_html[:500])
+        print("="*50)
+        return JsonResponse({'success': True, 'html': doc.contenu_html})
+    else:
+        return JsonResponse({'error': 'Aucun contenu disponible pour ce document'}, status=404)
 
 @login_required
-def telecharger_document_soumission(request, type_doc):
+def api_document_modifier(request):
     """
-    Télécharge le document au format choisi (DOCX ou PDF)
+    POST /api/document/modifier/
+    Modifie le contenu d'un document existant
     """
-    format_doc = request.GET.get('format', 'docx')
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON invalide'}, status=400)
+    
+    opportunite_type = data.get('opportunite_type')
+    opportunite_id = data.get('opportunite_id')
+    type_document = data.get('type_document')
+    nouveau_texte = data.get('contenu')
+    
+    if not all([opportunite_type, opportunite_id, type_document, nouveau_texte]):
+        return JsonResponse({'error': 'Paramètres manquants'}, status=400)
+    
+    # Récupérer l'entreprise
+    try:
+        entreprise = Entreprise.objects.get(user=request.user)
+    except Entreprise.DoesNotExist:
+        return JsonResponse({'error': 'Entreprise non trouvée'}, status=404)
+    
+    # Récupérer le dossier
+    try:
+        dossier = DossierSoumission.objects.get(
+            entreprise=entreprise,
+            opportunite_type=opportunite_type,
+            opportunite_id=opportunite_id
+        )
+    except DossierSoumission.DoesNotExist:
+        return JsonResponse({'error': 'Dossier non trouvé'}, status=404)
+    
+    # Vérifier que le dossier n'est pas déjà soumis
+    if dossier.statut == 'SOUMIS':
+        return JsonResponse({'error': 'Dossier déjà soumis, modification impossible'}, status=400)
+    
+    # Récupérer le document
+    type_document_upper = type_document.upper()
+    try:
+        doc = DocumentGenere.objects.get(
+            dossier=dossier,
+            type_document=type_document_upper
+        )
+    except DocumentGenere.DoesNotExist:
+        return JsonResponse({'error': 'Document non trouvé'}, status=404)
+    
+    # ============================================
+    # RECONSTRUIRE LE HTML SELON LE TYPE
+    # ============================================
+    
+    if type_document == 'enveloppe':
+        nouveau_html = construire_html_enveloppe(nouveau_texte)
+    
+    elif type_document == 'lettre':
+        opportunite = get_object_or_404(Ami_uemoa, id=opportunite_id)
+        date_actuelle = timezone.now().strftime('%d/%m/%Y')
+        responsable = request.user.get_full_name() or request.user.username or entreprise.raisonSociale
+        domaines = entreprise.domaineActive or "Fournitures et équipements ; Services courants ; Prestations intellectuelles"
+        nouveau_html = construire_html_lettre(entreprise, nouveau_texte, responsable, date_actuelle, domaines)
+    
+    elif type_document == 'presentation':
+        nouveau_html = construire_html_presentation(entreprise, nouveau_texte)
+    
+    elif type_document == 'fiche':
+        nouveau_html = construire_html_fiche(entreprise)
+    
+    elif type_document == 'materiel':
+        nouveau_html = construire_html_materiel(request, entreprise)
+        
+    else:
+        nouveau_html = nouveau_texte
+    
+    # Mettre à jour le contenu (UNE SEULE FOIS)
+    doc.contenu_html = nouveau_html
+    doc.statut = 'MODIFIED'
+    doc.version += 1
+    doc.save()
+    
+    return JsonResponse({'success': True, 'message': 'Document modifié avec succès'})
+
+@login_required
+def api_document_telecharger(request):
+    """
+    GET /api/document/telecharger/?opportunite_type=Ami_uemoa&opportunite_id=66&type_document=enveloppe&format=pdf
+    """
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+    
+    opportunite_type = request.GET.get('opportunite_type')
+    opportunite_id = request.GET.get('opportunite_id')
+    type_document = request.GET.get('type_document')
+    format_doc = request.GET.get('format', 'pdf')
+    
+    if not all([opportunite_type, opportunite_id, type_document]):
+        return JsonResponse({'error': 'Paramètres manquants'}, status=400)
+    
+    # Récupérer l'entreprise
+    try:
+        entreprise = Entreprise.objects.get(user=request.user)
+    except Entreprise.DoesNotExist:
+        return JsonResponse({'error': 'Entreprise non trouvée'}, status=404)
+    
+    # Récupérer le dossier
+    try:
+        dossier = DossierSoumission.objects.get(
+            entreprise=entreprise,
+            opportunite_type=opportunite_type,
+            opportunite_id=opportunite_id
+        )
+    except DossierSoumission.DoesNotExist:
+        return JsonResponse({'error': 'Dossier non trouvé'}, status=404)
+    
+    # Récupérer le document
+    type_document_upper = type_document.upper()
+    try:
+        doc = DocumentGenere.objects.get(
+            dossier=dossier,
+            type_document=type_document_upper
+        )
+    except DocumentGenere.DoesNotExist:
+        return JsonResponse({'error': 'Document non trouvé'}, status=404)
+    
+    if not doc.contenu_html:
+        return JsonResponse({'error': 'Aucun contenu généré'}, status=404)
+    
+    # Générer le fichier selon le format
+    filename = f"{type_document}_{dossier.id}_{timezone.now().strftime('%Y%m%d')}"
+    
+    if format_doc == 'pdf':
+        return generer_pdf(doc.contenu_html, f"{filename}.pdf")
+    elif format_doc == 'docx':
+        return generer_docx(doc.contenu_html, f"{filename}.docx")
+    else:
+        return JsonResponse({'error': 'Format non supporté'}, status=400)
+
+def convertir_pdf_en_html(fichier):
+    """Convertit un PDF en HTML (version simplifiée)"""
+    # Pour l'instant, extraire le texte du PDF
+    try:
+        import PyPDF2
+        pdf_reader = PyPDF2.PdfReader(fichier)
+        texte = ""
+        for page in pdf_reader.pages:
+            texte += page.extract_text()
+        
+        # Encapsuler dans du HTML
+        html = f"""
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <div style="white-space: pre-wrap;">
+                {texte}
+            </div>
+        </div>
+        """
+        return html
+    except ImportError:
+        return "<div>Import PDF - Installation de PyPDF2 requise</div>"
+
+def convertir_docx_en_html(fichier):
+    """Convertit un DOCX en HTML"""
+    try:
+        from docx import Document as DocxDocument
+        
+        doc = DocxDocument(fichier)
+        texte = ""
+        for paragraph in doc.paragraphs:
+            texte += paragraph.text + "\n"
+        
+        html = f"""
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <div style="white-space: pre-wrap;">
+                {texte}
+            </div>
+        </div>
+        """
+        return html
+    except ImportError:
+        return "<div>Import DOCX - Installation de python-docx requise</div>"
+
+@login_required
+def api_document_importer(request):
+    """
+    POST /api/document/importer/
+    Importe un fichier (PDF ou DOCX) et le convertit en HTML
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+    
+    opportunite_type = request.POST.get('opportunite_type')
+    opportunite_id = request.POST.get('opportunite_id')
+    type_document = request.POST.get('type_document')
+    fichier = request.FILES.get('fichier')
+    
+    if not all([opportunite_type, opportunite_id, type_document, fichier]):
+        return JsonResponse({'error': 'Paramètres manquants'}, status=400)
+    
+    # Vérifier l'extension du fichier
+    nom_fichier = fichier.name
+    extension = nom_fichier.split('.')[-1].lower()
+    
+    if extension not in ['pdf', 'docx']:
+        return JsonResponse({'error': 'Format non supporté. Utilisez PDF ou DOCX'}, status=400)
+    
+    # Récupérer l'entreprise
+    try:
+        entreprise = Entreprise.objects.get(user=request.user)
+    except Entreprise.DoesNotExist:
+        return JsonResponse({'error': 'Entreprise non trouvée'}, status=404)
+    
+    # Récupérer le dossier
+    try:
+        dossier = DossierSoumission.objects.get(
+            entreprise=entreprise,
+            opportunite_type=opportunite_type,
+            opportunite_id=opportunite_id
+        )
+    except DossierSoumission.DoesNotExist:
+        return JsonResponse({'error': 'Dossier non trouvé'}, status=404)
+    
+    if dossier.statut == 'SOUMIS':
+        return JsonResponse({'error': 'Dossier déjà soumis'}, status=400)
+    
+    # Récupérer le document
+    type_document_upper = type_document.upper()
+    try:
+        doc = DocumentGenere.objects.get(
+            dossier=dossier,
+            type_document=type_document_upper
+        )
+    except DocumentGenere.DoesNotExist:
+        return JsonResponse({'error': 'Document non trouvé'}, status=404)
+    
+    # Convertir le fichier en HTML
+    try:
+        if extension == 'pdf':
+            contenu_html = convertir_pdf_en_html(fichier)
+        else:  # docx
+            contenu_html = convertir_docx_en_html(fichier)
+    except Exception as e:
+        return JsonResponse({'error': f'Erreur lors de la conversion: {str(e)}'}, status=500)
+    
+    # Sauvegarder
+    doc.contenu_html = contenu_html
+    doc.statut = 'IMPORTED'
+    doc.version += 1
+    doc.save()
+    
+    return JsonResponse({'success': True, 'message': 'Document importé avec succès'})
+
+@login_required
+def api_document_supprimer(request):
+    """API : supprimer (archiver) un document"""
+    pass
+
+@login_required
+def api_dossier_soumettre(request):
+    """API : soumettre le dossier"""
+    pass
+
+@login_required
+def api_dossier_etat(request):
+    """
+    GET /api/dossier/etat/?opportunite_type=Ami_uemoa&opportunite_id=66
+    Retourne l'état complet d'un dossier de soumission
+    """
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+    
+    # 1. Récupérer les paramètres
     opportunite_type = request.GET.get('opportunite_type')
     opportunite_id = request.GET.get('opportunite_id')
     
     if not opportunite_type or not opportunite_id:
         return JsonResponse({'error': 'Paramètres manquants'}, status=400)
     
-    # ============================================
-    # TYPE: EN-TÊTE
-    # ============================================
-    if type_doc == 'entete':
-        if opportunite_type == 'Offre_uemoa':
-            opportunite = get_object_or_404(Offre_uemoa, id=opportunite_id)
-        else:
-            opportunite = get_object_or_404(Ami_uemoa, id=opportunite_id)
-        
-        description = opportunite.description or ""
-        description = description.replace('\n', ' ').replace('\r', ' ')
-        description = description.strip()
-        description = re.sub(r'Avis à manifestation d[’\']intérêt\s+', '', description, flags=re.IGNORECASE)
-        description = re.sub(r'AVIS À MANIFESTATION D[’\']INTÉRÊT\s+', '', description, flags=re.IGNORECASE)
-        description = description.upper()
-        
-        if format_doc == 'pdf':
-            from reportlab.lib.pagesizes import A4
-            from reportlab.lib.units import mm
-            from reportlab.pdfgen import canvas
-            from io import BytesIO
-            
-            buffer = BytesIO()
-            c = canvas.Canvas(buffer, pagesize=A4)
-            width, height = A4
-            
-            c.setFont("Helvetica-Bold", 22)
-            
-            margin = 20 * mm
-            y = height - margin
-            x = margin
-            
-            text = f"RÉPONSE À LA MANIFESTATION D'INTÉRÊT {description}"
-            
-            words = text.split()
-            lines = []
-            current_line = ""
-            for word in words:
-                if c.stringWidth(current_line + " " + word, "Helvetica-Bold", 22) < (width - 2 * margin):
-                    current_line += " " + word if current_line else word
-                else:
-                    lines.append(current_line)
-                    current_line = word
-            if current_line:
-                lines.append(current_line)
-            
-            for line in lines:
-                c.drawString(x, y, line)
-                y -= 30
-            
-            c.save()
-            buffer.seek(0)
-            
-            return FileResponse(
-                buffer,
-                as_attachment=True,
-                filename=f"entete_AMI_{opportunite_id}.pdf",
-                content_type='application/pdf'
-            )
-        else:
-            from docx import Document
-            from docx.shared import Pt, Inches
-            from docx.enum.text import WD_ALIGN_PARAGRAPH
-            from io import BytesIO
-            
-            doc = Document()
-            
-            section = doc.sections[0]
-            section.top_margin = Inches(0.5)
-            section.bottom_margin = Inches(0.5)
-            section.left_margin = Inches(0.5)
-            section.right_margin = Inches(0.5)
-            
-            p = doc.add_paragraph()
-            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-            
-            texte_complet = f"RÉPONSE À LA MANIFESTATION D'INTÉRÊT {description}"
-            
-            run = p.add_run(texte_complet)
-            run.font.size = Pt(22)
-            run.font.bold = True
-            
-            buffer = BytesIO()
-            doc.save(buffer)
-            buffer.seek(0)
-            
-            return FileResponse(
-                buffer,
-                as_attachment=True,
-                filename=f"entete_AMI_{opportunite_id}.docx",
-                content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            )
+    # 2. Vérifier que c'est un AMI (pour l'instant)
+    if opportunite_type != 'Ami_uemoa':
+        return JsonResponse({'error': 'Seuls les AMI sont supportés pour le moment'}, status=400)
     
-    # ============================================
-    # TYPE: LETTRE DE MANIFESTATION D'INTÉRÊT
-    # ============================================
-    elif type_doc == 'lettre':
-        try:
-            # Récupérer l'entreprise
-            try:
-                entreprise = Entreprise.objects.get(user=request.user)
-            except Entreprise.DoesNotExist:
-                return JsonResponse({'error': 'Entreprise non trouvée'}, status=404)
-            
-            # Récupérer l'opportunité
-            if opportunite_type == 'Offre_uemoa':
-                opportunite = get_object_or_404(Offre_uemoa, id=opportunite_id)
-                description_opportunite = opportunite.description or ""
-            else:
-                opportunite = get_object_or_404(Ami_uemoa, id=opportunite_id)
-                description_opportunite = opportunite.description or ""
-            
-            # Nettoyer la description pour l'utiliser dans la lettre
-            description_clean = description_opportunite.replace('\n', ' ').replace('\r', ' ')
-            description_clean = description_clean.strip()
-            
-            # Récupérer les domaines d'activité de l'entreprise
-            domaines = ""
-            if entreprise.domaineActive:
-                domaines_list = [d.strip() for d in entreprise.domaineActive.split(',')]
-                domaines = " ; ".join(domaines_list)
-            else:
-                domaines = "Prestations de services ; Fournitures et équipements ; Services courants ; Prestations intellectuelles"
-            
-            # Récupérer le nom du responsable
-            responsable = request.user.get_full_name() or request.user.username or entreprise.raisonSociale
-            
-            # Récupérer le téléphone formaté
-            telephone = str(entreprise.telephone) if entreprise.telephone else '+226 XX XX XX XX'
-            
-            if format_doc == 'pdf':
-                from reportlab.lib.pagesizes import A4
-                from reportlab.lib.units import mm
-                from reportlab.pdfgen import canvas
-                from reportlab.lib.utils import simpleSplit
-                from io import BytesIO
-                
-                buffer = BytesIO()
-                c = canvas.Canvas(buffer, pagesize=A4)
-                width, height = A4
-                margin = 20 * mm
-                y = height - margin
-                x = margin
-                
-                # En-tête gauche
-                c.setFont("Helvetica-Bold", 11)
-                c.drawString(x, y, entreprise.raisonSociale)
-                y -= 12
-                c.setFont("Helvetica", 9)
-                c.drawString(x, y, f"Tel : {telephone}")
-                y -= 12
-                c.drawString(x, y, f"Email : {entreprise.email or 'contact@entreprise.com'}")
-                
-                # En-tête droit
-                c.setFont("Helvetica-Bold", 11)
-                c.drawRightString(width - margin, height - margin, "BURKINA FASO")
-                y2 = height - margin - 12
-                c.setFont("Helvetica", 9)
-                c.drawRightString(width - margin, y2, "La Patrie ou, La Mort, Nous vaincrons")
-                
-                # Ligne de séparation
-                y -= 10
-                c.line(margin, y, width - margin, y)
-                y -= 20
-                
-                # Destinataire
-                c.setFont("Helvetica", 10)
-                c.drawString(x, y, "A")
-                y -= 12
-                c.drawString(x, y, "La Personne Responsable des Marchés")
-                y -= 25
-                
-                # Objet
-                c.setFont("Helvetica-Bold", 11)
-                c.drawString(x, y, "Objet : LETTRE DE MANIFESTATION D'INTERET")
-                y -= 20
-                
-                # Corps de la lettre
-                c.setFont("Helvetica", 10)
-                text1 = f"Nous, L'ENTREPRISE {entreprise.raisonSociale}, montrons notre intérêt face à l'{description_clean} dans les domaines suivants :"
-                lines = simpleSplit(text1, "Helvetica", 10, width - 2*margin)
-                for line in lines:
-                    if y < margin + 50:
-                        c.showPage()
-                        y = height - margin
-                        c.setFont("Helvetica", 10)
-                    c.drawString(x, y, line)
-                    y -= 15
-                
-                # Domaines
-                y -= 5
-                c.setFont("Helvetica-Bold", 10)
-                lines = simpleSplit(domaines, "Helvetica-Bold", 10, width - 2*margin - 20)
-                for line in lines:
-                    if y < margin + 50:
-                        c.showPage()
-                        y = height - margin
-                        c.setFont("Helvetica-Bold", 10)
-                    c.drawString(x + 20, y, line)
-                    y -= 15
-                
-                # Fin du corps
-                y -= 10
-                c.setFont("Helvetica", 10)
-                text2 = "Dans l'espoir de retenir votre attention lors de vos consultations, nous vous prions de croire, en l'assurance de nos sentiments les plus dévoués."
-                lines = simpleSplit(text2, "Helvetica", 10, width - 2*margin)
-                for line in lines:
-                    if y < margin + 80:
-                        c.showPage()
-                        y = height - margin
-                        c.setFont("Helvetica", 10)
-                    c.drawString(x, y, line)
-                    y -= 15
-                
-                # Signature
-                y -= 30
-                c.drawRightString(width - margin, y, f"Ouagadougou, le {timezone.now().strftime('%d/%m/%Y')}")
-                y -= 25
-                c.drawRightString(width - margin, y, "Le responsable")
-                y -= 20
-                c.drawRightString(width - margin, y, responsable)
-                
-                c.save()
-                buffer.seek(0)
-                
-                return FileResponse(
-                    buffer,
-                    as_attachment=True,
-                    filename=f"lettre_manifestation_{opportunite_id}.pdf",
-                    content_type='application/pdf'
-                )
-            
-            else:
-                # Génération DOCX
-                from docx import Document
-                from docx.shared import Pt, Inches
-                from docx.enum.text import WD_ALIGN_PARAGRAPH
-                from io import BytesIO
-                
-                doc = Document()
-                
-                # Marges
-                section = doc.sections[0]
-                section.top_margin = Inches(1)
-                section.bottom_margin = Inches(1)
-                section.left_margin = Inches(1)
-                section.right_margin = Inches(1)
-                
-                # En-tête avec tableau 2 colonnes
-                header_table = doc.add_table(rows=2, cols=2)
-                header_table.autofit = False
-                header_table.columns[0].width = Inches(3.5)
-                header_table.columns[1].width = Inches(3.5)
-                
-                # Colonne gauche
-                cell_left = header_table.cell(0, 0)
-                p = cell_left.paragraphs[0]
-                p.add_run(entreprise.raisonSociale).bold = True
-                p.add_run(f"\nTel : {telephone}")
-                p.add_run(f"\nEmail : {entreprise.email or 'contact@entreprise.com'}")
-                
-                # Colonne droite
-                cell_right = header_table.cell(0, 1)
-                p = cell_right.paragraphs[0]
-                p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-                p.add_run("BURKINA FASO\n").bold = True
-                p.add_run("La Patrie ou, La Mort, Nous vaincrons")
-                
-                # Ligne de séparation
-                doc.add_paragraph()
-                
-                # Destinataire
-                p = doc.add_paragraph()
-                p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-                p.add_run("A\nLa Personne Responsable des Marchés")
-                
-                doc.add_paragraph()
-                
-                # Objet
-                p = doc.add_paragraph()
-                run = p.add_run("Objet : LETTRE DE MANIFESTATION D'INTERET")
-                run.bold = True
-                
-                doc.add_paragraph()
-                
-                # Corps
-                p = doc.add_paragraph()
-                p.add_run(f"Nous, L'ENTREPRISE {entreprise.raisonSociale}, montrons notre intérêt face à l'{description_clean} dans les domaines suivants :")
-                
-                doc.add_paragraph()
-                
-                # Domaines (indenté)
-                p = doc.add_paragraph()
-                p.paragraph_format.left_indent = Inches(0.5)
-                p.add_run(domaines).bold = True
-                
-                doc.add_paragraph()
-                
-                # Fin du corps
-                p = doc.add_paragraph()
-                p.add_run("Dans l'espoir de retenir votre attention lors de vos consultations, nous vous prions de croire, en l'assurance de nos sentiments les plus dévoués.")
-                
-                doc.add_paragraph()
-                doc.add_paragraph()
-                
-                # Signature
-                p = doc.add_paragraph()
-                p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-                p.add_run(f"Ouagadougou, le {timezone.now().strftime('%d/%m/%Y')}\n\n")
-                p.add_run("Le responsable\n\n")
-                p.add_run(responsable)
-                
-                buffer = BytesIO()
-                doc.save(buffer)
-                buffer.seek(0)
-                
-                return FileResponse(
-                    buffer,
-                    as_attachment=True,
-                    filename=f"lettre_manifestation_{opportunite_id}.docx",
-                    content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                )
-                
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            return JsonResponse({'error': str(e)}, status=500)
-    
-    # ============================================
-    # TYPE NON SUPPORTÉ
-    # ============================================
-    else:
-        return JsonResponse({'error': f'Type de document non supporté: {type_doc}'}, status=400)
-
-@login_required
-def telecharger_dossier_complet(request):
-    """
-    Télécharge le dossier complet (tous les documents)
-    """
-    format_doc = request.GET.get('format', 'pdf')
-    opportunite_type = request.GET.get('opportunite_type')
-    opportunite_id = request.GET.get('opportunite_id')
-    
-    # Pour l'instant, redirige vers l'en-tête
-    return JsonResponse({
-        'success': True,
-        'url': f'/soumission/telecharger/document/entete/?format={format_doc}&opportunite_type={opportunite_type}&opportunite_id={opportunite_id}'
-    })
-
-@login_required
-def mes_soumissions(request):
-    """Liste tous les dossiers de l'entreprise"""
+    # 3. Récupérer l'entreprise
     try:
         entreprise = Entreprise.objects.get(user=request.user)
     except Entreprise.DoesNotExist:
-        messages.error(request, "Vous devez être une entreprise")
-        return redirect('dashboard')
+        return JsonResponse({'error': 'Entreprise non trouvée'}, status=404)
     
-    dossiers = DossierSoumission.objects.filter(
-        entreprise=entreprise
-    ).order_by('-date_modification')
+    # 4. Récupérer le dossier
+    try:
+        dossier = DossierSoumission.objects.get(
+            entreprise=entreprise,
+            opportunite_type=opportunite_type,
+            opportunite_id=opportunite_id
+        )
+    except DossierSoumission.DoesNotExist:
+        return JsonResponse({'error': 'Dossier non trouvé'}, status=404)
     
-    stats = {
-        'en_preparation': dossiers.filter(statut='EN_PREPARATION').count(),
-        'soumis': dossiers.filter(statut='SOUMIS').count(),
-        'total': dossiers.count(),
+    # 5. Récupérer tous les documents du dossier
+    documents = dossier.documents_prepares.all()
+    
+    # 6. Construire la réponse
+    etat = {
+        'dossier_id': dossier.id,
+        'statut': dossier.statut,
+        'est_soumis': dossier.statut == 'SOUMIS',
+        'documents': {}
     }
     
-    context = {
-        'dossiers': dossiers,
-        'stats': stats,
+    # Mapping des types de document (DB -> frontend)
+    mapping = {
+        'ENVELOPPE': 'enveloppe',
+        'LETTRE': 'lettre',
+        'PRESENTATION': 'presentation',
+        'FICHE': 'fiche',
+        'MATERIEL': 'materiel',
+        'PERSONNEL': 'personnel',
     }
-    return render(request, 'myAppli/soumission/mes_soumissions.html', context)
+    
+    for doc in documents:
+        type_key = mapping.get(doc.type_document, doc.type_document.lower())
+        etat['documents'][type_key] = {
+            'statut': doc.statut,
+            'version': doc.version,
+            'date_generation': doc.date_generation.isoformat() if doc.date_generation else None,
+            'date_modification': doc.date_modification.isoformat() if doc.date_modification else None,
+        }
+    
+    return JsonResponse({'success': True, 'data': etat})
+
+@login_required
+def api_materiel_liste(request):
+    """Retourne la liste du matériel de l'entreprise"""
+    entreprise = Entreprise.objects.get(user=request.user)
+    materiels = MaterielEntreprise.objects.filter(entreprise=entreprise)
+    
+    data = [
+        {
+            'id': m.id,
+            'designation': m.designation,
+            'quantite': m.quantite,
+        }
+        for m in materiels
+    ]
+    return JsonResponse({'success': True, 'materiels': data})
+
+@login_required
+def api_materiel_ajouter(request):
+    """Ajoute un matériel"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON invalide'}, status=400)
+    
+    entreprise = Entreprise.objects.get(user=request.user)
+    
+    materiel = MaterielEntreprise.objects.create(
+        entreprise=entreprise,
+        designation=data.get('designation'),
+        quantite=data.get('quantite', 1)
+    )
+    
+    return JsonResponse({
+        'success': True, 
+        'materiel': {'id': materiel.id, 'designation': materiel.designation, 'quantite': materiel.quantite}
+    })
+
+@login_required
+def api_materiel_modifier(request):
+    """Modifie un matériel existant"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON invalide'}, status=400)
+    
+    entreprise = Entreprise.objects.get(user=request.user)
+    
+    try:
+        materiel = MaterielEntreprise.objects.get(id=data.get('id'), entreprise=entreprise)
+        materiel.designation = data.get('designation', materiel.designation)
+        materiel.quantite = data.get('quantite', materiel.quantite)
+        materiel.save()
+        
+        return JsonResponse({'success': True, 'message': 'Matériel modifié avec succès'})
+    except MaterielEntreprise.DoesNotExist:
+        return JsonResponse({'error': 'Matériel non trouvé'}, status=404)
+
+@login_required
+def api_materiel_supprimer(request):
+    """Supprime un matériel"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON invalide'}, status=400)
+    
+    entreprise = Entreprise.objects.get(user=request.user)
+    
+    try:
+        materiel = MaterielEntreprise.objects.get(id=data.get('id'), entreprise=entreprise)
+        materiel.delete()
+        return JsonResponse({'success': True, 'message': 'Matériel supprimé avec succès'})
+    except MaterielEntreprise.DoesNotExist:
+        return JsonResponse({'error': 'Matériel non trouvé'}, status=404)
 
 def trouver_emploi(request):
     """
@@ -2264,7 +2253,6 @@ def apercu_cv(request, cv_id):
     
     return HttpResponse(html)
 
-
 @login_required
 def mes_cvs(request):
     """Affiche tous les CV de l'utilisateur"""
@@ -2416,32 +2404,6 @@ def modifier_cv(request, cv_id):
     return render(request, 'myAppli/outils_emploi/modifier_cv.html', {'cv': cv})
 
 @login_required
-def get_dossier_documents(request, dossier_id):
-    """Retourne la liste des documents d'un dossier en JSON"""
-    dossier = get_object_or_404(DossierSoumission, id=dossier_id)
-    
-    # Vérifier que l'entreprise a le droit
-    if dossier.entreprise.user != request.user:
-        return JsonResponse({'error': 'Non autorisé'}, status=403)
-    
-    documents = dossier.documents.all()
-    
-    data = {
-        'documents': [
-            {
-                'id': doc.id,
-                'nom_document': doc.nom_document,
-                'statut': doc.statut,
-                'taille_fichier': doc.taille_fichier,
-                'date_generation': doc.date_generation.strftime('%d/%m/%Y %H:%M'),
-            }
-            for doc in documents
-        ]
-    }
-    
-    return JsonResponse(data)
-
-@login_required
 def publier_offre_emploi(request):
     """
     Vue pour publier une offre d'emploi
@@ -2499,8 +2461,6 @@ def publier_offre_emploi(request):
     
     return redirect('myAppli:dashboard_recruteur')
 
-# myAppli/views.py - Ajouter ces fonctions
-
 def generer_lettre_motivation(request):
     """
     Générateur de lettre de motivation personnalisable
@@ -2532,8 +2492,6 @@ def generer_lettre_motivation(request):
     }
     return render(request, 'myAppli/outils_emploi/generer_lettre_motivation.html', context)
 
-
-#@login_required
 @require_http_methods(["POST"])
 def generer_lettre_pdf(request):
     """
@@ -2717,7 +2675,6 @@ def generer_lettre_pdf(request):
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="lettre_motivation_{nom}_{prenom}.pdf"'
     return response
-
 
 def telecharger_modele_lettre(request):
     """

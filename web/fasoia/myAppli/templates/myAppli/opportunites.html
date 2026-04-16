@@ -292,7 +292,7 @@
                                         data-toggle="modal" data-target="#modalOffre{{ i.id }}">
                                     Détails
                                 </button>
-                                <a href="{% url 'myAppli:commencer_soumission' 'Offre_uemoa' i.id %}" 
+                                <a href="{% url 'myAppli:nouvelle_soumission' 'Offre_uemoa' i.id %}" 
                                    class="btn-fasoia-primary btn-action">
                                     Postuler
                                 </a>
@@ -355,9 +355,9 @@
                                         data-toggle="modal" data-target="#modalAmi{{ i.id }}">
                                     Détails
                                 </button>
-                                <a href="{% url 'myAppli:commencer_soumission' 'Ami_uemoa' i.id %}" 
+                                <a href="{% url 'myAppli:nouvelle_soumission' 'Ami_uemoa' i.id %}" 
                                    class="btn-fasoia-primary btn-action">
-                                    Participer
+                                    Postuler
                                 </a>
                             </td>
                         </tr>
