@@ -5,56 +5,206 @@
 
 {% block extra_css %}
 <style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* ===== LAYOUT ===== */
+.page-wrapper {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* ===== EN-TÊTE ===== */
+.page-header {
+    margin-bottom: 28px;
+}
+
+.page-header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.page-header .subtitle {
+    color: #666;
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.page-header .ref {
+    color: #999;
+    font-size: 13px;
+}
+
+/* ===== PROGRESSION ===== */
+.progress-section {
+    margin-bottom: 28px;
+}
+
+.progress-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: #555;
+}
+
+.progress-track {
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    width: 0%;
+    height: 100%;
+    background: #1ed760;
+    border-radius: 4px;
+    transition: width 0.35s ease;
+}
+
+/* ===== GRILLE DOCUMENTS ===== */
+.doc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 18px;
+    margin-bottom: 40px;
+}
+
+/* ===== CARTE DOCUMENT ===== */
 .document-card {
+    background: #fff;
     border: 1px solid #e0e0e0;
+    border-left: 4px solid #ccc;
     border-radius: 12px;
     padding: 20px;
-    background: white;
-    transition: all 0.2s;
-    border-left: 4px solid #ccc;
+    transition: transform 0.2s, box-shadow 0.2s, border-left-color 0.2s;
 }
 
 .document-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
 }
 
-.btn-generer, .btn-importer, .btn-modifier, .btn-ajouter {
-    padding: 6px 12px;
+.document-card.is-ready {
+    border-left-color: #1ed760;
+}
+
+.doc-icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+    line-height: 1;
+}
+
+.doc-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.doc-desc {
+    color: #666;
+    font-size: 13px;
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+
+/* ===== BOUTONS ACTIONS ===== */
+.btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 7px 13px;
     border: none;
-    border-radius: 6px;
+    border-radius: 7px;
     cursor: pointer;
     font-size: 12px;
-    transition: all 0.2s;
+    font-weight: 500;
+    font-family: inherit;
+    transition: opacity 0.2s, transform 0.1s;
+    white-space: nowrap;
 }
 
-.btn-generer {
-    background: #1ed760;
-    color: white;
+.btn-action:hover:not(:disabled) {
+    opacity: 0.85;
 }
 
-.btn-importer {
-    background: #4a90e2;
-    color: white;
+.btn-action:active:not(:disabled) {
+    transform: scale(0.97);
 }
 
-.btn-modifier {
-    background: #f5a623;
-    color: white;
-}
-
-.btn-ajouter {
-    background: #9b59b6;
-    color: white;
-}
-
-.btn-generer:hover, .btn-importer:hover, .btn-modifier:hover, .btn-ajouter:hover {
-    opacity: 0.8;
-}
-
-.btn-modifier:disabled {
-    background: #ccc;
+.btn-action:disabled {
+    opacity: 0.45;
     cursor: not-allowed;
+}
+
+.btn-generer  { background: #1ed760; color: #fff; }
+.btn-importer { background: #4a90e2; color: #fff; }
+.btn-modifier { background: #f5a623; color: #fff; }
+.btn-ajouter  { background: #9b59b6; color: #fff; }
+.btn-preview  { background: #f0f0f0; color: #444; }
+
+/* ===== BADGE STATUT ===== */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-badge.missing {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-badge.ready {
+    background: #d4edda;
+    color: #155724;
+}
+
+/* ===== BOUTON SOUMISSION ===== */
+.submit-area {
+    text-align: center;
+    margin-top: 10px;
+    padding-bottom: 20px;
+}
+
+#btn-soumettre {
+    background: #1ed760;
+    color: #fff;
+    border: none;
+    padding: 15px 44px;
+    border-radius: 9px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+    width: 100%;
+    max-width: 340px;
+}
+
+#btn-soumettre:hover:not(:disabled) {
+    opacity: 0.9;
+}
+
+#btn-soumettre:active:not(:disabled) {
+    transform: scale(0.98);
 }
 
 #btn-soumettre:disabled {
@@ -62,214 +212,589 @@
     cursor: not-allowed;
 }
 
-.status-badge {
+.submit-hint {
+    color: #999;
+    font-size: 12px;
     margin-top: 10px;
+}
+
+/* ===== MODALS (structure commune) ===== */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.modal-overlay.open {
+    display: flex;
+}
+
+.modal-box {
+    background: #fff;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+    max-width: 800px;
+    max-height: 90vh;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    background: #2c3e50;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.modal-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+.modal-body {
+    flex: 1;
+    overflow: auto;
+    padding: 20px;
+    background: #f5f5f5;
+}
+
+.modal-body textarea {
+    width: 100%;
+    height: 100%;
+    min-height: 260px;
+    padding: 14px;
+    font-family: monospace;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    resize: vertical;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid #e0e0e0;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.modal-footer button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: inherit;
+    transition: opacity 0.2s;
+}
+
+.modal-footer button:hover { opacity: 0.85; }
+.btn-cancel { background: #888; color: #fff; }
+.btn-pdf    { background: #e74c3c; color: #fff; }
+.btn-docx   { background: #3498db; color: #fff; }
+.btn-save   { background: #1ed760; color: #fff; }
+
+/* ===== MODAL MATÉRIEL (taille réduite) ===== */
+#gestionMaterielModal .modal-box,
+#materielFormModal .modal-box {
+    max-width: 600px;
+}
+
+#materielFormModal .modal-box {
+    max-width: 480px;
+}
+
+.modal-body.no-bg {
+    background: #fff;
+}
+
+.materiel-add-btn {
+    margin-bottom: 18px;
+}
+
+/* ===== TABLEAU MATÉRIEL ===== */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.materiel-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.materiel-table th,
+.materiel-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.materiel-table th {
+    background: #f5f5f5;
+    font-weight: 600;
+    font-size: 13px;
+    color: #555;
+}
+
+.materiel-table td:nth-child(2) {
+    text-align: center;
+}
+
+.materiel-table td:nth-child(3) {
+    text-align: center;
+}
+
+.table-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+}
+
+.table-actions button {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+/* ===== FORMULAIRE MATÉRIEL ===== */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #444;
+    margin-bottom: 6px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #4a90e2;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+    .page-wrapper {
+        padding: 14px;
+    }
+
+    .page-header h1 {
+        font-size: 18px;
+    }
+
+    .doc-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .document-card {
+        padding: 16px;
+    }
+
+    .btn-row {
+        gap: 6px;
+    }
+
+    /* Boutons en 2 colonnes sur mobile */
+    .btn-action {
+        flex: 1 1 calc(50% - 3px);
+        justify-content: center;
+    }
+
+    .modal-box {
+        max-height: 95vh;
+    }
+
+    .modal-header {
+        padding: 12px 16px;
+    }
+
+    .modal-body {
+        padding: 14px;
+    }
+
+    .modal-footer {
+        padding: 12px 16px;
+    }
+
+    .modal-footer button {
+        flex: 1;
+    }
+}
+
+@media (max-width: 380px) {
+    .btn-action {
+        flex: 1 1 100%;
+    }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container" style="padding: 20px; max-width: 1200px; margin: 0 auto;">
-    
+<div class="page-wrapper">
+
     <!-- En-tête -->
-    <div style="margin-bottom: 30px;">
+    <div class="page-header">
         <h1>📋 Générer mon dossier de candidature</h1>
-        <p style="color: #666;">{{ type_nom }} : {{ opportunite.titre }}</p>
-        <p style="color: #999; font-size: 14px;">Référence dossier : {{ dossier.reference }}</p>
+        <p class="subtitle">{{ type_nom }} : {{ opportunite.titre }}</p>
+        <p class="ref">Référence dossier : {{ dossier.reference }}</p>
     </div>
-    
+
     <!-- Barre de progression -->
-    <div style="margin-bottom: 30px;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+    <div class="progress-section">
+        <div class="progress-meta">
             <span id="compteur-docs">0/6 documents prêts</span>
         </div>
-        <div style="height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
-            <div id="progress-bar" style="width: 0%; height: 100%; background: #1ed760; transition: width 0.3s;"></div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progress-bar"></div>
         </div>
     </div>
-    
+
     <!-- Grille des 6 documents -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-bottom: 40px;">
-        
-        <!-- Document 1 : ENVELOPPE -->
+    <div class="doc-grid">
+
+        <!-- 1 · Enveloppe -->
         <div class="document-card" data-doc="enveloppe">
-            <div style="font-size: 40px; margin-bottom: 10px;">✉️</div>
-            <h3>1. Message enveloppe</h3>
-            <p style="color: #666; font-size: 13px;">Message à coller sur l'enveloppe de soumission</p>
-            <div style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">
-                <button class="btn-generer" data-type="enveloppe">✨ Générer</button>
-                <button class="btn-importer" data-type="enveloppe">📁 Importer</button>
-                <button class="btn-modifier" data-type="enveloppe" disabled>✏️ Modifier</button>
-                <button class="btn-preview" data-type="enveloppe" disabled>👁️ Aperçu</button>
+            <div class="doc-icon">✉️</div>
+            <h3 class="doc-title">1. Message enveloppe</h3>
+            <p class="doc-desc">Message à coller sur l'enveloppe de soumission</p>
+            <div class="btn-row">
+                <button class="btn-action btn-generer"  data-type="enveloppe">✨ Générer</button>
+                <button class="btn-action btn-importer" data-type="enveloppe">📁 Importer</button>
+                <button class="btn-action btn-modifier" data-type="enveloppe" disabled>✏️ Modifier</button>
+                <button class="btn-action btn-preview"  data-type="enveloppe" disabled>👁️ Aperçu</button>
             </div>
-            <div class="status-badge" data-status="enveloppe">❌ Non généré</div>
+            <span class="status-badge missing" data-status="enveloppe">❌ Non généré</span>
         </div>
-        
-        <!-- Document 2 : LETTRE -->
+
+        <!-- 2 · Lettre -->
         <div class="document-card" data-doc="lettre">
-            <div style="font-size: 40px; margin-bottom: 10px;">📝</div>
-            <h3>2. Lettre de manifestation</h3>
-            <p style="color: #666; font-size: 13px;">Lettre d'intention, motivation</p>
-            <div style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">
-                <button class="btn-generer" data-type="lettre">✨ Générer</button>
-                <button class="btn-importer" data-type="lettre">📁 Importer</button>
-                <button class="btn-modifier" data-type="lettre" disabled>✏️ Modifier</button>
-                <button class="btn-preview" data-type="lettre" disabled>👁️ Aperçu</button></div>
-            <div class="status-badge" data-status="lettre" style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px;">❌ Non généré</div>
+            <div class="doc-icon">📝</div>
+            <h3 class="doc-title">2. Lettre de manifestation</h3>
+            <p class="doc-desc">Lettre d'intention, motivation</p>
+            <div class="btn-row">
+                <button class="btn-action btn-generer"  data-type="lettre">✨ Générer</button>
+                <button class="btn-action btn-importer" data-type="lettre">📁 Importer</button>
+                <button class="btn-action btn-modifier" data-type="lettre" disabled>✏️ Modifier</button>
+                <button class="btn-action btn-preview"  data-type="lettre" disabled>👁️ Aperçu</button>
+            </div>
+            <span class="status-badge missing" data-status="lettre">❌ Non généré</span>
         </div>
-        
-        <!-- Document 3 : PRÉSENTATION -->
+
+        <!-- 3 · Présentation -->
         <div class="document-card" data-doc="presentation">
-            <div style="font-size: 40px; margin-bottom: 10px;">🏢</div>
-            <h3>3. Présentation entreprise</h3>
-            <p style="color: #666; font-size: 13px;">Historique, activités, certifications</p>
-            <div style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">
-                <button class="btn-generer" data-type="presentation">✨ Générer</button>
-                <button class="btn-importer" data-type="presentation">📁 Importer</button>
-                <button class="btn-modifier" data-type="presentation" disabled>✏️ Modifier</button>
-                <button class="btn-preview" data-type="presentation" disabled>👁️ Aperçu</button>
+            <div class="doc-icon">🏢</div>
+            <h3 class="doc-title">3. Présentation entreprise</h3>
+            <p class="doc-desc">Historique, activités, certifications</p>
+            <div class="btn-row">
+                <button class="btn-action btn-generer"  data-type="presentation">✨ Générer</button>
+                <button class="btn-action btn-importer" data-type="presentation">📁 Importer</button>
+                <button class="btn-action btn-modifier" data-type="presentation" disabled>✏️ Modifier</button>
+                <button class="btn-action btn-preview"  data-type="presentation" disabled>👁️ Aperçu</button>
             </div>
-            <div class="status-badge" data-status="presentation" style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px;">❌ Non généré</div>
+            <span class="status-badge missing" data-status="presentation">❌ Non généré</span>
         </div>
-        
-        <!-- Document 4 : FICHE -->
+
+        <!-- 4 · Fiche -->
         <div class="document-card" data-doc="fiche">
-            <div style="font-size: 40px; margin-bottom: 10px;">📋</div>
-            <h3>4. Fiche renseignement</h3>
-            <p style="color: #666; font-size: 13px;">IFU, RCCM, contacts, adresse</p>
-            <div style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">
-                <button class="btn-generer" data-type="fiche">✨ Générer</button>
-                <button class="btn-importer" data-type="fiche">📁 Importer</button>
-                <button class="btn-modifier" data-type="fiche" disabled>✏️ Modifier</button>
-                <button class="btn-preview" data-type="fiche" disabled>👁️ Aperçu</button>
+            <div class="doc-icon">📋</div>
+            <h3 class="doc-title">4. Fiche renseignement</h3>
+            <p class="doc-desc">IFU, RCCM, contacts, adresse</p>
+            <div class="btn-row">
+                <button class="btn-action btn-generer"  data-type="fiche">✨ Générer</button>
+                <button class="btn-action btn-importer" data-type="fiche">📁 Importer</button>
+                <button class="btn-action btn-modifier" data-type="fiche" disabled>✏️ Modifier</button>
+                <button class="btn-action btn-preview"  data-type="fiche" disabled>👁️ Aperçu</button>
             </div>
-            <div class="status-badge" data-status="fiche" style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px;">❌ Non généré</div>
+            <span class="status-badge missing" data-status="fiche">❌ Non généré</span>
         </div>
-        
-        <!-- Document 5 : MATÉRIEL -->
+
+        <!-- 5 · Matériel -->
         <div class="document-card" data-doc="materiel">
-            <div style="font-size: 40px; margin-bottom: 10px;">🛠️</div>
-            <h3>5. Liste matériel</h3>
-            <p style="color: #666; font-size: 13px;">Équipements, quantités, état</p>
-            <div style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">
-                <button class="btn-generer" data-type="materiel">✨ Générer</button>
-                <button class="btn-importer" data-type="materiel">📁 Importer</button>
-                <button class="btn-preview" data-type="materiel" disabled>👁️ Aperçu</button>
-                <button class="btn-ajouter" data-type="materiel">➕ Ajouter</button>
+            <div class="doc-icon">🛠️</div>
+            <h3 class="doc-title">5. Liste matériel</h3>
+            <p class="doc-desc">Équipements, quantités, état</p>
+            <div class="btn-row">
+                <button class="btn-action btn-generer"  data-type="materiel">✨ Générer</button>
+                <button class="btn-action btn-importer" data-type="materiel">📁 Importer</button>
+                <button class="btn-action btn-preview"  data-type="materiel" disabled>👁️ Aperçu</button>
+                <button class="btn-action btn-ajouter"  data-type="materiel">➕ Ajouter</button>
             </div>
-            <div class="status-badge" data-status="materiel" style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px;">❌ Non généré</div>
+            <span class="status-badge missing" data-status="materiel">❌ Non généré</span>
         </div>
-        
-        <!-- Document 6 : PERSONNEL -->
+
+        <!-- 6 · Personnel -->
         <div class="document-card" data-doc="personnel">
-            <div style="font-size: 40px; margin-bottom: 10px;">👥</div>
-            <h3>6. Personnel cadre</h3>
-            <p style="color: #666; font-size: 13px;">Postes, noms, qualifications</p>
-            <div style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">
-                <button class="btn-generer" data-type="personnel">✨ Générer</button>
-                <button class="btn-importer" data-type="personnel">📁 Importer</button>
-                <button class="btn-modifier" data-type="personnel" disabled>✏️ Modifier</button>
-                <button class="btn-preview" data-type="personnel" disabled>👁️ Aperçu</button>
-                <button class="btn-ajouter" data-type="personnel">➕ Ajouter</button>
+            <div class="doc-icon">👥</div>
+            <h3 class="doc-title">6. Personnel cadre</h3>
+            <p class="doc-desc">Postes, noms, qualifications</p>
+            <div class="btn-row">
+                <button class="btn-action btn-generer"  data-type="personnel">✨ Générer</button>
+                <button class="btn-action btn-importer" data-type="personnel">📁 Importer</button>
+                <button class="btn-action btn-modifier" data-type="personnel" disabled>✏️ Modifier</button>
+                <button class="btn-action btn-preview"  data-type="personnel" disabled>👁️ Aperçu</button>
+                <button class="btn-action btn-ajouter"  data-type="personnel">➕ Ajouter</button>
             </div>
-            <div class="status-badge" data-status="personnel" style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px;">❌ Non généré</div>
+            <span class="status-badge missing" data-status="personnel">❌ Non généré</span>
         </div>
-        
+
     </div>
-    
+
     <!-- Bouton de soumission -->
-    <div style="text-align: center; margin-top: 30px;">
-        <button id="btn-soumettre" disabled style="background: #1ed760; color: white; border: none; padding: 15px 40px; border-radius: 8px; font-size: 16px; cursor: pointer;">
-            📤 Soumettre mon dossier
-        </button>
-        <p style="color: #999; font-size: 12px; margin-top: 10px;">Tous les documents doivent être prêts pour soumettre</p>
-    </div>
-    
-</div>
-
-<!-- Modal d'aperçu -->
-<div id="previewModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: white; width: 90%; max-width: 800px; height: 90%; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden;">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: #2c3e50; color: white;">
-            <h4 id="preview-title" style="margin: 0;">Aperçu du document</h4>
-            <button onclick="closePreviewModal()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+    <div class="submit-area">
+        <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+            <button id="btn-soumettre" disabled style="background: #1ed760; color: white; border: none; padding: 15px 40px; border-radius: 9px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                📤 Soumettre mon dossier
+            </button>
+            
+            <button id="btn-telecharger-dossier" disabled style="background: #3498db; color: white; border: none; padding: 15px 40px; border-radius: 9px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                📥 Télécharger le dossier complet
+            </button>
         </div>
-        <div id="preview-content" style="flex: 1; overflow: auto; padding: 20px; background: #f5f5f5;"></div>
-        <div style="display: flex; justify-content: flex-end; gap: 10px; padding: 15px 20px; background: white; border-top: 1px solid #e0e0e0;">
-            <button onclick="closePreviewModal()" style="padding: 8px 20px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer;">Fermer</button>
-            <button onclick="telechargerDocument('pdf')" style="padding: 8px 20px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">📄 PDF</button>
-            <button onclick="telechargerDocument('docx')" style="padding: 8px 20px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">📝 DOCX</button>
+        <p class="submit-hint">Tous les documents doivent être prêts pour soumettre ou télécharger</p>
         </div>
     </div>
-</div>
+<div/>
 
-<!-- Modal d'édition -->
-<div id="editModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1001; align-items: center; justify-content: center;">
-    <div style="background: white; width: 90%; max-width: 800px; height: 80%; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden;">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: #2c3e50; color: white;">
-            <h4 id="edit-title" style="margin: 0;">✏️ Modifier le document</h4>
-            <button onclick="closeEditModal()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+<!-- ===== MODAL TÉLÉCHARGEMENT (CHOIX FORMAT) ===== -->
+<div id="downloadModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 400px;">
+        <div class="modal-header">
+            <h4>📥 Télécharger le dossier complet</h4>
+            <button class="modal-close" onclick="closeDownloadModal()">&times;</button>
         </div>
-        <div style="flex: 1; padding: 20px;">
-            <textarea id="edit-content" style="width: 100%; height: 100%; padding: 15px; font-family: monospace; font-size: 14px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+        <div class="modal-body no-bg">
+            <div class="form-group">
+                <label for="download_format">Format du dossier</label>
+                <select id="download_format" style="width: 100%; padding: 9px 12px; border: 1px solid #ccc; border-radius: 6px;">
+                    <option value="pdf">PDF</option>
+                    <option value="docx">DOCX</option>
+                </select>
+            </div>
         </div>
-        <div style="display: flex; justify-content: flex-end; gap: 10px; padding: 15px 20px; background: white; border-top: 1px solid #e0e0e0;">
-            <button onclick="closeEditModal()" style="padding: 8px 20px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer;">Annuler</button>
-            <button id="btn-save-edit" style="padding: 8px 20px; background: #1ed760; color: white; border: none; border-radius: 4px; cursor: pointer;">💾 Sauvegarder</button>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeDownloadModal()">Annuler</button>
+            <button class="btn-save" id="btn-confirmer-download">📥 Télécharger</button>
         </div>
     </div>
 </div>
 
-<!-- Modal de gestion du matériel -->
-<div id="gestionMaterielModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1003; align-items: center; justify-content: center;">
-    <div style="background: white; width: 90%; max-width: 800px; border-radius: 8px; padding: 20px; max-height: 80vh; overflow-y: auto;">
-        <h3>📦 Gestion du matériel</h3>
+<!-- ===== MODAL APERÇU ===== -->
+<div id="previewModal" class="modal-overlay">
+    <div class="modal-box" style="height: 90vh;">
+        <div class="modal-header">
+            <h4 id="preview-title">Aperçu du document</h4>
+            <button class="modal-close" onclick="closePreviewModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="preview-content"></div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closePreviewModal()">Fermer</button>
+            <button class="btn-pdf"  onclick="telechargerDocument('pdf')">📄 PDF</button>
+            <button class="btn-docx" onclick="telechargerDocument('docx')">📝 DOCX</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL ÉDITION ===== -->
+<div id="editModal" class="modal-overlay">
+    <div class="modal-box" style="height: 80vh;">
+        <div class="modal-header">
+            <h4 id="edit-title">✏️ Modifier le document</h4>
+            <button class="modal-close" onclick="closeEditModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <textarea id="edit-content"></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeEditModal()">Annuler</button>
+            <button class="btn-save" id="btn-save-edit">💾 Sauvegarder</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL GESTION MATÉRIEL ===== -->
+<div id="gestionMaterielModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h4>📦 Gestion du matériel</h4>
+            <button class="modal-close" onclick="closeGestionMaterielModal()">&times;</button>
+        </div>
+        <div class="modal-body no-bg">
+            <div class="materiel-add-btn">
+                <button class="btn-action btn-ajouter" onclick="ouvrirAjoutMateriel()">➕ Ajouter du matériel</button>
+            </div>
+            <div class="table-responsive">
+                <table class="materiel-table">
+                    <thead>
+                        <tr>
+                            <th>Désignation</th>
+                            <th style="text-align:center">Quantité</th>
+                            <th style="text-align:center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="materiel-list-body"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeGestionMaterielModal()">Fermer</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL FORMULAIRE MATÉRIEL ===== -->
+<div id="materielFormModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h4 id="materielFormTitle">➕ Ajouter du matériel</h4>
+            <button class="modal-close" onclick="closeMaterielFormModal()">&times;</button>
+        </div>
+        <div class="modal-body no-bg">
+            <input type="hidden" id="materiel_id" value="">
+            <div class="form-group">
+                <label for="materiel_designation">Type, capacité et caractéristiques du matériel</label>
+                <input type="text" id="materiel_designation" placeholder="Ex : Tracteur, 4x4, 120cv">
+            </div>
+            <div class="form-group">
+                <label for="materiel_quantite">Nombre</label>
+                <input type="number" id="materiel_quantite" value="1" min="1">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeMaterielFormModal()">Annuler</button>
+            <button class="btn-save" onclick="sauvegarderMateriel()">Sauvegarder</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de gestion du personnel -->
+<div id="gestionPersonnelModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1003; align-items: center; justify-content: center;">
+    <div style="background: white; width: 90%; max-width: 900px; border-radius: 8px; padding: 20px; max-height: 80vh; overflow-y: auto;">
+        <h3>👥 Gestion du personnel cadre</h3>
         
         <div style="margin-bottom: 20px;">
-            <button onclick="ouvrirAjoutMateriel()" style="padding: 8px 16px; background: #1ed760; color: white; border: none; border-radius: 4px;">➕ Ajouter du matériel</button>
+            <button onclick="ouvrirAjoutPersonnel()" style="padding: 8px 16px; background: #1ed760; color: white; border: none; border-radius: 4px;">➕ Ajouter du personnel</button>
         </div>
         
-        <div id="liste-materiel">
+        <div id="liste-personnel">
             <table style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr style="background-color: #f0f0f0;">
-                        <th style="padding: 10px; text-align: left;">Désignation</th>
-                        <th style="padding: 10px; text-align: center;">Quantité</th>
+                        <th style="padding: 10px; text-align: left;">Nom et prénom</th>
+                        <th style="padding: 10px; text-align: left;">Poste</th>
+                        <th style="padding: 10px; text-align: left;">Qualification</th>
+                        <th style="padding: 10px; text-align: center;">Années d'exp.</th>
                         <th style="padding: 10px; text-align: center;">Actions</th>
                     </tr>
                 </thead>
-                <tbody id="materiel-list-body">
+                <tbody id="personnel-list-body">
                     <!-- Rempli par JavaScript -->
                 </tbody>
             </table>
         </div>
         
         <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-            <button onclick="closeGestionMaterielModal()" style="padding: 8px 20px; background: #666; color: white; border: none; border-radius: 4px;">Fermer</button>
+            <button onclick="closeGestionPersonnelModal()" style="padding: 8px 20px; background: #666; color: white; border: none; border-radius: 4px;">Fermer</button>
         </div>
     </div>
 </div>
 
-<!-- Modal d'ajout/modification -->
-<div id="materielFormModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1004; align-items: center; justify-content: center;">
+<!-- Modal d'ajout/modification du personnel -->
+<div id="personnelFormModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1004; align-items: center; justify-content: center;">
     <div style="background: white; width: 90%; max-width: 500px; border-radius: 8px; padding: 20px;">
-        <h3 id="materielFormTitle">➕ Ajouter du matériel</h3>
+        <h3 id="personnelFormTitle">➕ Ajouter du personnel</h3>
         
-        <input type="hidden" id="materiel_id" value="">
+        <input type="hidden" id="personnel_id" value="">
         
         <div style="margin-bottom: 15px;">
-            <label>Type, capacité et caractéristiques du matériel :</label>
-            <input type="text" id="materiel_designation" style="width: 100%; padding: 8px; margin-top: 5px;">
+            <label>Nom et prénom :</label>
+            <input type="text" id="personnel_nom_prenom" style="width: 100%; padding: 8px; margin-top: 5px;">
         </div>
         
         <div style="margin-bottom: 15px;">
-            <label>Nombre :</label>
-            <input type="number" id="materiel_quantite" value="1" style="width: 100%; padding: 8px; margin-top: 5px;">
+            <label>Poste :</label>
+            <input type="text" id="personnel_poste" style="width: 100%; padding: 8px; margin-top: 5px;">
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label>Qualification :</label>
+            <input type="text" id="personnel_qualification" style="width: 100%; padding: 8px; margin-top: 5px;">
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label>Années d'expérience :</label>
+            <input type="number" id="personnel_annees_experience" value="0" style="width: 100%; padding: 8px; margin-top: 5px;">
         </div>
         
         <div style="display: flex; gap: 10px; justify-content: flex-end;">
-            <button onclick="closeMaterielFormModal()" style="padding: 8px 20px; background: #666; color: white; border: none; border-radius: 4px;">Annuler</button>
-            <button onclick="sauvegarderMateriel()" style="padding: 8px 20px; background: #1ed760; color: white; border: none; border-radius: 4px;">Sauvegarder</button>
+            <button onclick="closePersonnelFormModal()" style="padding: 8px 20px; background: #666; color: white; border: none; border-radius: 4px;">Annuler</button>
+            <button onclick="sauvegarderPersonnel()" style="padding: 8px 20px; background: #1ed760; color: white; border: none; border-radius: 4px;">Sauvegarder</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL SOUMISSION (CHOIX EMAIL + FORMAT) ===== -->
+<div id="soumissionModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 500px;">
+        <div class="modal-header">
+            <h4>📧 Soumettre le dossier</h4>
+            <button class="modal-close" onclick="closeSoumissionModal()">&times;</button>
+        </div>
+        <div class="modal-body no-bg">
+            <div class="form-group">
+                <label for="soumission_email">Email du destinataire <span style="color: red;">*</span></label>
+                <input type="email" id="soumission_email" placeholder="exemple@domaine.com" required>
+                <small style="color: #666; display: block; margin-top: 5px;">Email du responsable ou de la structure</small>
+            </div>
+            <div class="form-group">
+                <label for="soumission_format">Format du dossier</label>
+                <select id="soumission_format" style="width: 100%; padding: 9px 12px; border: 1px solid #ccc; border-radius: 6px;">
+                    <option value="pdf">PDF</option>
+                    <option value="docx">DOCX</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeSoumissionModal()">Annuler</button>
+            <button class="btn-save" id="btn-confirmer-soumission">📤 Envoyer</button>
         </div>
     </div>
 </div>
@@ -278,97 +803,93 @@
 
 {% block extra_js %}
 <script>
-// Configuration
-
+// ─── Configuration ───────────────────────────────────────────────────────────
 const opportuniteType = "{{ opportunite_type }}";
-const opportuniteId = {{ opportunite.id }};
-const dossierId = {{ dossier.id }};
+const opportuniteId   = {{ opportunite.id }};
+const dossierId       = {{ dossier.id }};
 
-// État local des documents
-let currentEditType = null;
-let currentEditContent = null;
+// ─── État local ──────────────────────────────────────────────────────────────
+let currentEditType    = null;
 let currentPreviewType = null;
+let materielEditId     = null;
+
 let documentsEtat = {
-    enveloppe: { statut: 'MISSING' },
-    lettre: { statut: 'MISSING' },
+    enveloppe:    { statut: 'MISSING' },
+    lettre:       { statut: 'MISSING' },
     presentation: { statut: 'MISSING' },
-    fiche: { statut: 'MISSING' },
-    materiel: { statut: 'MISSING' },
-    personnel: { statut: 'MISSING' }
+    fiche:        { statut: 'MISSING' },
+    materiel:     { statut: 'MISSING' },
+    personnel:    { statut: 'MISSING' }
 };
 
-// Charger l'état depuis le serveur
+const DOC_TITLES = {
+    enveloppe:    'Message enveloppe',
+    lettre:       'Lettre de manifestation',
+    presentation: 'Présentation entreprise',
+    fiche:        'Fiche renseignement',
+    materiel:     'Liste matériel',
+    personnel:    'Personnel cadre'
+};
+
+// ─── Chargement état serveur ─────────────────────────────────────────────────
 async function chargerEtat() {
     try {
-        const response = await fetch(`/api/dossier/etat/?opportunite_type=${opportuniteType}&opportunite_id=${opportuniteId}`);
-        const data = await response.json();
-        
+        const res  = await fetch(`/api/dossier/etat/?opportunite_type=${opportuniteType}&opportunite_id=${opportuniteId}`);
+        const data = await res.json();
         if (data.success) {
             documentsEtat = data.data.documents;
             mettreAJourAffichage();
         }
-    } catch (error) {
-        console.error('Erreur chargement état:', error);
+    } catch (err) {
+        console.error('Erreur chargement état:', err);
     }
 }
 
-// Mettre à jour l'affichage
+// ─── Mise à jour affichage ───────────────────────────────────────────────────
 function mettreAJourAffichage() {
     let compteur = 0;
-    const types = ['enveloppe', 'lettre', 'presentation', 'fiche', 'materiel', 'personnel'];
-    
+    const types  = Object.keys(documentsEtat);
+
     types.forEach(type => {
-        const statut = documentsEtat[type]?.statut || 'MISSING';
-        const badge = document.querySelector(`.status-badge[data-status="${type}"]`);
-        const btnModifier = document.querySelector(`.btn-modifier[data-type="${type}"]`);
-        const card = document.querySelector(`.document-card[data-doc="${type}"]`);
-        const btnPreview = document.querySelector(`.btn-preview[data-type="${type}"]`);
-        
-        if (statut === 'GENERATED' || statut === 'IMPORTED' || statut === 'MODIFIED') {
-            badge.innerHTML = '✅ Prêt';
-            badge.style.background = '#d4edda';
-            badge.style.color = '#155724';
+        const statut    = documentsEtat[type]?.statut || 'MISSING';
+        const isReady   = ['GENERATED', 'IMPORTED', 'MODIFIED'].includes(statut);
+        const badge     = document.querySelector(`.status-badge[data-status="${type}"]`);
+        const card      = document.querySelector(`.document-card[data-doc="${type}"]`);
+        const btnMod    = document.querySelector(`.btn-modifier[data-type="${type}"]`);
+        const btnPrev   = document.querySelector(`.btn-preview[data-type="${type}"]`);
+
+        if (isReady) {
             compteur++;
-            if (btnModifier) btnModifier.disabled = false;
-            if (card) card.style.borderLeft = '4px solid #1ed760';
-            if (btnPreview) btnPreview.disabled = false;
+            if (badge)  { badge.textContent = '✅ Prêt'; badge.className = 'status-badge ready'; }
+            if (card)   card.classList.add('is-ready');
+            if (btnMod) btnMod.disabled = false;
+            if (btnPrev) btnPrev.disabled = false;
         } else {
-            badge.innerHTML = '❌ Non généré';
-            badge.style.background = '#f8d7da';
-            badge.style.color = '#721c24';
-            if (btnModifier) btnModifier.disabled = true;
-            if (card) card.style.borderLeft = '4px solid #ccc';
-            if (btnPreview) btnPreview.disabled = true;
+            if (badge)  { badge.textContent = '❌ Non généré'; badge.className = 'status-badge missing'; }
+            if (card)   card.classList.remove('is-ready');
+            if (btnMod) btnMod.disabled = true;
+            if (btnPrev) btnPrev.disabled = true;
         }
     });
-    
-    // Mettre à jour la barre de progression
-    const pourcentage = (compteur / 6) * 100;
-    document.getElementById('progress-bar').style.width = pourcentage + '%';
-    document.getElementById('compteur-docs').innerHTML = `${compteur}/6 documents prêts`;
-    
-    // Activer/désactiver le bouton de soumission
-    const btnSoumettre = document.getElementById('btn-soumettre');
-    btnSoumettre.disabled = compteur !== 6;
+
+    const pct = (compteur / 6) * 100;
+    document.getElementById('progress-bar').style.width = pct + '%';
+    document.getElementById('compteur-docs').textContent  = `${compteur}/6 documents prêts`;
+
+    const tousPrets = (compteur === 6);
+    document.getElementById('btn-soumettre').disabled = !tousPrets;
+    document.getElementById('btn-telecharger-dossier').disabled = !tousPrets;
 }
 
-// Générer un document
+// ─── Génération ──────────────────────────────────────────────────────────────
 async function genererDocument(type) {
     try {
-        const response = await fetch('/api/document/generer/', {
+        const res  = await fetch('/api/document/generer/', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({
-                opportunite_type: opportuniteType,
-                opportunite_id: opportuniteId,
-                type_document: type
-            })
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ opportunite_type: opportuniteType, opportunite_id: opportuniteId, type_document: type })
         });
-        
-        const data = await response.json();
+        const data = await res.json();
         if (data.success) {
             documentsEtat[type] = { statut: 'GENERATED' };
             mettreAJourAffichage();
@@ -376,153 +897,283 @@ async function genererDocument(type) {
         } else {
             alert('Erreur : ' + data.error);
         }
-    } catch (error) {
-        console.error('Erreur génération:', error);
+    } catch (err) {
+        console.error('Erreur génération:', err);
         alert('Erreur lors de la génération');
     }
 }
 
-// Fonction d'aperçu
+// ─── Aperçu ──────────────────────────────────────────────────────────────────
 async function previewDocument(type) {
-    currentPreviewType = type; 
-    const modal = document.getElementById('previewModal');
-    const previewContent = document.getElementById('preview-content');
-    const previewTitle = document.getElementById('preview-title');
-    
-    const titles = {
-        'enveloppe': 'Message enveloppe',
-        'lettre': 'Lettre de manifestation',
-        'presentation': 'Présentation entreprise',
-        'fiche': 'Fiche renseignement',
-        'materiel': 'Liste matériel',
-        'personnel': 'Personnel cadre'
-    };
-    
-    previewTitle.innerHTML = `📄 ${titles[type] || type}`;
-    previewContent.innerHTML = '<div style="text-align: center; padding: 50px;">Chargement...</div>';
-    modal.style.display = 'flex';
-    
+    currentPreviewType = type;
+    const modal   = document.getElementById('previewModal');
+    const content = document.getElementById('preview-content');
+
+    document.getElementById('preview-title').textContent = '📄 ' + (DOC_TITLES[type] || type);
+    content.innerHTML = '<div style="text-align:center;padding:50px">Chargement…</div>';
+    modal.classList.add('open');
+
     try {
-        const response = await fetch(`/api/document/apercu/?opportunite_type=${opportuniteType}&opportunite_id=${opportuniteId}&type_document=${type}`);
-        const data = await response.json();
-        
-        if (data.success && data.html) {
-            previewContent.innerHTML = data.html;
-        } else {
-            previewContent.innerHTML = `<div style="text-align: center; padding: 50px; color: red;">❌ ${data.error || 'Erreur de chargement'}</div>`;
-        }
-    } catch (error) {
-        console.error('Erreur aperçu:', error);
-        previewContent.innerHTML = '<div style="text-align: center; padding: 50px; color: red;">❌ Erreur de connexion</div>';
+        const res  = await fetch(`/api/document/apercu/?opportunite_type=${opportuniteType}&opportunite_id=${opportuniteId}&type_document=${type}`);
+        const data = await res.json();
+        content.innerHTML = data.success && data.html
+            ? data.html
+            : `<div style="text-align:center;padding:50px;color:red">❌ ${data.error || 'Erreur de chargement'}</div>`;
+    } catch (err) {
+        content.innerHTML = '<div style="text-align:center;padding:50px;color:red">❌ Erreur de connexion</div>';
     }
 }
 
+function closePreviewModal() {
+    document.getElementById('previewModal').classList.remove('open');
+    currentPreviewType = null;
+}
+
+function telechargerDocument(format) {
+    if (!currentPreviewType) return;
+    window.open(`/api/document/telecharger/?opportunite_type=${opportuniteType}&opportunite_id=${opportuniteId}&type_document=${currentPreviewType}&format=${format}`, '_blank');
+}
+
+// ─── Modification ─────────────────────────────────────────────────────────────
 async function modifierDocument(type) {
     const statut = documentsEtat[type]?.statut;
-    if (statut !== 'GENERATED' && statut !== 'MODIFIED' && statut !== 'IMPORTED') {
+    if (!['GENERATED', 'MODIFIED', 'IMPORTED'].includes(statut)) {
         alert('Veuillez d\'abord générer ou importer le document');
         return;
     }
-    
     currentEditType = type;
-    
+
     try {
-        const response = await fetch(`/api/document/apercu/?opportunite_type=${opportuniteType}&opportunite_id=${opportuniteId}&type_document=${type}`);
-        const data = await response.json();
-        
+        const res  = await fetch(`/api/document/apercu/?opportunite_type=${opportuniteType}&opportunite_id=${opportuniteId}&type_document=${type}`);
+        const data = await res.json();
+
         if (data.success && data.html) {
-            // 🔥 Extraire le texte sans les balises HTML
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = data.html;
-            const texteBrut = tempDiv.textContent || tempDiv.innerText || '';
-            
-            document.getElementById('edit-content').value = texteBrut.trim();
-            
-            const titles = {
-                'enveloppe': 'Message enveloppe',
-                'lettre': 'Lettre de manifestation',
-                'presentation': 'Présentation entreprise',
-                'fiche': 'Fiche renseignement',
-                'materiel': 'Liste matériel',
-                'personnel': 'Personnel cadre'
-            };
-            document.getElementById('edit-title').innerHTML = `✏️ Modifier ${titles[type] || type}`;
-            document.getElementById('editModal').style.display = 'flex';
+            const tmp  = document.createElement('div');
+            tmp.innerHTML = data.html;
+            document.getElementById('edit-content').value = (tmp.textContent || tmp.innerText || '').trim();
+            document.getElementById('edit-title').textContent = '✏️ Modifier ' + (DOC_TITLES[type] || type);
+            document.getElementById('editModal').classList.add('open');
         } else {
-            alert('Erreur: impossible de récupérer le contenu');
+            alert('Impossible de récupérer le contenu');
         }
-    } catch (error) {
-        console.error('Erreur:', error);
+    } catch (err) {
         alert('Erreur lors du chargement du contenu');
     }
 }
 
 async function sauvegarderModification() {
-    const nouveauTexte = document.getElementById('edit-content').value;
-    
-    if (!nouveauTexte.trim()) {
-        alert('Le contenu ne peut pas être vide');
-        return;
-    }
-    
+    const texte = document.getElementById('edit-content').value.trim();
+    if (!texte) { alert('Le contenu ne peut pas être vide'); return; }
+
     try {
-        const response = await fetch('/api/document/modifier/', {
+        const res  = await fetch('/api/document/modifier/', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({
-                opportunite_type: opportuniteType,
-                opportunite_id: opportuniteId,
-                type_document: currentEditType,
-                contenu: nouveauTexte.trim()  // ← Seulement le texte, pas le HTML
-            })
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ opportunite_type: opportuniteType, opportunite_id: opportuniteId, type_document: currentEditType, contenu: texte })
         });
-        
-        const data = await response.json();
+        const data = await res.json();
         if (data.success) {
             documentsEtat[currentEditType] = { statut: 'MODIFIED' };
             mettreAJourAffichage();
             closeEditModal();
             alert('Document modifié avec succès !');
         } else {
-            alert('Erreur: ' + data.error);
+            alert('Erreur : ' + data.error);
         }
-    } catch (error) {
-        console.error('Erreur:', error);
+    } catch (err) {
         alert('Erreur lors de la sauvegarde');
     }
 }
 
-let materielEditId = null;
+function closeEditModal() {
+    document.getElementById('editModal').classList.remove('open');
+    currentEditType = null;
+}
 
+// ─── Import fichier ───────────────────────────────────────────────────────────
+async function importerDocument(type) {
+    const input = document.createElement('input');
+    input.type  = 'file';
+    input.accept = '.pdf,.docx';
+
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('opportunite_type', opportuniteType);
+        formData.append('opportunite_id',   opportuniteId);
+        formData.append('type_document',    type);
+        formData.append('fichier',          file);
+
+        const btn = document.querySelector(`.btn-importer[data-type="${type}"]`);
+        const orig = btn.textContent;
+        btn.textContent = '⏳ Import…';
+        btn.disabled = true;
+
+        try {
+            const res  = await fetch('/api/document/importer/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                body: formData
+            });
+            const data = await res.json();
+            if (data.success) {
+                documentsEtat[type] = { statut: 'IMPORTED' };
+                mettreAJourAffichage();
+                alert('Document importé avec succès !');
+            } else {
+                alert('Erreur : ' + data.error);
+            }
+        } catch (err) {
+            alert('Erreur lors de l\'import');
+        } finally {
+            btn.textContent = orig;
+            btn.disabled = false;
+        }
+    };
+
+    input.click();
+}
+
+// ─── Gestion matériel ─────────────────────────────────────────────────────────
 async function ouvrirGestionMateriel() {
-    document.getElementById('gestionMaterielModal').style.display = 'flex';
+    document.getElementById('gestionMaterielModal').classList.add('open');
     await chargerListeMateriel();
 }
 
 function closeGestionMaterielModal() {
-    document.getElementById('gestionMaterielModal').style.display = 'none';
+    document.getElementById('gestionMaterielModal').classList.remove('open');
 }
 
 async function chargerListeMateriel() {
     try {
-        const response = await fetch('/api/materiel/liste/');
+        const res  = await fetch('/api/materiel/liste/');
+        const data = await res.json();
+        if (!data.success) return;
+
+        const tbody = document.getElementById('materiel-list-body');
+        tbody.innerHTML = '';
+        data.materiels.forEach(m => {
+            const tr = tbody.insertRow();
+            tr.insertCell(0).textContent = m.designation;
+            tr.insertCell(1).innerHTML   = `<div style="text-align:center">${m.quantite}</div>`;
+            tr.insertCell(2).innerHTML   = `
+                <div class="table-actions">
+                    <button style="background:#f5a623;color:#fff" onclick="ouvrirModifierMateriel(${m.id},'${m.designation.replace(/'/g,"\\'")}',${m.quantite})">✏️</button>
+                    <button style="background:#e74c3c;color:#fff" onclick="supprimerMateriel(${m.id})">🗑️</button>
+                </div>`;
+        });
+    } catch (err) {
+        console.error('Erreur chargement matériels:', err);
+    }
+}
+
+function ouvrirAjoutMateriel() {
+    materielEditId = null;
+    document.getElementById('materiel_id').value          = '';
+    document.getElementById('materiel_designation').value = '';
+    document.getElementById('materiel_quantite').value    = '1';
+    document.getElementById('materielFormTitle').textContent = '➕ Ajouter du matériel';
+    document.getElementById('materielFormModal').classList.add('open');
+}
+
+function ouvrirModifierMateriel(id, designation, quantite) {
+    materielEditId = id;
+    document.getElementById('materiel_id').value          = id;
+    document.getElementById('materiel_designation').value = designation;
+    document.getElementById('materiel_quantite').value    = quantite;
+    document.getElementById('materielFormTitle').textContent = '✏️ Modifier le matériel';
+    document.getElementById('materielFormModal').classList.add('open');
+}
+
+function closeMaterielFormModal() {
+    document.getElementById('materielFormModal').classList.remove('open');
+    materielEditId = null;
+}
+
+async function sauvegarderMateriel() {
+    const designation = document.getElementById('materiel_designation').value.trim();
+    const quantite    = parseInt(document.getElementById('materiel_quantite').value, 10);
+
+    if (!designation) { alert('Veuillez saisir la désignation du matériel'); return; }
+
+    const url  = materielEditId ? '/api/materiel/modifier/' : '/api/materiel/ajouter/';
+    const body = materielEditId
+        ? { id: materielEditId, designation, quantite }
+        : { designation, quantite };
+
+    try {
+        const res  = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (data.success) {
+            closeMaterielFormModal();
+            await chargerListeMateriel();
+            await genererDocument('materiel');
+            alert(materielEditId ? 'Matériel modifié avec succès' : 'Matériel ajouté avec succès');
+        } else {
+            alert('Erreur : ' + data.error);
+        }
+    } catch (err) {
+        alert('Erreur lors de la sauvegarde');
+    }
+}
+
+async function supprimerMateriel(id) {
+    if (!confirm('Voulez-vous vraiment supprimer ce matériel ?')) return;
+    try {
+        const res  = await fetch('/api/materiel/supprimer/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ id })
+        });
+        const data = await res.json();
+        if (data.success) {
+            await chargerListeMateriel();
+            await genererDocument('materiel');
+            alert('Matériel supprimé avec succès');
+        } else {
+            alert('Erreur : ' + data.error);
+        }
+    } catch (err) {
+        alert('Erreur lors de la suppression');
+    }
+}
+
+let personnelEditId = null;
+
+async function ouvrirGestionPersonnel() {
+    document.getElementById('gestionPersonnelModal').style.display = 'flex';
+    await chargerListePersonnel();
+}
+
+function closeGestionPersonnelModal() {
+    document.getElementById('gestionPersonnelModal').style.display = 'none';
+}
+
+async function chargerListePersonnel() {
+    try {
+        const response = await fetch('/api/personnel/liste/');
         const data = await response.json();
         
         if (data.success) {
-            const tbody = document.getElementById('materiel-list-body');
+            const tbody = document.getElementById('personnel-list-body');
             tbody.innerHTML = '';
             
-            data.materiels.forEach(m => {
+            data.personnels.forEach(p => {
                 const row = tbody.insertRow();
-                row.insertCell(0).innerHTML = m.designation;
-                row.insertCell(1).innerHTML = `<div style="text-align: center;">${m.quantite}</div>`;
-                row.insertCell(2).innerHTML = `
+                row.insertCell(0).innerHTML = p.nom_prenom;
+                row.insertCell(1).innerHTML = p.poste;
+                row.insertCell(2).innerHTML = p.qualification;
+                row.insertCell(3).innerHTML = `<div style="text-align: center;">${p.annees_experience}</div>`;
+                row.insertCell(4).innerHTML = `
                     <div style="display: flex; gap: 5px; justify-content: center;">
-                        <button onclick="ouvrirModifierMateriel(${m.id}, '${m.designation.replace(/'/g, "\\'")}', ${m.quantite})" style="background: #f5a623; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">✏️</button>
-                        <button onclick="supprimerMateriel(${m.id})" style="background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">🗑️</button>
+                        <button onclick="ouvrirModifierPersonnel(${p.id}, '${p.nom_prenom.replace(/'/g, "\\'")}', '${p.poste.replace(/'/g, "\\'")}', '${p.qualification.replace(/'/g, "\\'")}', ${p.annees_experience})" style="background: #f5a623; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">✏️</button>
+                        <button onclick="supprimerPersonnel(${p.id})" style="background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">🗑️</button>
                     </div>
                 `;
             });
@@ -532,42 +1183,59 @@ async function chargerListeMateriel() {
     }
 }
 
-function ouvrirAjoutMateriel() {
-    materielEditId = null;
-    document.getElementById('materiel_id').value = '';
-    document.getElementById('materiel_designation').value = '';
-    document.getElementById('materiel_quantite').value = '1';
-    document.getElementById('materielFormTitle').innerHTML = '➕ Ajouter du matériel';
-    document.getElementById('materielFormModal').style.display = 'flex';
+function ouvrirAjoutPersonnel() {
+    personnelEditId = null;
+    document.getElementById('personnel_id').value = '';
+    document.getElementById('personnel_nom_prenom').value = '';
+    document.getElementById('personnel_poste').value = '';
+    document.getElementById('personnel_qualification').value = '';
+    document.getElementById('personnel_annees_experience').value = '0';
+    document.getElementById('personnelFormTitle').innerHTML = '➕ Ajouter du personnel';
+    document.getElementById('personnelFormModal').style.display = 'flex';
 }
 
-function ouvrirModifierMateriel(id, designation, quantite) {
-    materielEditId = id;
-    document.getElementById('materiel_id').value = id;
-    document.getElementById('materiel_designation').value = designation;
-    document.getElementById('materiel_quantite').value = quantite;
-    document.getElementById('materielFormTitle').innerHTML = '✏️ Modifier le matériel';
-    document.getElementById('materielFormModal').style.display = 'flex';
+function ouvrirModifierPersonnel(id, nom_prenom, poste, qualification, annees_experience) {
+    personnelEditId = id;
+    document.getElementById('personnel_id').value = id;
+    document.getElementById('personnel_nom_prenom').value = nom_prenom;
+    document.getElementById('personnel_poste').value = poste;
+    document.getElementById('personnel_qualification').value = qualification;
+    document.getElementById('personnel_annees_experience').value = annees_experience;
+    document.getElementById('personnelFormTitle').innerHTML = '✏️ Modifier le personnel';
+    document.getElementById('personnelFormModal').style.display = 'flex';
 }
 
-function closeMaterielFormModal() {
-    document.getElementById('materielFormModal').style.display = 'none';
-    materielEditId = null;
+function closePersonnelFormModal() {
+    document.getElementById('personnelFormModal').style.display = 'none';
+    personnelEditId = null;
 }
 
-async function sauvegarderMateriel() {
-    const designation = document.getElementById('materiel_designation').value.trim();
-    const quantite = document.getElementById('materiel_quantite').value;
+async function sauvegarderPersonnel() {
+    const nom_prenom = document.getElementById('personnel_nom_prenom').value.trim();
+    const poste = document.getElementById('personnel_poste').value.trim();
+    const qualification = document.getElementById('personnel_qualification').value.trim();
+    const annees_experience = document.getElementById('personnel_annees_experience').value;
     
-    if (!designation) {
-        alert('Veuillez saisir la désignation du matériel');
+    if (!nom_prenom) {
+        alert('Veuillez saisir le nom et prénom');
         return;
     }
     
-    const url = materielEditId ? '/api/materiel/modifier/' : '/api/materiel/ajouter/';
-    const body = materielEditId 
-        ? { id: materielEditId, designation: designation, quantite: parseInt(quantite) }
-        : { designation: designation, quantite: parseInt(quantite) };
+    const url = personnelEditId ? '/api/personnel/modifier/' : '/api/personnel/ajouter/';
+    const body = personnelEditId 
+        ? { 
+            id: personnelEditId, 
+            nom_prenom: nom_prenom, 
+            poste: poste, 
+            qualification: qualification, 
+            annees_experience: parseInt(annees_experience) 
+        }
+        : { 
+            nom_prenom: nom_prenom, 
+            poste: poste, 
+            qualification: qualification, 
+            annees_experience: parseInt(annees_experience) 
+        };
     
     try {
         const response = await fetch(url, {
@@ -581,10 +1249,10 @@ async function sauvegarderMateriel() {
         
         const data = await response.json();
         if (data.success) {
-            closeMaterielFormModal();
-            await chargerListeMateriel();
-            await genererDocument('materiel');
-            alert(materielEditId ? 'Matériel modifié avec succès' : 'Matériel ajouté avec succès');
+            closePersonnelFormModal();
+            await chargerListePersonnel();
+            await genererDocument('personnel');
+            alert(personnelEditId ? 'Personnel modifié avec succès' : 'Personnel ajouté avec succès');
         } else {
             alert('Erreur: ' + data.error);
         }
@@ -594,11 +1262,11 @@ async function sauvegarderMateriel() {
     }
 }
 
-async function supprimerMateriel(id) {
-    if (!confirm('Voulez-vous vraiment supprimer ce matériel ?')) return;
+async function supprimerPersonnel(id) {
+    if (!confirm('Voulez-vous vraiment supprimer ce personnel ?')) return;
     
     try {
-        const response = await fetch('/api/materiel/supprimer/', {
+        const response = await fetch('/api/personnel/supprimer/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -609,9 +1277,9 @@ async function supprimerMateriel(id) {
         
         const data = await response.json();
         if (data.success) {
-            await chargerListeMateriel();
-            await genererDocument('materiel');
-            alert('Matériel supprimé avec succès');
+            await chargerListePersonnel();
+            await genererDocument('personnel');
+            alert('Personnel supprimé avec succès');
         } else {
             alert('Erreur: ' + data.error);
         }
@@ -621,140 +1289,117 @@ async function supprimerMateriel(id) {
     }
 }
 
-function closeEditModal() {
-    document.getElementById('editModal').style.display = 'none';
-    currentEditType = null;
-    currentEditContent = null;
+// Événement pour le bouton Ajouter (dans la carte)
+document.querySelectorAll('.btn-ajouter[data-type="personnel"]').forEach(btn => {
+    btn.addEventListener('click', ouvrirGestionPersonnel);
+});
+
+// ─── Délégation d'événements ──────────────────────────────────────────────────
+document.addEventListener('click', (e) => {
+    const btn  = e.target.closest('button[data-type]');
+    if (!btn) return;
+    const type = btn.dataset.type;
+
+    if (btn.classList.contains('btn-generer'))  genererDocument(type);
+    if (btn.classList.contains('btn-importer')) importerDocument(type);
+    if (btn.classList.contains('btn-modifier')) modifierDocument(type);
+    if (btn.classList.contains('btn-preview'))  previewDocument(type);
+    if (btn.classList.contains('btn-ajouter'))  ouvrirGestionMateriel();
+});
+
+// ─── Soumission dossier (avec modale) ───────────────────────────────────────
+function ouvrirSoumissionModal() {
+    document.getElementById('soumissionModal').classList.add('open');
 }
 
-function closePreviewModal() {
-    document.getElementById('previewModal').style.display = 'none';
-    currentPreviewType = null;
+function closeSoumissionModal() {
+    document.getElementById('soumissionModal').classList.remove('open');
+    document.getElementById('soumission_email').value = '';
 }
 
-function telechargerDocument(format) {
-    if (!currentPreviewType) return;
+async function confirmerSoumission() {
+    const email = document.getElementById('soumission_email').value.trim();
+    const format = document.getElementById('soumission_format').value;
     
-    const url = `/api/document/telecharger/?opportunite_type=${opportuniteType}&opportunite_id=${opportuniteId}&type_document=${currentPreviewType}&format=${format}`;
-    window.open(url, '_blank');
-}
-
-async function importerDocument(type) {
-    // Créer un input file caché
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.pdf,.docx';
+    if (!email) {
+        alert('Veuillez saisir l\'email du destinataire');
+        return;
+    }
     
-    input.onchange = async (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
+    const btn = document.getElementById('btn-confirmer-soumission');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Envoi en cours...';
+    btn.disabled = true;
+    
+    try {
+        const response = await fetch('/api/dossier/soumettre/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                opportunite_type: opportuniteType,
+                opportunite_id: opportuniteId,
+                email_destinataire: email,
+                format: format
+            })
+        });
         
-        const formData = new FormData();
-        formData.append('opportunite_type', opportuniteType);
-        formData.append('opportunite_id', opportuniteId);
-        formData.append('type_document', type);
-        formData.append('fichier', file);
+        const data = await response.json();
         
-        const btn = document.querySelector(`.btn-importer[data-type="${type}"]`);
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '⏳ Import...';
-        btn.disabled = true;
-        
-        try {
-            const response = await fetch('/api/document/importer/', {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: formData
-            });
-            
-            const data = await response.json();
-            if (data.success) {
-                documentsEtat[type] = { statut: 'IMPORTED' };
-                mettreAJourAffichage();
-                alert('Document importé avec succès !');
-            } else {
-                alert('Erreur: ' + data.error);
-            }
-        } catch (error) {
-            console.error('Erreur:', error);
-            alert('Erreur lors de l\'import');
-        } finally {
+        if (data.success) {
+            alert(`✅ ${data.message}`);
+            window.location.href = '/mes_soumissions/';
+        } else {
+            alert('❌ Erreur : ' + data.error);
             btn.innerHTML = originalText;
             btn.disabled = false;
         }
-    };
-    
-    input.click();
+    } catch (error) {
+        console.error('Erreur:', error);
+        alert('❌ Erreur lors de l\'envoi');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
 }
 
-// Événements des boutons
+// ─── Téléchargement dossier complet ─────────────────────────────────────────
+function ouvrirDownloadModal() {
+    document.getElementById('downloadModal').classList.add('open');
+}
 
-document.querySelectorAll('.btn-importer').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const type = btn.dataset.type;
-        importerDocument(type);
-    });
-});
+function closeDownloadModal() {
+    document.getElementById('downloadModal').classList.remove('open');
+}
 
-document.querySelectorAll('.btn-generer').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const type = btn.dataset.type;
-        genererDocument(type);
-    });
-});
+function telechargerDossierComplet() {
+    const format = document.getElementById('download_format').value;
+    const url = `/api/dossier/telecharger_complet/?opportunite_type=${opportuniteType}&opportunite_id=${opportuniteId}&format=${format}`;
+    window.open(url, '_blank');
+    closeDownloadModal();
+}
 
-document.querySelectorAll('.btn-modifier').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const type = btn.dataset.type;
-        modifierDocument(type);
-    });
-});
+// Bouton Télécharger
+document.getElementById('btn-telecharger-dossier').addEventListener('click', ouvrirDownloadModal);
+document.getElementById('btn-confirmer-download').addEventListener('click', telechargerDossierComplet);
 
-document.querySelectorAll('.btn-ajouter[data-type="materiel"]').forEach(btn => {
-    btn.addEventListener('click', ouvrirGestionMateriel);
-});
+// Bouton Soumettre ouvre la modale
+document.getElementById('btn-soumettre').addEventListener('click', ouvrirSoumissionModal);
 
-document.querySelectorAll('.btn-preview').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const type = btn.dataset.type;
-        previewDocument(type);
-    });
-});
+// Bouton de confirmation dans la modale
+document.getElementById('btn-confirmer-soumission').addEventListener('click', confirmerSoumission);
 
 document.getElementById('btn-save-edit').addEventListener('click', sauvegarderModification);
 
-document.getElementById('btn-soumettre').addEventListener('click', async () => {
-    if (confirm('Voulez-vous vraiment soumettre ce dossier ? Cette action est définitive.')) {
-        try {
-            const response = await fetch('/api/dossier/soumettre/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({
-                    opportunite_type: opportuniteType,
-                    opportunite_id: opportuniteId
-                })
-            });
-            
-            const data = await response.json();
-            if (data.success) {
-                alert('Dossier soumis avec succès !');
-                window.location.reload();
-            } else {
-                alert('Erreur : ' + data.error);
-            }
-        } catch (error) {
-            console.error('Erreur soumission:', error);
-            alert('Erreur lors de la soumission');
-        }
-    }
+// ─── Fermeture modals sur clic extérieur ──────────────────────────────────────
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.classList.remove('open');
+    });
 });
 
-// Charger l'état au démarrage
+// ─── Init ─────────────────────────────────────────────────────────────────────
 chargerEtat();
 </script>
 {% endblock %}

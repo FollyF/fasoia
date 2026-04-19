@@ -478,15 +478,11 @@
                class="nav-item {% if request.resolver_match.url_name == 'dashboard_entreprise' %}active{% endif %}">
               <i class="fa fa-building"></i><span>Dashboard entreprise</span>
             </a>
-            <a href="#"
+            <a href="{% url 'myAppli:mes_soumissions' %}"
                class="nav-item {% if request.resolver_match.url_name == 'mes_soumissions' %}active{% endif %}">
               <i class="fa fa-file-lines"></i><span>Mes soumissions</span>
             </a>
           {% endif %}
-          <a href="{% url 'myAppli:profil' %}"
-             class="nav-item {% if request.resolver_match.url_name == 'profil' %}active{% endif %}">
-            <i class="fa fa-circle-user"></i><span>Mon profil</span>
-          </a>
         {% else %}
           <a href="{% url 'myAppli:connexion' %}" class="nav-item">
             <i class="fa fa-right-to-bracket"></i><span>Se connecter</span>

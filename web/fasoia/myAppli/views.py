@@ -15,10 +15,13 @@ from django.http import FileResponse
 from datetime import datetime, timedelta
 import tempfile
 import subprocess
+import zipfile
 
+from docx import Document as DocxDocument
 from io import BytesIO
 from weasyprint import HTML
 from html2docx import html2docx
+from django.core.mail import EmailMessage
 
 import re
 import os
@@ -734,8 +737,12 @@ def completer_profil_candidat(request):
         # Date de naissance (optionnelle)
         date_naissance = request.POST.get('date_naissance')
         if date_naissance:
-            particulier.date_naissance = datetime.strptime(date_naissance, '%Y-%m-%d').date()
-        
+            try:
+                from datetime import datetime
+                particulier.date_naissance = datetime.strptime(date_naissance, '%Y-%m-%d').date()
+            except ValueError:
+                particulier.date_naissance = None
+                
         particulier.adresse = request.POST.get('adresse', particulier.adresse)
         particulier.ville = request.POST.get('ville', particulier.ville)
         particulier.pays = request.POST.get('pays', particulier.pays)
@@ -1163,6 +1170,22 @@ def nouvelle_soumission(request, opportunite_type, opportunite_id):
     
     return render(request, 'myAppli/soumission/nouvelle_soumission.html', context)
 
+@login_required
+def mes_soumissions(request):
+    """Affiche la liste de tous les dossiers de l'entreprise"""
+    try:
+        entreprise = Entreprise.objects.get(user=request.user)
+    except Entreprise.DoesNotExist:
+        messages.error(request, "Vous devez être une entreprise")
+        return redirect('myAppli:home')
+    
+    # Récupérer TOUS les dossiers (sans filtre de statut)
+    dossiers = DossierSoumission.objects.filter(
+        entreprise=entreprise
+    ).order_by('-date_creation')
+    
+    return render(request, 'myAppli/soumission/mes_soumissions.html', {'dossiers': dossiers})
+
 def get_entete_image_html(request, entreprise):
     """Retourne le HTML de l'image d'en-tête avec URL absolue"""
     if entreprise.entete_image and entreprise.entete_image.url:
@@ -1356,6 +1379,83 @@ def construire_html_materiel(request, entreprise):
         </div>
         </div>"""
 
+def construire_html_personnel(request, entreprise):
+    """Construit le HTML pour la liste du personnel"""
+    
+    entete_image_html = get_entete_image_html(request, entreprise)
+   
+    personnels = PersonnelCle.objects.filter(entreprise=entreprise)
+    
+    lignes = ""
+    for i, p in enumerate(personnels, 1):
+        lignes += f"""
+        <tr style="border-bottom: 1px solid #ccc;">
+            <td style="padding: 8px; text-align: center;">{i:02d}</td>
+            <td style="padding: 8px;">{p.nom_prenom}</td>
+            <td style="padding: 8px;">{p.poste}</td>
+            <td style="padding: 8px;">{p.qualification}</td>
+            <td style="padding: 8px; text-align: center;">{p.annees_experience}</td>
+        </tr>
+        """
+    
+    if not lignes:
+        lignes = '<tr><td colspan="5" style="padding: 20px; text-align: center;">Aucun personnel renseigné</td></tr>'
+    
+    date_actuelle = timezone.now().strftime('%d/%m/%Y')
+    responsable = request.user.get_full_name() or request.user.username or entreprise.raisonSociale
+    
+    return f"""<div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;">
+        {entete_image_html}
+        <h2 style="text-align: center; margin-bottom: 30px;">LISTE DU PERSONNEL CADRE</h2>
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
+            <thead>
+                <tr style="background-color: #f0f0f0; border-bottom: 1px solid #000;">
+                    <th style="padding: 10px; text-align: center; border: 1px solid #000;">N°</th>
+                    <th style="padding: 10px; text-align: center; border: 1px solid #000;">Nom et prénom</th>
+                    <th style="padding: 10px; text-align: center; border: 1px solid #000;">Poste</th>
+                    <th style="padding: 10px; text-align: center; border: 1px solid #000;">Qualification</th>
+                    <th style="padding: 10px; text-align: center; border: 1px solid #000;">Années d'exp.</th>
+                </tr>
+            </thead>
+            <tbody>
+                {lignes}
+            </tbody>
+        </table>
+        <div style="margin-top: 40px;">
+        <div style="float: right; text-align: right;">
+        Ouagadougou, le {date_actuelle}<br><br>
+        Le responsable<br><br>
+        <strong>{responsable}</strong>
+        </div>
+        <div style="clear: both;"></div>
+        </div>
+        </div>"""
+
+def get_pdf_bytes(html_content):
+    """Retourne les bytes d'un PDF (sans FileResponse)"""
+    buffer = BytesIO()
+    HTML(string=html_content).write_pdf(buffer)
+    buffer.seek(0)
+    return buffer.getvalue()
+
+def get_docx_bytes(html_content):
+    """Retourne les bytes d'un DOCX à partir du HTML"""
+    buffer = BytesIO()
+    
+    # Extraire le texte brut du HTML
+    text = re.sub(r'<[^>]+>', ' ', html_content)
+    text = re.sub(r'\s+', ' ', text).strip()
+    
+    # Créer le document Word
+    doc = DocxDocument()
+    doc.add_paragraph(text)
+    
+    # Sauvegarder dans le buffer
+    doc.save(buffer)
+    buffer.seek(0)
+    
+    return buffer.getvalue()
+
 def generer_message_enveloppe(entreprise, opportunite):
     """
     Génère le message à coller sur l'enveloppe
@@ -1380,25 +1480,16 @@ def generer_message_enveloppe(entreprise, opportunite):
     return construire_html_enveloppe(texte_brut)
 
 def generer_pdf(html_content, filename):
-    """Génère un PDF à partir du HTML avec WeasyPrint"""
-    buffer = BytesIO()
-    
-    # WeasyPrint peut écrire directement dans un buffer
-    HTML(string=html_content).write_pdf(buffer)
-    buffer.seek(0)
-    
-    return FileResponse(buffer, as_attachment=True, filename=filename, content_type='application/pdf')
+    return FileResponse(
+        BytesIO(get_pdf_bytes(html_content)),  # ← réutilise get_pdf_bytes
+        as_attachment=True,
+        filename=filename
+    )
 
 def generer_docx(html_content, filename):
-    """Génère un DOCX à partir du HTML avec html2docx"""
-    buffer = BytesIO()
-    
-    # html2docx écrit dans un buffer
-    html2docx(html_content, buffer)
-    buffer.seek(0)
-    
+    """Génère un DOCX à partir du HTML"""
     return FileResponse(
-        buffer,
+        BytesIO(get_docx_bytes(html_content)),
         as_attachment=True,
         filename=filename,
         content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -1418,18 +1509,57 @@ def generer_lettre_manifestation(request, entreprise, opportunite):
 
 def generer_presentation_entreprise(request, entreprise):
     """Génère la présentation de l'entreprise"""
-    
     return construire_html_presentation(request, entreprise, entreprise.description or "")
 
 def generer_fiche_renseignement(request, entreprise):
     """Génère la fiche de renseignement de l'entreprise"""
-    
     return construire_html_fiche(request, entreprise)
 
 def generer_liste_materiel(request, entreprise):
     """Génère la liste du matériel"""
-    
     return construire_html_materiel(request, entreprise)
+
+def generer_liste_personnel(request, entreprise):
+    """Génère la liste du matériel"""
+    return construire_html_personnel(request, entreprise)
+
+def generer_zip_documents(dossier, format_doc):
+    """
+    Génère un ZIP contenant tous les documents du dossier
+    
+    Args:
+        dossier: DossierSoumission
+        format_doc: 'pdf' ou 'docx'
+    
+    Returns:
+        BytesIO: Buffer contenant le ZIP
+    """
+    noms_fichiers = {
+        'ENVELOPPE': '01_message_enveloppe',
+        'LETTRE': '02_lettre_manifestation',
+        'PRESENTATION': '03_presentation_entreprise',
+        'FICHE': '04_fiche_renseignement',
+        'MATERIEL': '05_liste_materiel',
+        'PERSONNEL': '06_liste_personnel',
+    }
+    
+    zip_buffer = BytesIO()
+    
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for doc in dossier.documents_prepares.all():
+            if doc.contenu_html and doc.statut in ['GENERATED', 'IMPORTED', 'MODIFIED']:
+                nom = noms_fichiers.get(doc.type_document, doc.type_document.lower())
+                filename = f"{nom}.{format_doc}"
+                
+                if format_doc == 'pdf':
+                    file_content = get_pdf_bytes(doc.contenu_html)
+                else:
+                    file_content = get_docx_bytes(doc.contenu_html)
+                
+                zip_file.writestr(filename, file_content)
+    
+    zip_buffer.seek(0)
+    return zip_buffer
 
 @login_required
 def api_document_generer(request):
@@ -1550,6 +1680,13 @@ def api_document_generer(request):
         doc.statut = 'GENERATED'
         doc.save()
         return JsonResponse({'success': True, 'message': 'Liste du matériel générée avec succès'})
+    
+    elif type_document == 'personnel':
+        contenu = generer_liste_personnel(request, entreprise)
+        doc.contenu_html = contenu
+        doc.statut = 'GENERATED'
+        doc.save()
+        return JsonResponse({'success': True, 'message': 'Liste du personnel générée avec succès'})
     
     else:
         print(f"❌ Type de document non supporté: {type_document}")
@@ -1868,8 +2005,171 @@ def api_document_supprimer(request):
 
 @login_required
 def api_dossier_soumettre(request):
-    """API : soumettre le dossier"""
-    pass
+    """
+    POST /api/dossier/soumettre/
+    Soumet le dossier définitivement et envoie par email
+    """
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        print(f"✅ JSON décodé: {data}")
+    except json.JSONDecodeError:
+        print(f"❌ Erreur JSON: {e}")
+        return JsonResponse({'error': 'JSON invalide'}, status=400)
+    
+    opportunite_type = data.get('opportunite_type')
+    opportunite_id = data.get('opportunite_id')
+    email_destinataire = data.get('email_destinataire', '')
+    format_doc = data.get('format', 'pdf')
+
+    if not opportunite_type or not opportunite_id:
+        print("❌ opportunite_type ou opportunite_id manquant")
+        return JsonResponse({'error': 'Paramètres manquants'}, status=400)
+    
+    # Récupérer l'entreprise
+    try:
+        entreprise = Entreprise.objects.get(user=request.user)
+    except Entreprise.DoesNotExist:
+        return JsonResponse({'error': 'Entreprise non trouvée'}, status=404)
+    
+    # Récupérer l'opportunité
+    if opportunite_type == 'Ami_uemoa':
+        opportunite = get_object_or_404(Ami_uemoa, id=opportunite_id)
+    else:
+        opportunite = None
+    
+    # Récupérer le dossier
+    try:
+        dossier = DossierSoumission.objects.get(
+            entreprise=entreprise,
+            opportunite_type=opportunite_type,
+            opportunite_id=opportunite_id
+        )
+    except DossierSoumission.DoesNotExist:
+        return JsonResponse({'error': 'Dossier non trouvé'}, status=404)
+    
+    # Vérifier que tous les documents sont prêts
+    documents = dossier.documents_prepares.all()
+    tous_ok = all(doc.statut in ['GENERATED', 'IMPORTED', 'MODIFIED'] for doc in documents)
+    
+    if not tous_ok:
+        return JsonResponse({'error': 'Tous les documents doivent être générés avant soumission'}, status=400)
+    
+    # Vérifier que le dossier n'est pas déjà soumis
+    if dossier.statut == 'SOUMIS':
+        return JsonResponse({'error': 'Ce dossier a déjà été soumis'}, status=400)
+    
+    # ============================================
+    # DÉTERMINER L'EMAIL DU DESTINATAIRE
+    # ============================================
+    
+    if not email_destinataire:
+        if opportunite:
+            if hasattr(opportunite, 'email_contact') and opportunite.email_contact:
+                email_destinataire = opportunite.email_contact
+            elif hasattr(opportunite, 'email') and opportunite.email:
+                email_destinataire = opportunite.email
+    
+    if not email_destinataire:
+        return JsonResponse({'error': 'Email destinataire requis. Veuillez le saisir.'}, status=400)
+    
+    # ============================================
+    # GÉNÉRER LE ZIP
+    # ============================================
+    
+    try:
+        zip_buffer = generer_zip_documents(dossier, format_doc)
+    except Exception as e:
+        return JsonResponse({'error': f'Erreur lors de la génération du ZIP: {str(e)}'}, status=500)
+    
+    # ============================================
+    # EMAIL AU DESTINATAIRE
+    # ============================================
+    
+    sujet = f"Dossier de candidature - {entreprise.raisonSociale} - {dossier.reference}"
+    message = f"""
+Bonjour,
+
+L'entreprise {entreprise.raisonSociale} a soumis son dossier de candidature.
+
+Référence du dossier : {dossier.reference}
+Date de soumission : {timezone.now().strftime('%d/%m/%Y à %H:%M')}
+Format du dossier : {format_doc.upper()}
+
+Vous trouverez le dossier complet en pièce jointe.
+
+Cordialement,
+L'équipe FASOIA
+"""
+    
+    email = EmailMessage(
+        subject=sujet,
+        body=message,
+        to=[email_destinataire],
+        reply_to=[entreprise.email],
+    )
+    
+    zip_buffer.seek(0)
+    email.attach(f"dossier_complet_{dossier.reference}.zip", zip_buffer.read(), 'application/zip')
+    
+    # ============================================
+    # EMAIL DE COPIE À L'ENTREPRISE
+    # ============================================
+    
+    message_copy = f"""
+Bonjour {entreprise.raisonSociale},
+
+Vous trouverez ci-joint une copie du dossier que vous avez soumis.
+
+Référence : {dossier.reference}
+Date de soumission : {timezone.now().strftime('%d/%m/%Y à %H:%M')}
+Destinataire : {email_destinataire}
+Format : {format_doc.upper()}
+
+Cordialement,
+L'équipe FASOIA
+"""
+    
+    email_copy = EmailMessage(
+        subject=f"Copie de votre soumission - {dossier.reference}",
+        body=message_copy,
+        to=[entreprise.email],
+    )
+    
+    # Re-générer le ZIP pour la copie
+    zip_buffer2 = generer_zip_documents(dossier, format_doc)
+    email_copy.attach(f"dossier_complet_{dossier.reference}.zip", zip_buffer2.read(), 'application/zip')
+    
+    # ============================================
+    # ENVOYER LES EMAILS
+    # ============================================
+    
+    try:
+        email.send()
+        email_copy.send()
+    except Exception as e:
+        return JsonResponse({'error': f'Erreur lors de l\'envoi des emails: {str(e)}'}, status=500)
+    
+    # ============================================
+    # MARQUER COMME SOUMIS
+    # ============================================
+    
+    dossier.statut = 'SOUMIS'
+    dossier.date_soumission_effective = timezone.now()
+    dossier.save()
+    
+    # Mettre à jour les statistiques
+    entreprise.nb_candidatures_emises += 1
+    entreprise.save()
+    
+    return JsonResponse({
+        'success': True,
+        'message': f'Dossier soumis avec succès et envoyé à {email_destinataire}',
+        'date_soumission': dossier.date_soumission_effective.strftime('%d/%m/%Y à %H:%M')
+    })
 
 @login_required
 def api_dossier_etat(request):
@@ -1938,6 +2238,61 @@ def api_dossier_etat(request):
         }
     
     return JsonResponse({'success': True, 'data': etat})
+
+@login_required
+def api_dossier_telecharger_complet(request, dossier_id=None):
+    """
+    GET /api/dossier/telecharger-complet/?opportunite_type=...&opportunite_id=...
+    GET /api/dossier/telecharger-complet/<dossier_id>/
+    """
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+    
+    format_doc = request.GET.get('format', 'pdf')
+    
+    if format_doc not in ['pdf', 'docx']:
+        return JsonResponse({'error': 'Format non supporté'}, status=400)
+    
+    try:
+        entreprise = Entreprise.objects.get(user=request.user)
+    except Entreprise.DoesNotExist:
+        return JsonResponse({'error': 'Entreprise non trouvée'}, status=404)
+    
+    # Cas 1: Téléchargement par ID
+    if dossier_id:
+        try:
+            dossier = DossierSoumission.objects.get(id=dossier_id, entreprise=entreprise)
+        except DossierSoumission.DoesNotExist:
+            return JsonResponse({'error': 'Dossier non trouvé'}, status=404)
+    else:
+        # Cas 2: Téléchargement par opportunite_type + opportunite_id
+        opportunite_type = request.GET.get('opportunite_type')
+        opportunite_id = request.GET.get('opportunite_id')
+        
+        if not opportunite_type or not opportunite_id:
+            return JsonResponse({'error': 'Paramètres manquants'}, status=400)
+        
+        try:
+            dossier = DossierSoumission.objects.get(
+                entreprise=entreprise,
+                opportunite_type=opportunite_type,
+                opportunite_id=opportunite_id
+            )
+        except DossierSoumission.DoesNotExist:
+            return JsonResponse({'error': 'Dossier non trouvé'}, status=404)
+    
+    # Générer le ZIP
+    try:
+        zip_buffer = generer_zip_documents(dossier, format_doc)
+    except Exception as e:
+        return JsonResponse({'error': f'Erreur lors de la génération: {str(e)}'}, status=500)
+    
+    return FileResponse(
+        zip_buffer,
+        as_attachment=True,
+        filename=f"dossier_complet_{dossier.reference}_{timezone.now().strftime('%Y%m%d')}.zip",
+        content_type='application/zip'
+    )
 
 @login_required
 def api_materiel_liste(request):
@@ -2021,6 +2376,101 @@ def api_materiel_supprimer(request):
         return JsonResponse({'success': True, 'message': 'Matériel supprimé avec succès'})
     except MaterielEntreprise.DoesNotExist:
         return JsonResponse({'error': 'Matériel non trouvé'}, status=404)
+
+@login_required
+def api_personnel_liste(request):
+    """Retourne la liste du personnel de l'entreprise"""
+    entreprise = Entreprise.objects.get(user=request.user)
+    personnels = PersonnelCle.objects.filter(entreprise=entreprise)
+    
+    data = [
+        {
+            'id': p.id,
+            'nom_prenom': p.nom_prenom,
+            'poste': p.poste,
+            'qualification': p.qualification,
+            'annees_experience': p.annees_experience,
+        }
+        for p in personnels
+    ]
+    return JsonResponse({'success': True, 'personnels': data})
+
+@login_required
+def api_personnel_ajouter(request):
+    """Ajoute un personnel"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON invalide'}, status=400)
+    
+    entreprise = Entreprise.objects.get(user=request.user)
+    
+    personnel = PersonnelCle.objects.create(
+        entreprise=entreprise,
+        nom_prenom=data.get('nom_prenom'),
+        poste=data.get('poste'),
+        qualification=data.get('qualification'),
+        annees_experience=data.get('annees_experience', 0)
+    )
+    
+    return JsonResponse({
+        'success': True,
+        'personnel': {
+            'id': personnel.id,
+            'nom_prenom': personnel.nom_prenom,
+            'poste': personnel.poste,
+            'qualification': personnel.qualification,
+            'annees_experience': personnel.annees_experience,
+        }
+    })
+
+@login_required
+def api_personnel_modifier(request):
+    """Modifie un personnel existant"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON invalide'}, status=400)
+    
+    entreprise = Entreprise.objects.get(user=request.user)
+    
+    try:
+        personnel = PersonnelCle.objects.get(id=data.get('id'), entreprise=entreprise)
+        personnel.nom_prenom = data.get('nom_prenom', personnel.nom_prenom)
+        personnel.poste = data.get('poste', personnel.poste)
+        personnel.qualification = data.get('qualification', personnel.qualification)
+        personnel.annees_experience = data.get('annees_experience', personnel.annees_experience)
+        personnel.save()
+        
+        return JsonResponse({'success': True, 'message': 'Personnel modifié avec succès'})
+    except PersonnelCle.DoesNotExist:
+        return JsonResponse({'error': 'Personnel non trouvé'}, status=404)
+
+@login_required
+def api_personnel_supprimer(request):
+    """Supprime un personnel"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON invalide'}, status=400)
+    
+    entreprise = Entreprise.objects.get(user=request.user)
+    
+    try:
+        personnel = PersonnelCle.objects.get(id=data.get('id'), entreprise=entreprise)
+        personnel.delete()
+        return JsonResponse({'success': True, 'message': 'Personnel supprimé avec succès'})
+    except PersonnelCle.DoesNotExist:
+        return JsonResponse({'error': 'Personnel non trouvé'}, status=404)
 
 def trouver_emploi(request):
     """

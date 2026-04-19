@@ -49,14 +49,22 @@ urlpatterns = [
     path('ami/<int:pk>/', views.detail_ami, name='detail_ami'),
     path('emploi/<int:pk>/', views.detail_emploi, name='detail_emploi'),
     
-    # ============================================
-    # NOUVEAU SYSTÈME DE SOUMISSION 
-    # ============================================
+    # Soumission
     path('soumission/<str:opportunite_type>/<int:opportunite_id>/', 
          views.nouvelle_soumission, name='nouvelle_soumission'),
     
     path('api/dossier/etat/', 
          views.api_dossier_etat, name='api_dossier_etat'),
+    
+    path('api/dossier/telecharger_complet/', 
+         views.api_dossier_telecharger_complet, name='api_dossier_telecharger_complet'),
+    
+    path('api/dossier/telecharger_complet/<int:dossier_id>/', 
+         views.api_dossier_telecharger_complet, name='api_dossier_telecharger_par_id'),
+
+    path('api/dossier/soumettre/', 
+         views.api_dossier_soumettre, name='api_dossier_soumettre'),
+    
     
     path('api/document/apercu/', 
          views.api_document_apercu, name='api_document_apercu'),
@@ -73,9 +81,6 @@ urlpatterns = [
     path('api/document/supprimer/', 
          views.api_document_supprimer, name='api_document_supprimer'),
     
-    path('api/dossier/soumettre/', 
-         views.api_dossier_soumettre, name='api_dossier_soumettre'),
-    
     path('api/document/telecharger/', 
          views.api_document_telecharger, name='api_document_telecharger'),
 
@@ -91,6 +96,21 @@ urlpatterns = [
     path('api/materiel/supprimer/', 
          views.api_materiel_supprimer, name='api_materiel_supprimer'),
 
+    path('api/personnel/liste/', 
+         views.api_personnel_liste, name='api_personnel_liste'),
+    
+    path('api/personnel/ajouter/', 
+         views.api_personnel_ajouter, name='api_personnel_ajouter'),
+    
+    path('api/personnel/modifier/', 
+         views.api_personnel_modifier, name='api_personnel_modifier'),
+    
+    path('api/personnel/supprimer/', 
+         views.api_personnel_supprimer, name='api_personnel_supprimer'),
+    
+    path('mes_soumissions/', 
+         views.mes_soumissions, name='mes_soumissions'),
+    
     path('trouver/emploi/', views.trouver_emploi, name='trouver_emploi'),
     path('generer/cv/', views.generer_cv, name='generer_cv'),
     path('preparer/entretien/', views.preparer_entretien, name='preparer_entretien'),

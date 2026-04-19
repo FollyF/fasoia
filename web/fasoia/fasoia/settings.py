@@ -77,7 +77,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                #'myAppli.context_processors.notifications_context',
+                'myAppli.context_processors.total_opportunites',
             ],
         },
     },
@@ -159,7 +159,11 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # =============================================
 # CONFIGURATION D'AUTHENTIFICATION
 # =============================================
-
 LOGIN_URL = 'myAppli:connexion'  # ← Où rediriger si @login_required échoue
 LOGIN_REDIRECT_URL = 'myAppli:home'  # ← Où rediriger après connexion réussie
 LOGOUT_REDIRECT_URL = 'myAppli:connexion'  # ← Où rediriger après déconnexion
+
+# =============================================
+# CONFIGURATION EMAIL
+# =============================================
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

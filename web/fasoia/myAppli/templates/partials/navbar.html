@@ -279,10 +279,6 @@
        class="{% if request.resolver_match.view_name == 'myAppli:opportunites' %}active{% endif %}">
       Opportunités
     </a>
-    <a href="{% url 'myAppli:gestion_entreprise' %}"
-       class="{% if request.resolver_match.view_name == 'myAppli:gestion_entreprise' %}active{% endif %}">
-      Entreprise
-    </a>
     <a href="{% url 'myAppli:trouver_emploi' %}"
        class="{% if request.resolver_match.view_name == 'myAppli:trouver_emploi' %}active{% endif %}">
       Trouver emploi

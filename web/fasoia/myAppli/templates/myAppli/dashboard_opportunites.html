@@ -327,7 +327,7 @@
                         data-toggle="modal" data-target="#modalOffre{{ i.id }}">
                   <i class="fa fa-eye"></i> Détails
                 </button>
-                <a href="{% url 'myAppli:commencer_soumission' 'Offre_uemoa' i.id %}"
+                <a href="{% url 'myAppli:nouvelle_soumission' 'Offre_uemoa' i.id %}"
                    class="btn-app sm">
                   <i class="fa fa-paper-plane"></i> Postuler
                 </a>
@@ -376,9 +376,9 @@
                         data-toggle="modal" data-target="#modalAmi{{ i.id }}">
                   <i class="fa fa-eye"></i> Détails
                 </button>
-                <a href="{% url 'myAppli:commencer_soumission' 'Ami_uemoa' i.id %}"
+                <a href="{% url 'myAppli:nouvelle_soumission' 'Ami_uemoa' i.id %}"
                    class="btn-app sm">
-                  <i class="fa fa-paper-plane"></i> Participer
+                  <i class="fa fa-paper-plane"></i> Postuler
                 </a>
               </div>
             </td>
