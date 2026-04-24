@@ -883,7 +883,6 @@ class OffreEmploi(models.Model):
         offre.save()
         return offre
 
-
 class SourceScraping(models.Model):
     """
     Configuration des sources de scraping
@@ -913,7 +912,6 @@ class SourceScraping(models.Model):
     
     def __str__(self):
         return self.nom
-
 
 class LogScraping(models.Model):
     """
@@ -1029,7 +1027,6 @@ class Candidature(models.Model):
     def __str__(self):
         return f"{self.candidat} - {self.offre.titre}"
 
-
 class ModeleCV(models.Model):
     """
     Modèles de CV disponibles
@@ -1061,7 +1058,6 @@ class ModeleCV(models.Model):
         """Incrémente le compteur d'utilisations"""
         self.nb_utilisations += 1
         self.save(update_fields=['nb_utilisations'])
-
 
 class CVGenere(models.Model):
     """
@@ -1110,7 +1106,6 @@ class CVGenere(models.Model):
         if self.utilisateur:
             return f"CV de {self.utilisateur.username} - {self.modele.nom if self.modele else 'Sans style'}"
         return f"CV anonyme - {self.date_generation.strftime('%d/%m/%Y')}"
-    
 
 # ==========================================
 # 1. RÉFÉRENTIEL DES DOCUMENTS (TEMPLATES)
@@ -1140,7 +1135,6 @@ class ModeleDocument(models.Model):
     def __str__(self):
         return f"{self.nom} ({self.get_categorie_display()})"
 
-
 # ==========================================
 # 2. DONNÉES DE RÉFÉRENCE (REMPLISSAGE PDF)
 # ==========================================
@@ -1168,7 +1162,6 @@ class ReferenceTechnique(models.Model):
     client = models.CharField(max_length=200)
     annee = models.IntegerField()
     attestation_bonne_fin = models.FileField(upload_to='attestations/', blank=True, null=True)
-
 
 # ==========================================
 # 3. LE DOSSIER DE SOUMISSION (LE MODÈLE)
@@ -1218,7 +1211,6 @@ class DossierSoumission(models.Model):
     
     def __str__(self):
         return f"Dossier {self.reference} - {self.entreprise.raisonSociale}"
-
 
 # ==========================================
 # 4. INSTANCES DE DOCUMENTS GÉNÉRÉS

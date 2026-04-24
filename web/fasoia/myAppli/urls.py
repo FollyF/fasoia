@@ -16,6 +16,11 @@ Including another URLconf
 """
 from django.urls import path
 from . import views
+
+# import API Flutter
+from .api_views import RegisterMobileView # Importe ta nouvelle vue API
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
 app_name = 'myAppli'
 
 urlpatterns = [
@@ -64,7 +69,6 @@ urlpatterns = [
 
     path('api/dossier/soumettre/', 
          views.api_dossier_soumettre, name='api_dossier_soumettre'),
-    
     
     path('api/document/apercu/', 
          views.api_document_apercu, name='api_document_apercu'),
@@ -129,4 +133,11 @@ urlpatterns = [
     path('generer/lettre/modele/', views.telecharger_modele_lettre, name='telecharger_modele_lettre'),
     path('lettre/apercu/style/<str:style>/', views.apercu_style_lettre, name='apercu_style_lettre'),
     path('recruteur/publier/offre/', views.publier_offre_emploi, name='publier_offre_emploi'),
+
+    # Routes pour l'API Mobile
+    path('api/register/', RegisterMobileView.as_view(), name='api_register'),
+    
+    # Route pour la CONNEXION (Login) - SimpleJWT la gère tout seul !
+    path('api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

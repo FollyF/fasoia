@@ -17,6 +17,8 @@ cymem==2.0.13
 dj-database-url==3.1.2
 Django==6.0.2
 django-phonenumber-field==8.4.0
+djangorestframework==3.17.1
+djangorestframework_simplejwt==5.5.1
 docxtpl==0.20.2
 fonttools==4.62.1
 fr_core_news_md @ https://github.com/explosion/spacy-models/releases/download/fr_core_news_md-3.8.0/fr_core_news_md-3.8.0-py3-none-any.whl#sha256=8a70d090a54ef77525c3ffa6a6195b9d365f2cf369ae1cd84ede93f3d709079e
@@ -45,6 +47,7 @@ pydantic==2.12.5
 pydantic_core==2.41.5
 pydyf==0.12.1
 Pygments==2.19.2
+PyJWT==2.12.1
 PyMuPDF==1.27.1
 pypandoc==1.17
 pypdf==6.7.4

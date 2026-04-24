@@ -52,9 +52,11 @@ INSTALLED_APPS = [
     'phonenumber_field',
     'myAppli', 
     'analyse_ia',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -107,8 +109,6 @@ else:
             'PORT': config('DB_PORT'),
         }
     }
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -167,3 +167,6 @@ LOGOUT_REDIRECT_URL = 'myAppli:connexion'  # ← Où rediriger après déconnexi
 # CONFIGURATION EMAIL
 # =============================================
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
+CORS_ALLOW_ALL_ORIGINS = True
