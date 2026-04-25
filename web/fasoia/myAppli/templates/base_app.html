@@ -476,7 +476,7 @@
           {% elif user.entreprise %}
             <a href="{% url 'myAppli:dashboard_entreprise' %}"
                class="nav-item {% if request.resolver_match.url_name == 'dashboard_entreprise' %}active{% endif %}">
-              <i class="fa fa-building"></i><span>Dashboard entreprise</span>
+              <i class="fa fa-building"></i><span>Tableau se bord</span>
             </a>
             <a href="{% url 'myAppli:mes_soumissions' %}"
                class="nav-item {% if request.resolver_match.url_name == 'mes_soumissions' %}active{% endif %}">
@@ -530,7 +530,16 @@
       </div>
       <div class="topbar-right">
         {% if user.is_authenticated %}
-          <a href="{% url 'myAppli:profil' %}" class="topbar-link">
+            {% if user.entreprise %}
+              <a href="{% url 'myAppli:dashboard_entreprise' %}" class="topbar-link">
+            {% endif %}
+            {% if user.particulier.candidat %}
+              <a href="{% url 'myAppli:dashboard_candidat' %}" class="topbar-link">
+            {% endif %}
+            {% if user.particulier.recruteur %}
+              <a href="{% url 'myAppli:dashboard_particulier' %}" class="topbar-link">
+            {% endif %}
+              
             <i class="fa fa-circle-user" style="font-size:11px"></i>
             {% if user.particulier %}{{ user.particulier.prenom }}
             {% elif user.entreprise %}{{ user.entreprise.raisonSociale|truncatechars:16 }}{% endif %}

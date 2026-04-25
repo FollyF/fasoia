@@ -12,14 +12,13 @@
 
 /* ===== LAYOUT ===== */
 .page-wrapper {
-    padding: 20px;
     max-width: 1200px;
     margin: 0 auto;
 }
 
 /* ===== EN-TÊTE ===== */
 .page-header {
-    margin-bottom: 28px;
+    margin: 1px;
 }
 
 .page-header h1 {
@@ -177,6 +176,94 @@
     color: #155724;
 }
 
+/* ===== AMÉLIORATION BOUTONS DÉSACTIVÉS ===== */
+#btn-soumettre,
+#btn-telecharger-dossier {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+#btn-soumettre:disabled,
+#btn-telecharger-dossier:disabled {
+    background: #cccccc !important;
+    color: #666666 !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+    transform: none !important;
+    box-shadow: none !important;
+    animation: subtle-pulse 1.5s ease-in-out infinite alternate;
+}
+
+#btn-soumettre:disabled:hover,
+#btn-telecharger-dossier:disabled:hover {
+    background: #cccccc !important;
+    opacity: 0.6;
+    transform: none;
+}
+
+/* Icône de cadenas pour les boutons désactivés */
+#btn-soumettre:disabled::after,
+#btn-telecharger-dossier:disabled::after {
+    content: " 🔒";
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+@keyframes subtle-pulse {
+    0% { opacity: 0.5; }
+    100% { opacity: 0.8; }
+}
+
+/* Badge d'information pour les boutons désactivés */
+.submit-area {
+    position: relative;
+}
+
+.btn-disabled-hint {
+    display: inline-block;
+    margin-left: 15px;
+    font-size: 12px;
+    color: #e74c3c;
+    background: #fee;
+    padding: 4px 12px;
+    border-radius: 20px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+
+/* Barre d'alerte */
+.alert-missing-docs {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 12px 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+}
+
+.alert-missing-docs .alert-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.alert-missing-docs .alert-icon {
+    font-size: 24px;
+}
+
+.alert-missing-docs .alert-text strong {
+    color: #856404;
+}
+
+.alert-missing-docs .alert-text p {
+    margin: 5px 0 0 0;
+    color: #856404;
+}
+
 /* ===== BOUTON SOUMISSION ===== */
 .submit-area {
     text-align: center;
@@ -207,9 +294,27 @@
     transform: scale(0.98);
 }
 
-#btn-soumettre:disabled {
-    background: #ccc;
-    cursor: not-allowed;
+#btn-telecharger-dossier {
+    background: #3498db;
+    color: #fff;
+    border: none;
+    padding: 15px 44px;
+    border-radius: 9px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+    width: 100%;
+    max-width: 340px;
+}
+
+#btn-telecharger-dossier:hover:not(:disabled) {
+    opacity: 0.9;
+}
+
+#btn-telecharger-dossier:active:not(:disabled) {
+    transform: scale(0.98);
 }
 
 .submit-hint {
@@ -458,6 +563,13 @@
     .modal-footer button {
         flex: 1;
     }
+    
+    .btn-disabled-hint {
+        display: block;
+        margin: 10px auto 0;
+        text-align: center;
+        width: fit-content;
+    }
 }
 
 @media (max-width: 380px) {
@@ -485,6 +597,17 @@
         </div>
         <div class="progress-track">
             <div class="progress-fill" id="progress-bar"></div>
+        </div>
+    </div>
+
+    <!-- Barre d'alerte dynamique -->
+    <div id="alert-missing-docs" class="alert-missing-docs" style="display: none;">
+        <div class="alert-content">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-text">
+                <strong>Documents manquants</strong>
+                <p id="missing-docs-message"></p>
+            </div>
         </div>
     </div>
 
@@ -581,18 +704,18 @@
     <!-- Bouton de soumission -->
     <div class="submit-area">
         <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
-            <button id="btn-soumettre" disabled style="background: #1ed760; color: white; border: none; padding: 15px 40px; border-radius: 9px; font-size: 16px; font-weight: 600; cursor: pointer;">
+            <button id="btn-soumettre" disabled>
                 📤 Soumettre mon dossier
             </button>
             
-            <button id="btn-telecharger-dossier" disabled style="background: #3498db; color: white; border: none; padding: 15px 40px; border-radius: 9px; font-size: 16px; font-weight: 600; cursor: pointer;">
+            <button id="btn-telecharger-dossier" disabled>
                 📥 Télécharger le dossier complet
             </button>
         </div>
         <p class="submit-hint">Tous les documents doivent être prêts pour soumettre ou télécharger</p>
-        </div>
     </div>
-<div/>
+
+</div>
 
 <!-- ===== MODAL TÉLÉCHARGEMENT (CHOIX FORMAT) ===== -->
 <div id="downloadModal" class="modal-overlay">
@@ -853,13 +976,15 @@ function mettreAJourAffichage() {
     types.forEach(type => {
         const statut    = documentsEtat[type]?.statut || 'MISSING';
         const isReady   = ['GENERATED', 'IMPORTED', 'MODIFIED'].includes(statut);
+        
+        if (isReady) compteur++;
+        
         const badge     = document.querySelector(`.status-badge[data-status="${type}"]`);
         const card      = document.querySelector(`.document-card[data-doc="${type}"]`);
         const btnMod    = document.querySelector(`.btn-modifier[data-type="${type}"]`);
         const btnPrev   = document.querySelector(`.btn-preview[data-type="${type}"]`);
 
         if (isReady) {
-            compteur++;
             if (badge)  { badge.textContent = '✅ Prêt'; badge.className = 'status-badge ready'; }
             if (card)   card.classList.add('is-ready');
             if (btnMod) btnMod.disabled = false;
@@ -877,8 +1002,74 @@ function mettreAJourAffichage() {
     document.getElementById('compteur-docs').textContent  = `${compteur}/6 documents prêts`;
 
     const tousPrets = (compteur === 6);
-    document.getElementById('btn-soumettre').disabled = !tousPrets;
-    document.getElementById('btn-telecharger-dossier').disabled = !tousPrets;
+    const btnSoumettre = document.getElementById('btn-soumettre');
+    const btnTelecharger = document.getElementById('btn-telecharger-dossier');
+    
+    btnSoumettre.disabled = !tousPrets;
+    btnTelecharger.disabled = !tousPrets;
+    
+    // Gestion de l'alerte des documents manquants
+    const alertDiv = document.getElementById('alert-missing-docs');
+    const missingMsg = document.getElementById('missing-docs-message');
+    
+    if (!tousPrets) {
+        const docsManquants = 6 - compteur;
+        const docsList = [];
+        
+        // Trouver les documents manquants
+        for (const [type, data] of Object.entries(documentsEtat)) {
+            if (!['GENERATED', 'IMPORTED', 'MODIFIED'].includes(data.statut)) {
+                const docName = {
+                    enveloppe: 'Message enveloppe',
+                    lettre: 'Lettre de manifestation',
+                    presentation: 'Présentation entreprise',
+                    fiche: 'Fiche renseignement',
+                    materiel: 'Liste matériel',
+                    personnel: 'Personnel cadre'
+                }[type];
+                docsList.push(docName);
+            }
+        }
+        
+        missingMsg.innerHTML = `❌ ${docsManquants} document${docsManquants > 1 ? 's' : ''} manquant${docsManquants > 1 ? 's' : ''} : ${docsList.join(', ')}`;
+        alertDiv.style.display = 'block';
+        
+        // Ajouter un titre explicatif au survol
+        btnSoumettre.title = `Complétez les ${docsManquants} document(s) manquant(s)`;
+        btnTelecharger.title = `Complétez les ${docsManquants} document(s) manquant(s)`;
+    } else {
+        alertDiv.style.display = 'none';
+        btnSoumettre.title = 'Tous les documents sont prêts !';
+        btnTelecharger.title = 'Tous les documents sont prêts !';
+    }
+}
+
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: ${type === 'success' ? '#16a34a' : '#dc2626'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-family: sans-serif;
+        font-size: 14px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 9999;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => toast.style.opacity = '1');
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }
 
 // ─── Génération ──────────────────────────────────────────────────────────────
@@ -893,13 +1084,13 @@ async function genererDocument(type) {
         if (data.success) {
             documentsEtat[type] = { statut: 'GENERATED' };
             mettreAJourAffichage();
-            alert('Document généré avec succès !');
+            showToast('Document généré avec succès !');
         } else {
-            alert('Erreur : ' + data.error);
+            showToast('Erreur : ' + data.error, 'error');
         }
     } catch (err) {
         console.error('Erreur génération:', err);
-        alert('Erreur lors de la génération');
+        showToast('Erreur lors de la génération', 'error');
     }
 }
 
