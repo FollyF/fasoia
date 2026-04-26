@@ -19,6 +19,7 @@ from . import views
 
 # import API Flutter
 from .api_views import RegisterMobileView # Importe ta nouvelle vue API
+from .api_views import CustomTokenObtainPairView # Importe ta nouvelle vue API
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 app_name = 'myAppli'
@@ -138,6 +139,6 @@ urlpatterns = [
     path('api/register/', RegisterMobileView.as_view(), name='api_register'),
     
     # Route pour la CONNEXION (Login) - SimpleJWT la gère tout seul !
-    path('api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

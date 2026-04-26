@@ -66,7 +66,6 @@ class _LoginScreenState extends State<LoginScreen>
     });
 
     try {
-      // Rappel : adb reverse tcp:8000 tcp:8000 requis pour l'Infinix
       final url = Uri.parse('http://127.0.0.1:8000/api/login/');
       final response = await http.post(
         url,
@@ -77,15 +76,28 @@ class _LoginScreenState extends State<LoginScreen>
         }),
       );
 
+      final data = jsonDecode(response.body);
+      debugPrint('STATUS: ${response.statusCode}');
+      debugPrint('BODY: ${response.body}');
+      
       if (response.statusCode == 200) {
         // Succès : Redirection vers le Dashboard de FASOIA
-        if (mounted) {
-           final data = jsonDecode(response.body);
-           print("Utilisateur connecté : ${data['user']}");
-        }
+        if (mounted){
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Connexion réussie !'), backgroundColor: Colors.green),
+          );
+          // --- LOGIQUE DE REDIRECTION ---
+          String profileType = data['user']['profile_type'];
+
+          if (profileType == 'entreprise') {
+            Navigator.pushReplacementNamed(context, '/dashboard/entreprise');
+          }else {
+            Navigator.pushReplacementNamed(context, '/dashboard/particulier');
+          }
+        } 
       } else {
-        final body = jsonDecode(response.body);
-        setState(() => _errorMessage = body['message'] ?? 'Identifiants incorrects.');
+        setState(() => _errorMessage = data['message'] ?? 'Identifiants incorrects.');
       }
     } catch (e) {
       setState(() => _errorMessage = 'Impossible de contacter le serveur.');

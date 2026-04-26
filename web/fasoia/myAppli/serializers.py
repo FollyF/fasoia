@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import Entreprise, Particulier
 
 class RegisterMobileSerializer(serializers.Serializer):
@@ -13,8 +14,14 @@ class RegisterMobileSerializer(serializers.Serializer):
     raison_sociale = serializers.CharField(required=False, allow_blank=True) # Pour Entreprise
 
     def validate_email(self, value):
+        print(f"🔍 Validation email reçu: '{value}'")
+        print(f"📧 Type: {self.initial_data.get('profile_type')}")
+        
         if User.objects.filter(email=value).exists():
+            existing_user = User.objects.get(email=value)
+            print(f"❌ Email existe déjà pour l'utilisateur: {existing_user.email}")
             raise serializers.ValidationError("Cet email est déjà utilisé.")
+        print(f"✅ Email valide: {value}")
         return value
 
     def create(self, validated_data):
@@ -52,3 +59,25 @@ class RegisterMobileSerializer(serializers.Serializer):
                 typeProfil='PARTICULIER'
             )
         return user
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        
+        # Récupérer le profile_type selon le modèle existant
+        user = self.user
+        profile_type = 'particulier'  # défaut
+        
+        try:
+            user.entreprise  # si ce champ existe → c'est une entreprise
+            profile_type = 'entreprise'
+        except:
+            profile_type = 'particulier'
+        
+        # Ajouter les infos dans la réponse
+        data['user'] = {
+            'email': user.email,
+            'profile_type': profile_type,
+        }
+        return data

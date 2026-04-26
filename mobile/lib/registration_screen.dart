@@ -84,12 +84,26 @@ class _RegistrationScreenState extends State<RegistrationScreen>
           'raison_sociale': _profileType == 'entreprise' ? _nameController.text.trim() : '',
         }),
       );
-
+      final data = jsonDecode(response.body);
+      debugPrint('STATUS: ${response.statusCode}');
+      debugPrint('BODY: ${response.body}');
+      
       if (response.statusCode == 201) {
-        if (mounted) _showSuccessSnackbar();
+        if (mounted){
+          _showSuccessSnackbar();
+
+          // --- LOGIQUE DE REDIRECTION ---
+          String profileType = data['user']['profile_type'];
+
+          if (profileType == 'entreprise') {
+            Navigator.pushReplacementNamed(context, '/dashboard_entreprise');
+          }else {
+            Navigator.pushReplacementNamed(context, '/dashboard_particulier');
+          }
+        } 
+        
       } else {
-        final body = jsonDecode(response.body);
-        setState(() => _errorMessage = body['message'] ?? 'Une erreur est survenue.');
+        setState(() => _errorMessage = data['email']?[0] ?? 'Une erreur est survenue.');
       }
     } catch (e) {
       setState(() => _errorMessage = 'Impossible de contacter le serveur.');

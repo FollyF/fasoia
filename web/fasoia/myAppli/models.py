@@ -76,7 +76,12 @@ class Entreprise(Utilisateur):
     domaineActive = models.CharField(max_length=100, help_text="Secteur d'activité principal")
     competencesCles = models.CharField(max_length=300, help_text="Compétences séparées par des virgules")
     localisation = models.CharField(max_length=100, help_text="Ville, Pays")
-    taille = models.IntegerField(help_text="Nombre d'employés")
+    taille = models.IntegerField(
+        null=True, 
+        blank=True, 
+        default=0, 
+        help_text="Nombre d'employés"
+    )
     
     # Informations complémentaires
     description = models.TextField(blank=True, help_text="Présentation de l'entreprise", default='')

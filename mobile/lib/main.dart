@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'registration_screen.dart';
 import 'login_sreen.dart';
+import 'dashboard_entreprise.dart';
+import 'dashboard_particulier.dart';
+
 
 void main() {
   runApp(const FasoiaApp());
@@ -63,6 +66,8 @@ class FasoiaApp extends StatelessWidget {
       routes: {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegistrationScreen(),
+        '/dashboard/entreprise': (context) => const DashboardEntreprise(),
+        '/dashboard/particulier': (context) => const DashboardParticulier(),
       },
     );
   }

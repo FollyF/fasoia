@@ -382,6 +382,9 @@ def dashboard_entreprise(request):
             recommandations = Recommandation.objects.filter(
                 entreprise=entreprise
             ).order_by('-score_global')[:10]
+
+            for reco in recommandations:
+                reco.score_global = round(reco.score_global * 100, 1)
             
             recommandations_count = recommandations.count()
             opportunites_correspondantes = recommandations_count

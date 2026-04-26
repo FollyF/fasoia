@@ -565,7 +565,7 @@
                                     {% if reco.opportunite_type == 'Offre_uemoa' %}OFFRE-{% else %}AMI-{% endif %}{{ reco.opportunite.id }}
                                 </span></td>
                                 <td>{{ reco.opportunite.description|truncatechars:90 }}</td>
-                                <td><span class="score-badge">{{ reco.score_global|floatformat:0 }}%</span></td>
+                                <td><span class="score-badge">{{ reco.score_global }}%</span></td>
                                 <td class="date-limite">
                                     {{ reco.opportunite.date_limite|date:"d/m/Y"|default:"Non spécifiée" }}
                                 </td>
