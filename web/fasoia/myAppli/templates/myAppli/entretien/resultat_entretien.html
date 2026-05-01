@@ -1,0 +1,106 @@
+{% extends "base_app.html" %}
+{% load static %}
+
+{% block title %}FASOIA — Résultats entretien{% endblock %}
+{% block breadcrumb %}Résultats{% endblock %}
+
+{% block content %}
+
+<!-- SCORE GLOBAL -->
+<div style="background:var(--ink);padding:32px;margin-bottom:24px;
+            border-bottom:3px solid var(--red);text-align:center">
+  <div style="font-family:var(--font-display);font-size:72px;font-weight:700;
+              color:{% if score_global >= 7 %}var(--teal){% elif score_global >= 5 %}#f59e0b{% else %}var(--red){% endif %}">
+    {{ score_global }}
+  </div>
+  <div style="font-size:14px;color:var(--muted);margin-top:4px">/10 — Score global</div>
+  <div style="font-size:18px;font-weight:700;color:#862323;margin-top:12px">
+    {{ session.poste_vise|default:"Entretien général" }}
+  </div>
+  <div style="font-size:12px;color:var(--muted);margin-top:4px">
+    {{ session.date_creation|date:"d/m/Y" }} —
+    {{ session.nb_questions_repondues }} questions répondues
+  </div>
+</div>
+
+<!-- FEEDBACK GLOBAL -->
+<div class="card-edit" style="margin-bottom:20px;border-left:3px solid var(--teal)">
+  <div class="card-edit-head">
+    <h3><i class="fa fa-robot" style="color:var(--teal)"></i> Feedback global de l'IA</h3>
+  </div>
+  <p style="font-size:14px;color:var(--ink);line-height:1.7">
+    {{ feedback_global }}
+  </p>
+</div>
+
+<!-- DÉTAIL PAR QUESTION -->
+<div class="card-edit">
+  <div class="card-edit-head">
+    <h3>Détail par question</h3>
+  </div>
+
+  {% for q in questions %}
+  <div style="padding:16px 0;border-bottom:1px solid var(--border)">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:10px;background:var(--ink);color:white;padding:2px 8px">
+            Q{{ q.ordre }}
+          </span>
+          <span style="font-size:10px;color:var(--muted)">
+            {{ q.get_type_question_display }}
+          </span>
+        </div>
+        <p style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:8px">
+          {{ q.question }}
+        </p>
+        {% if q.reponse_candidat %}
+        <p style="font-size:12px;color:var(--muted);font-style:italic;
+                  background:var(--cream);padding:8px 12px;margin-bottom:8px">
+          {{ q.reponse_candidat|truncatechars:200 }}
+        </p>
+        {% if q.feedback_ia %}
+        <p style="font-size:12px;color:var(--ink)">{{ q.feedback_ia }}</p>
+        {% endif %}
+        <div style="display:flex;gap:16px;margin-top:8px">
+          {% if q.points_forts %}
+          <div>
+            <strong style="font-size:11px;color:var(--teal)">✅ Points forts</strong>
+            <ul style="margin:4px 0 0 14px;font-size:11px;color:var(--muted)">
+              {% for p in q.points_forts %}<li>{{ p }}</li>{% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+          {% if q.points_amelioration %}
+          <div>
+            <strong style="font-size:11px;color:var(--red)">⚠️ À améliorer</strong>
+            <ul style="margin:4px 0 0 14px;font-size:11px;color:var(--muted)">
+              {% for p in q.points_amelioration %}<li>{{ p }}</li>{% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+      <div style="font-family:var(--font-display);font-size:28px;font-weight:700;
+                  color:{% if q.score >= 7 %}var(--teal){% elif q.score >= 5 %}#f59e0b{% else %}var(--red){% endif %};
+                  flex-shrink:0;text-align:right">
+        {{ q.score }}<span style="font-size:14px">/10</span>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+</div>
+
+<!-- ACTIONS -->
+<div style="display:flex;gap:12px;margin-top:20px;justify-content:center">
+  <a href="{% url 'myAppli:preparer_entretien' %}" class="btn-app outline">
+    <i class="fa fa-redo"></i> Nouvelle session
+  </a>
+  <a href="{% url 'myAppli:dashboard_candidat' %}" class="btn-app">
+    <i class="fa fa-home"></i> Tableau de bord
+  </a>
+</div>
+
+{% endblock %}

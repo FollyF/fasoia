@@ -1,0 +1,665 @@
+{% extends "base_app.html" %}
+{% load static %}
+
+{% block title %}FASOIA — Mes opportunités{% endblock %}
+{% block breadcrumb %}Mes opportunités{% endblock %}
+
+{% block app_extra_css %}
+<style>
+  /* ===== EN-TÊTE ===== */
+  .dash-header {
+    background: var(--ink);
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    border-bottom: 3px solid var(--red);
+  }
+  .dash-header h1 {
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--red);
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+  .dash-header p { font-size: 13px; color: var(--ink); margin: 0; }
+  .dash-header-counts { display: flex; gap: 0; flex-shrink: 0; }
+  .hcount {
+    text-align: center;
+    padding: 8px 20px;
+    border-left: 1px solid rgba(255,255,255,0.1);
+  }
+  .hcount:first-child { border-left: none; }
+  .hcount .n {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .hcount .l {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--ink);
+    margin-top: 3px;
+  }
+
+  /* ===== BARRE DE RECHERCHE ===== */
+  .search-bar {
+    display: flex;
+    gap: 0;
+    margin-bottom: 20px;
+    border: 1.5px solid var(--ink);
+  }
+  .search-bar input {
+    flex: 1;
+    border: none;
+    padding: 11px 18px;
+    font-size: 14px;
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: var(--surface);
+    outline: none;
+  }
+  .search-bar input::placeholder { color: var(--hint); }
+  .search-bar .search-icon {
+    background: var(--cream);
+    border-left: 1.5px solid var(--ink);
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* ===== ONGLETS ===== */
+  .tabs-nav {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--ink);
+    overflow-x: auto;
+    margin-bottom: 0;
+  }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    color: var(--muted);
+    padding: 10px 20px;
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .tab-btn i { font-size: 11px; }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.active { color: var(--ink); border-bottom-color: var(--red); }
+  .tab-count {
+    background: var(--ink);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 6px;
+    margin-left: 2px;
+  }
+  .tab-btn.active .tab-count { background: var(--red); }
+
+  /* ===== PANNEAUX ===== */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ===== TABLEAU ===== */
+  .table-wrap { overflow-x: auto; margin-top: 0; }
+
+  .opp-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 580px; }
+  .opp-table th {
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--muted);
+    padding: 10px 14px; border-bottom: 2px solid var(--ink);
+    text-align: left; background: var(--cream);
+  }
+  .opp-table th:last-child { text-align: center; }
+  .opp-table td {
+    padding: 13px 14px; border-bottom: 1px solid var(--border);
+    color: var(--ink); vertical-align: middle;
+  }
+  .opp-table td:last-child { text-align: center; }
+  .opp-table tr:hover td { background: var(--cream); }
+  .opp-table tr:last-child td { border-bottom: none; }
+
+  .ref-id {
+    font-family: 'Courier New', monospace;
+    font-size: 11px; font-weight: 700; color: var(--ink);
+  }
+  .desc-text { font-size: 12px; color: var(--ink-mid); line-height: 1.5; max-width: 340px; }
+  .date-urg { color: var(--red); font-weight: 700; font-size: 12px; }
+  .date-normal { font-size: 12px; color: var(--muted); }
+  .action-btns { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+
+  /* ===== PIED DE TABLEAU ===== */
+  .result-count {
+    padding: 12px 14px;
+    font-size: 11px;
+    color: var(--hint);
+    border-top: 1px solid var(--border);
+    background: var(--cream);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ===== ÉTAT VIDE ===== */
+  .empty-state {
+    padding: 48px 24px;
+    text-align: center;
+  }
+  .empty-state i { font-size: 36px; color: var(--border); margin-bottom: 16px; display: block; }
+  .empty-state p { font-size: 13px; color: var(--muted); margin-bottom: 8px; line-height: 1.6; }
+  .empty-state .sub { font-size: 12px; color: var(--hint); margin-bottom: 20px; }
+
+  /* ===== MODALS ===== */
+  .modal-content { border-radius: 0; border: 1px solid var(--border); background: var(--surface); }
+  .modal-header {
+    background: var(--cream);
+    border-bottom: 2px solid var(--ink);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .modal-title i { font-size: 14px; color: var(--muted); }
+  .modal-close {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 14px; transition: all 0.15s;
+  }
+  .modal-close:hover { border-color: var(--ink); color: var(--ink); }
+
+  .modal-body { padding: 24px; }
+  .modal-row {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    align-items: flex-start;
+  }
+  .modal-row:last-child { border-bottom: none; }
+  .modal-key {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    min-width: 130px;
+    flex-shrink: 0;
+    padding-top: 1px;
+  }
+  .modal-val { color: var(--ink); line-height: 1.5; flex: 1; }
+
+  /* Compteur compétences */
+  .comp-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .comp-tag {
+    font-size: 9px; font-weight: 700;
+    padding: 2px 6px;
+    background: #EAF3DE; color: #27500A;
+    border: 1px solid #C0DD97;
+    text-transform: uppercase; letter-spacing: 0.3px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- EN-TÊTE -->
+<div class="dash-header">
+  <div>
+    <h1>Mes opportunités</h1>
+    <p>Opportunités personnalisées selon votre profil</p>
+  </div>
+  <div class="dash-header-counts">
+    {% if offre %}
+    <div class="hcount">
+      <div class="n">{{ offre|length }}</div>
+      <div class="l">Appels d'offres</div>
+    </div>
+    {% endif %}
+    {% if ami %}
+    <div class="hcount">
+      <div class="n">{{ ami|length }}</div>
+      <div class="l">Manifestations</div>
+    </div>
+    {% endif %}
+    {% if offres_emploi %}
+    <div class="hcount">
+      <div class="n">{{ offres_emploi|length }}</div>
+      <div class="l">Emplois</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- BARRE DE RECHERCHE -->
+<div class="search-bar">
+  <input type="text" id="searchInput" onkeyup="filterResults()"
+         placeholder="Rechercher par référence, description, entreprise…" autocomplete="off">
+  <div class="search-icon"><i class="fa fa-search"></i></div>
+</div>
+
+<!-- ONGLETS -->
+<div class="tabs-nav">
+  {% if offre %}
+  <button class="tab-btn active" onclick="openTab(event, 'offres')">
+    <i class="fa fa-gavel"></i> Appels d'offres
+    <span class="tab-count">{{ offre|length }}</span>
+  </button>
+  {% endif %}
+  {% if ami %}
+  <button class="tab-btn {% if not offre %}active{% endif %}" onclick="openTab(event, 'ami')">
+    <i class="fa fa-bullhorn"></i> Manifestations d'intérêt
+    <span class="tab-count">{{ ami|length }}</span>
+  </button>
+  {% endif %}
+  {% if offres_emploi %}
+  <button class="tab-btn {% if not offre and not ami %}active{% endif %}" onclick="openTab(event, 'emplois')">
+    <i class="fa fa-briefcase"></i> Offres d'emploi
+    <span class="tab-count">{{ offres_emploi|length }}</span>
+  </button>
+  {% endif %}
+</div>
+
+<!-- ===== CONTENU ===== -->
+<div class="card-edit" style="padding:0;overflow:hidden">
+
+  <!-- APPELS D'OFFRES -->
+  {% if offre %}
+  <div id="offres" class="tab-panel active">
+    <div class="table-wrap">
+      <table class="opp-table">
+        <thead>
+          <tr>
+            <th>Référence</th>
+            <th>Objet du marché</th>
+            <th>Date limite</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for i in offre %}
+          <tr>
+            <td><span class="ref-id">OFFRE-{{ i.id }}</span></td>
+            <td><div class="desc-text">{{ i.description|truncatechars:90 }}</div></td>
+            <td>
+              {% if i.date_limite %}
+                <span class="date-urg">{{ i.date_limite|date:"d/m/Y" }}</span>
+              {% else %}
+                <span class="date-normal">Non spécifiée</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="action-btns">
+                <button type="button" class="btn-app sm outline"
+                        data-toggle="modal" data-target="#modalOffre{{ i.id }}">
+                  <i class="fa fa-eye"></i> Détails
+                </button>
+                <a href="{% url 'myAppli:nouvelle_soumission' 'Offre_uemoa' i.id %}"
+                   class="btn-app sm">
+                  <i class="fa fa-paper-plane"></i> Postuler
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="result-count">
+      <i class="fa fa-list"></i>
+      <span id="offresCount">{{ offre|length }}</span> résultat(s) affiché(s)
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- MANIFESTATIONS D'INTÉRÊT -->
+  {% if ami %}
+  <div id="ami" class="tab-panel {% if not offre %}active{% endif %}">
+    <div class="table-wrap">
+      <table class="opp-table">
+        <thead>
+          <tr>
+            <th>Référence</th>
+            <th>Objet de la manifestation</th>
+            <th>Date limite</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for i in ami %}
+          <tr>
+            <td><span class="ref-id">AMI-{{ i.id }}</span></td>
+            <td><div class="desc-text">{{ i.description|truncatechars:90 }}</div></td>
+            <td>
+              {% if i.date_limite %}
+                <span class="date-urg">{{ i.date_limite|date:"d/m/Y" }}</span>
+              {% else %}
+                <span class="date-normal">Non spécifiée</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="action-btns">
+                <button type="button" class="btn-app sm outline"
+                        data-toggle="modal" data-target="#modalAmi{{ i.id }}">
+                  <i class="fa fa-eye"></i> Détails
+                </button>
+                <a href="{% url 'myAppli:nouvelle_soumission' 'Ami_uemoa' i.id %}"
+                   class="btn-app sm">
+                  <i class="fa fa-paper-plane"></i> Postuler
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="result-count">
+      <i class="fa fa-list"></i>
+      <span id="amiCount">{{ ami|length }}</span> résultat(s) affiché(s)
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- OFFRES D'EMPLOI -->
+  {% if offres_emploi %}
+  <div id="emplois" class="tab-panel {% if not offre and not ami %}active{% endif %}">
+    <div class="table-wrap">
+      <table class="opp-table">
+        <thead>
+          <tr>
+            <th>Poste</th>
+            <th>Entreprise</th>
+            <th>Localisation</th>
+            <th>Échéance</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for emploi in offres_emploi %}
+          <tr>
+            <td>
+              <div style="font-weight:700;font-size:13px;color:var(--ink);margin-bottom:3px">{{ emploi.titre }}</div>
+              {% if emploi.type_contrat %}<span class="tag tag-job" style="font-size:9px">{{ emploi.get_type_contrat_display }}</span>{% endif %}
+            </td>
+            <td style="font-size:12px;color:var(--ink-mid)">
+              {% if emploi.recruteur %}{{ emploi.recruteur.organisation }}
+              {% else %}{{ emploi.entreprise_nom|default:"Non spécifié" }}{% endif %}
+            </td>
+            <td style="font-size:12px;color:var(--muted)">{{ emploi.ville|default:emploi.localisation }}</td>
+            <td>
+              {% if emploi.date_limite %}
+                <span class="date-urg">{{ emploi.date_limite|date:"d/m/Y" }}</span>
+              {% else %}
+                <span class="date-normal">N/A</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="action-btns">
+                <button type="button" class="btn-app sm outline"
+                        data-toggle="modal" data-target="#modalEmploi{{ emploi.id }}">
+                  <i class="fa fa-eye"></i> Détails
+                </button>
+                <a href="{% url 'myAppli:soumettre_candidature' emploi.id %}" class="btn-app sm">
+                  <i class="fa fa-paper-plane"></i> Postuler
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="result-count">
+      <i class="fa fa-list"></i>
+      <span id="emploisCount">{{ offres_emploi|length }}</span> résultat(s) affiché(s)
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ÉTAT VIDE -->
+  {% if not offre and not ami and not offres_emploi %}
+  <div class="empty-state">
+    <i class="fa fa-folder-open"></i>
+    <p>Aucune opportunité ne correspond à votre profil pour le moment.</p>
+    <p class="sub">Complétez votre profil pour recevoir des opportunités personnalisées.</p>
+    <a href="{% url 'myAppli:profil' %}" class="btn-app">
+      <i class="fa fa-pen"></i> Compléter mon profil
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- ===== MODALS APPELS D'OFFRES ===== -->
+{% for i in offre %}
+<div class="modal fade" id="modalOffre{{ i.id }}" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title"><i class="fa fa-gavel"></i> Appel d'offres</div>
+        <button type="button" class="modal-close" data-dismiss="modal"><i class="fa fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-row">
+          <div class="modal-key">Référence</div>
+          <div class="modal-val"><span class="ref-id">OFFRE-{{ i.id }}</span></div>
+        </div>
+        <div class="modal-row">
+          <div class="modal-key">Description</div>
+          <div class="modal-val">{{ i.description }}</div>
+        </div>
+        <div class="modal-row">
+          <div class="modal-key">Date limite</div>
+          <div class="modal-val"><span class="date-urg">{{ i.date_limite|date:"d/m/Y H:i" }}</span></div>
+        </div>
+        <div class="modal-row">
+          <div class="modal-key">Publication</div>
+          <div class="modal-val">{{ i.date_scraping|date:"d/m/Y" }}</div>
+        </div>
+        <div class="modal-row">
+          <div class="modal-key">Document</div>
+          <div class="modal-val">
+            {% if i.fichier_local %}
+              <a href="{{ i.fichier_local.url }}" class="btn-app sm" download>
+                <i class="fa fa-download"></i> Télécharger le PDF
+              </a>
+            {% else %}
+              <a href="{{ i.download_url }}" target="_blank" class="btn-app sm outline">
+                <i class="fa fa-arrow-up-right-from-square"></i> Voir sur le site original
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- ===== MODALS AMI ===== -->
+{% for i in ami %}
+<div class="modal fade" id="modalAmi{{ i.id }}" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title"><i class="fa fa-bullhorn"></i> Manifestation d'intérêt</div>
+        <button type="button" class="modal-close" data-dismiss="modal"><i class="fa fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-row">
+          <div class="modal-key">Référence</div>
+          <div class="modal-val"><span class="ref-id">AMI-{{ i.id }}</span></div>
+        </div>
+        <div class="modal-row">
+          <div class="modal-key">Description</div>
+          <div class="modal-val">{{ i.description }}</div>
+        </div>
+        <div class="modal-row">
+          <div class="modal-key">Date limite</div>
+          <div class="modal-val"><span class="date-urg">{{ i.date_limite|date:"d/m/Y H:i" }}</span></div>
+        </div>
+        <div class="modal-row">
+          <div class="modal-key">Publication</div>
+          <div class="modal-val">{{ i.date_scraping|date:"d/m/Y" }}</div>
+        </div>
+        <div class="modal-row">
+          <div class="modal-key">Document</div>
+          <div class="modal-val">
+            {% if i.fichier_local %}
+              <a href="{{ i.fichier_local.url }}" class="btn-app sm" download>
+                <i class="fa fa-download"></i> Télécharger le PDF
+              </a>
+            {% else %}
+              <a href="{{ i.download_url }}" target="_blank" class="btn-app sm outline">
+                <i class="fa fa-arrow-up-right-from-square"></i> Voir sur le site original
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- ===== MODALS EMPLOI ===== -->
+{% for emploi in offres_emploi %}
+<div class="modal fade" id="modalEmploi{{ emploi.id }}" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title"><i class="fa fa-briefcase"></i> Offre d'emploi</div>
+        <button type="button" class="modal-close" data-dismiss="modal"><i class="fa fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-row">
+          <div class="modal-key">Poste</div>
+          <div class="modal-val" style="font-weight:700">{{ emploi.titre }}</div>
+        </div>
+        <div class="modal-row">
+          <div class="modal-key">Entreprise</div>
+          <div class="modal-val">
+            {% if emploi.recruteur %}{{ emploi.recruteur.organisation }}
+            {% else %}{{ emploi.entreprise_nom|default:"Non spécifié" }}{% endif %}
+          </div>
+        </div>
+        <div class="modal-row">
+          <div class="modal-key">Description</div>
+          <div class="modal-val">{{ emploi.description|truncatechars:300 }}</div>
+        </div>
+        <div class="modal-row">
+          <div class="modal-key">Localisation</div>
+          <div class="modal-val">{{ emploi.ville|default:emploi.localisation }}{% if emploi.pays %}, {{ emploi.pays }}{% endif %}</div>
+        </div>
+        <div class="modal-row">
+          <div class="modal-key">Type de contrat</div>
+          <div class="modal-val"><span class="tag tag-job">{{ emploi.get_type_contrat_display }}</span></div>
+        </div>
+        <div class="modal-row">
+          <div class="modal-key">Date limite</div>
+          <div class="modal-val">
+            {% if emploi.date_limite %}
+              <span class="date-urg">{{ emploi.date_limite|date:"d/m/Y" }}</span>
+            {% else %}
+              <span class="date-normal">Non spécifiée</span>
+            {% endif %}
+          </div>
+        </div>
+        {% if emploi.competences_requises %}
+        <div class="modal-row">
+          <div class="modal-key">Compétences</div>
+          <div class="modal-val">
+            <div class="comp-tags">
+              {% for comp in emploi.competences_requises %}
+              <span class="comp-tag">{{ comp }}</span>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  var searchTimeout = null;
+
+  function openTab(e, tabId) {
+    document.getElementById('searchInput').value = '';
+    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.getElementById(tabId).classList.add('active');
+    e.currentTarget.classList.add('active');
+    filterResults();
+  }
+
+  function filterResults() {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(function () {
+      var input = document.getElementById('searchInput').value.toUpperCase();
+      var activePanel = document.querySelector('.tab-panel.active');
+      if (!activePanel) return;
+
+      var rows = activePanel.querySelectorAll('tbody tr');
+      var visible = 0;
+      rows.forEach(function(row) {
+        var match = (row.textContent || row.innerText).toUpperCase().indexOf(input) > -1;
+        row.style.display = match ? '' : 'none';
+        if (match) visible++;
+      });
+
+      /* Mise à jour du compteur */
+      var countEl = activePanel.querySelector('[id$="Count"]');
+      if (countEl) countEl.textContent = visible;
+
+    }, 250);
+  }
+
+  /* Raccourci Ctrl+F → focus recherche */
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'f') {
+      e.preventDefault();
+      document.getElementById('searchInput').focus();
+    }
+  });
+</script>
+{% endblock %}

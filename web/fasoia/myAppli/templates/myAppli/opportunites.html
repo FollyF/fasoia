@@ -1,0 +1,490 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Opportunités - FASOIA{% endblock %}
+
+{% block extra_css %}
+<style>
+    .opportunites-page {
+        margin: 5px;
+        max-width: 1280px;
+    }
+
+    .page-header {
+        margin: 1px;
+        text-align: center;
+    }
+
+    .page-header h1 {
+        font-family: var(--font-display);
+        font-size: 32px;
+        color: var(--ink);
+    }
+
+    .page-header p {
+        color: var(--muted);
+        font-size: 15px;
+    }
+
+    .search-container {
+        max-width: 720px;
+        margin: 0 auto 20px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 16px 24px;
+        font-size: 16px;
+        border: 2px solid var(--border);
+        background: var(--surface);
+        transition: all 0.3s;
+    }
+
+    .search-input:focus {
+        border-color: var(--red);
+        box-shadow: 0 0 0 4px rgba(192, 57, 43, 0.08);
+    }
+
+    /* Onglets */
+    .tabs-wrapper {
+        display: flex;
+        border-bottom: 3px solid var(--ink);
+        margin-bottom: 0;
+        flex-wrap: wrap;
+        gap: 2px;
+    }
+
+    .tab-btn {
+        flex: 1;
+        padding: 16px 20px;
+        background: var(--cream);
+        border: 1px solid var(--border);
+        border-bottom: none;
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+        color: var(--muted);
+        cursor: pointer;
+        transition: all 0.25s;
+    }
+
+    .tab-btn:hover { 
+        background: var(--surface); 
+        color: var(--ink); 
+    }
+
+    .tab-btn.active {
+        background: var(--surface);
+        color: var(--ink);
+        border-top: 4px solid var(--red);
+        position: relative;
+        top: 2px;
+    }
+
+    .tab-content {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-top: none;
+        padding: 24px 16px;
+        min-height: 400px;
+    }
+
+    .tab-panel { 
+        display: none; 
+    }
+    .tab-panel.active { 
+        display: block; 
+    }
+
+    /* Tables responsives */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 20px;
+        border: 1px solid var(--border);
+    }
+
+    .opportunites-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    .opportunites-table th {
+        background: var(--cream);
+        color: var(--ink);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        padding: 14px 10px;
+        border-bottom: 2px solid var(--ink);
+        white-space: nowrap;
+    }
+
+    .opportunites-table td {
+        padding: 14px 10px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .opportunites-table tr:hover td {
+        background: var(--cream);
+    }
+
+    .ref-code {
+        font-family: monospace;
+        font-weight: 700;
+        color: var(--red);
+    }
+
+    .actions-col {
+        min-width: 140px;
+        text-align: center;
+    }
+
+    .btn-action {
+        display: block;
+        width: 100%;
+        max-width: 130px;
+        margin: 4px auto;
+        padding: 7px 12px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    .result-count {
+        margin-top: 16px;
+        color: var(--muted);
+        font-size: 13px;
+        text-align: right;
+    }
+
+    .no-result {
+        text-align: center;
+        padding: 50px 20px;
+        color: var(--muted);
+    }
+
+    /* MODALS CENTRÉS */
+    .modal {
+        text-align: center;
+        padding: 0 !important;
+    }
+
+    .modal:before {
+        content: '';
+        display: inline-block;
+        height: 100%;
+        vertical-align: middle;
+        margin-right: -4px;
+    }
+
+    .modal-dialog {
+        display: inline-block;
+        text-align: left;
+        vertical-align: middle;
+        width: 90%;
+        max-width: 600px;
+        margin: 20px auto;
+    }
+
+    .modal-content {
+        border-radius: 0;
+        border: 1px solid var(--ink);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+        background: var(--amber);
+        color: white;
+        padding: 15px 20px;
+        border: none;
+    }
+
+    .modal-title {
+        font-family: var(--font-display);
+        font-size: 22px;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .modal-body {
+        padding: 30px;
+        line-height: 1.6;
+        color: var(--ink-mid);
+    }
+
+    .modal-body p {
+        margin-bottom: 18px;
+        border-bottom: 1px solid var(--bg);
+        padding-bottom: 10px;
+    }
+
+    .modal-body strong {
+        display: block;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        color: var(--muted);
+        margin-bottom: 4px;
+    }
+
+    /* Adaptation mobile pour modals */
+    @media (max-width: 768px) {
+        .modal-dialog { width: 95%; }
+        .tab-btn { padding: 12px 8px; font-size: 11px; }
+    }
+    
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="opportunites-page">
+
+    <div class="page-header">
+        <h1>Opportunités</h1>
+        <p>Découvrez les appels d'offres, avis de manifestation et offres d'emploi du moment</p>
+    </div>
+
+    <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" 
+               onkeyup="filterResults()" 
+               placeholder="🔍 Rechercher par référence, objet, poste...">
+    </div>
+
+    <div class="tabs-wrapper">
+        <button class="tab-btn active" data-tab="offres">
+            <i class="fa fa-gavel"></i> Appels d'offres
+        </button>
+        <button class="tab-btn" data-tab="amis">
+            <i class="fa fa-bullhorn"></i> Avis de manifestation
+        </button>
+        <button class="tab-btn" data-tab="emplois">
+            <i class="fa fa-briefcase"></i> Offres d'emploi
+        </button>
+    </div>
+
+    <div class="tab-content">
+
+        <!-- ==================== APPELS D'OFFRES ==================== -->
+        <div id="offres" class="tab-panel active">
+            <div class="table-responsive">
+                <table class="opportunites-table">
+                    <thead>
+                        <tr>
+                            <th>Référence</th>
+                            <th>Objet</th>
+                            <th>Date limite</th>
+                            <th class="actions-col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for i in offres %}
+                        <tr>
+                            <td><span class="ref-code">AO-{{ i.reference|default:forloop.counter }}</span></td>
+                            <td>{{ i.description|truncatechars:85 }}</td>
+                            <td>{{ i.date_limite|date:"d/m/Y" }}</td>
+                            <td class="actions-col">
+                                <button type="button" class="btn-fasoia-outline btn-action"
+                                        data-toggle="modal" data-target="#modalOffre{{ i.id }}">
+                                    Détails
+                                </button>
+                                <a href="{% url 'myAppli:nouvelle_soumission' 'Offre_uemoa' i.id %}" 
+                                   class="btn-fasoia-primary btn-action">
+                                    Postuler
+                                </a>
+                            </td>
+                        </tr>
+
+                        <!-- Modal -->
+                        <div class="modal fade" id="modalOffre{{ i.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Détails de l'appel d'offres</h5>
+                                        <button type="button" class="close" data-dismiss="modal" style="color:white;">&times;</button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p><strong>Référence :</strong> AO-{{ i.reference|default:forloop.counter }}</p>
+                                        <p><strong>Description :</strong> {{ i.description }}</p>
+                                        <p><strong>Date limite :</strong> {{ i.date_limite|date:"d/m/Y H:i" }}</p>
+                                        <p><strong>Date de publication :</strong> {{ i.date_scraping|date:"d/m/Y" }}</p>
+                                        {% if i.fichier_local %}
+                                        <p><strong>Document :</strong><br>
+                                            <a href="{{ i.fichier_local.url }}" class="btn-fasoia-primary" download>
+                                                <i class="fa fa-download"></i> Télécharger le PDF
+                                            </a>
+                                        </p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <tr><td colspan="4" class="no-result">Aucun appel d'offres disponible pour le moment</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="result-count">{{ offres|length }} résultat(s)</div>
+        </div>
+
+        <!-- ==================== AVIS DE MANIFESTATION ==================== -->
+        <div id="amis" class="tab-panel">
+            <div class="table-responsive">
+                <table class="opportunites-table">
+                    <thead>
+                        <tr>
+                            <th>Référence</th>
+                            <th>Objet</th>
+                            <th>Date limite</th>
+                            <th class="actions-col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for i in amis %}
+                        <tr>
+                            <td><span class="ref-code">AMI-{{ forloop.counter }}</span></td>
+                            <td>{{ i.description|truncatechars:85 }}</td>
+                            <td>{{ i.date_limite|date:"d/m/Y" }}</td>
+                            <td class="actions-col">
+                                <button type="button" class="btn-fasoia-outline btn-action"
+                                        data-toggle="modal" data-target="#modalAmi{{ i.id }}">
+                                    Détails
+                                </button>
+                                <a href="{% url 'myAppli:nouvelle_soumission' 'Ami_uemoa' i.id %}" 
+                                   class="btn-fasoia-primary btn-action">
+                                    Postuler
+                                </a>
+                            </td>
+                        </tr>
+
+                        <!-- Modal -->
+                        <div class="modal fade" id="modalAmi{{ i.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Détails de l'avis de manifestation</h5>
+                                        <button type="button" class="close" data-dismiss="modal" style="color:white;">&times;</button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p><strong>Référence :</strong> AMI-{{ forloop.counter }}</p>
+                                        <p><strong>Description :</strong> {{ i.description }}</p>
+                                        <p><strong>Date limite :</strong> {{ i.date_limite|date:"d/m/Y H:i" }}</p>
+                                        <p><strong>Date de publication :</strong> {{ i.date_scraping|date:"d/m/Y" }}</p>
+                                        {% if i.fichier_local %}
+                                        <p><strong>Document :</strong><br>
+                                            <a href="{{ i.fichier_local.url }}" class="btn-fasoia-primary" download>
+                                                <i class="fa fa-download"></i> Télécharger le PDF
+                                            </a>
+                                        </p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <tr><td colspan="4" class="no-result">Aucun avis de manifestation disponible</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="result-count">{{ amis|length }} résultat(s)</div>
+        </div>
+
+        <!-- ==================== OFFRES D'EMPLOI ==================== -->
+        <div id="emplois" class="tab-panel">
+            <div class="table-responsive">
+                <table class="opportunites-table">
+                    <thead>
+                        <tr>
+                            <th>Poste</th>
+                            <th>Entreprise</th>
+                            <th>Localisation</th>
+                            <th>Date limite</th>
+                            <th class="actions-col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for emploi in offres_emploi %}
+                        <tr>
+                            <td><strong>{{ emploi.titre|truncatechars:55 }}</strong></td>
+                            <td>{{ emploi.recruteur.organisation|default:emploi.entreprise_nom|default:"—" }}</td>
+                            <td>{{ emploi.ville|default:"—" }}</td>
+                            <td>{{ emploi.date_limite|date:"d/m/Y"|default:"—" }}</td>
+                            <td class="actions-col">
+                                <button type="button" class="btn-fasoia-outline btn-action"
+                                        data-toggle="modal" data-target="#modalEmploi{{ emploi.id }}">
+                                    Détails
+                                </button>
+                                <a href="#" class="btn-fasoia-primary btn-action">
+                                    Postuler
+                                </a>
+                            </td>
+                        </tr>
+
+                        <!-- Modal -->
+                        <div class="modal fade" id="modalEmploi{{ emploi.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Détails de l'offre d'emploi</h5>
+                                        <button type="button" class="close" data-dismiss="modal" style="color:white;">&times;</button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p><strong>Titre :</strong> {{ emploi.titre }}</p>
+                                        <p><strong>Entreprise :</strong> {{ emploi.recruteur.organisation|default:emploi.entreprise_nom|default:"Non spécifié" }}</p>
+                                        <p><strong>Description :</strong> {{ emploi.description|truncatechars:200 }}</p>
+                                        <p><strong>Localisation :</strong> {{ emploi.ville|default:emploi.localisation }}</p>
+                                        <p><strong>Date limite :</strong> {{ emploi.date_limite|date:"d/m/Y"|default:"Non spécifiée" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <tr><td colspan="5" class="no-result">Aucune offre d'emploi disponible pour le moment</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="result-count">{{ offres_emploi|length }} résultat(s)</div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Gestion des onglets
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+
+            this.classList.add('active');
+            document.getElementById(this.dataset.tab).classList.add('active');
+
+            document.getElementById('searchInput').value = '';
+            filterResults();
+        });
+    });
+});
+
+// Recherche avec debounce
+let timeout;
+function filterResults() {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+        const term = document.getElementById('searchInput').value.toUpperCase().trim();
+        document.querySelectorAll('.tab-panel.active tbody tr').forEach(row => {
+            if (!row.classList.contains('no-result')) {
+                row.style.display = row.textContent.toUpperCase().includes(term) ? '' : 'none';
+            }
+        });
+    }, 200);
+}
+</script>
+{% endblock %}

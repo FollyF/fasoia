@@ -1,0 +1,668 @@
+{% extends "base_app.html" %}
+{% load static %}
+{% block title %}FASOIA — Tableau de bord entreprise{% endblock %}
+{% block breadcrumb %}Tableau de bord{% endblock %}
+
+{% block app_extra_css %}
+<style>
+    /* ===== EN-TÊTE ===== */
+    .dash-header {
+        background: var(--ink);
+        padding: 28px 32px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+        border-bottom: 3px solid var(--red);
+    }
+    .dash-header-left h1 {
+        font-family: var(--font-display);
+        font-size: 30px;
+        font-weight: 700;
+        color: #862323;
+        line-height: 1.1;
+        margin-bottom: 10px;
+    }
+    .dash-header-left h1 span { color: var(--red); }
+
+    .dash-tags {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .dash-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border: 1px solid rgba(255,255,255,0.15);
+        color: var(--ink);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+    .dash-tag i { font-size: 10px; color: rgba(255,255,255,0.3); }
+
+    .dash-header-right {
+        text-align: right;
+        flex-shrink: 0;
+    }
+    .dash-completion-num {
+        font-family: var(--font-display);
+        font-size: 48px;
+        font-weight: 700;
+        color: var(--ink);
+        line-height: 1;
+    }
+    .dash-completion-num span { color: var(--red); }
+    
+    .dash-completion-lbl {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--red);
+        margin-top: 4px;
+    }
+    .dash-prog-track {
+        height: 3px;
+        background: rgba(255,255,255,0.1);
+        margin-top: 10px;
+        width: 140px;
+        margin-left: auto;
+        overflow: hidden;
+    }
+    .dash-prog-fill {
+        height: 100%;
+        background: var(--red);
+        width: {{ pourcentage_completion }}%;
+    }
+
+    /* ===== SUCCÈS PROFIL COMPLET ===== */
+    .success-banner {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--teal);
+        padding: 16px 20px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .success-banner i { color: var(--teal); font-size: 18px; flex-shrink: 0; }
+    .success-banner strong { font-size: 13px; color: var(--ink); }
+    .success-banner p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .success-banner .btn-app { margin-left: auto; flex-shrink: 0; }
+
+    /* ===== ONGLETS ===== */
+    .tabs-nav {
+        display: flex;
+        gap: 0;
+        margin-bottom: 0;
+        border-bottom: 2px solid var(--ink);
+        overflow-x: auto;
+    }
+    .tab-btn {
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        color: var(--muted);
+        padding: 10px 20px;
+        font-family: var(--font-body);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.15s;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+    .tab-btn i { font-size: 11px; }
+    .tab-btn:hover { color: var(--ink); }
+    .tab-btn.active {
+        color: var(--ink);
+        border-bottom-color: var(--red);
+    }
+    .tab-content { display: none; padding-top: 24px; }
+    .tab-content.active { display: block; }
+
+    /* ===== FORMULAIRE ===== */
+    .form-grid-2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 18px;
+    }
+    .form-grid-2 .full { grid-column: 1 / -1; }
+    .field-note {
+        font-size: 11px;
+        color: var(--hint);
+        margin-top: 4px;
+    }
+    .required-star::after { content: " *"; color: var(--red); }
+
+    .form-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 28px;
+        padding-top: 18px;
+        border-top: 1px solid var(--border);
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .nav-btns { display: flex; gap: 8px; }
+
+    /* ===== RECOMMANDATIONS ===== */
+    .recommandations-wrapper {
+        margin-top: 20px;
+    }
+    .recommandations-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--surface);
+    }
+    .recommandations-table th {
+        background: var(--ink);
+        color: white;
+        padding: 14px 12px;
+        text-align: left;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+    .recommandations-table td {
+        padding: 14px 12px;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+        color: var(--ink);
+    }
+    .recommandations-table tr:hover {
+        background: var(--cream);
+    }
+    .type-badge {
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+    }
+    .type-offre { background: #862323; color: white; }
+    .type-ami   { background: var(--teal); color: white; }
+
+    .score-badge {
+        font-family: var(--font-display);
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--teal);
+    }
+    .ref-id {
+        font-family: monospace;
+        color: var(--red);
+        font-weight: 600;
+    }
+    .date-limite {
+        color: #862323;
+        font-weight: 500;
+    }
+
+    /* ===== BOUTONS ACTIONS (CORRIGÉS) ===== */
+    .actions-col { min-width: 140px; text-align: center; }
+    .btn-action {
+        display: block; width: 100%; max-width: 130px;
+        margin: 4px auto; padding: 7px 12px;
+        font-size: 11px; font-weight: 700; text-transform: uppercase;
+        cursor: pointer; border: none; text-decoration: none; text-align: center;
+    }
+    .btn-fasoia-primary { background: var(--red); color: white; }
+    .btn-fasoia-outline { background: transparent; border: 1px solid var(--ink); color: var(--ink); }
+    .btn-fasoia-outline:hover { background: var(--ink); color: white; }
+
+    /* MODALS CENTRÉS */
+    .modal {
+        text-align: center;
+        padding: 0 !important;
+    }
+
+    .modal:before {
+        content: '';
+        display: inline-block;
+        height: 100%;
+        vertical-align: middle;
+        margin-right: -4px;
+    }
+
+    .modal-dialog {
+        display: inline-block;
+        text-align: left;
+        vertical-align: middle;
+        width: 90%;
+        max-width: 600px;
+        margin: 20px auto;
+    }
+
+    .modal-content {
+        border-radius: 4px;
+        border: 1px solid var(--ink);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    }
+
+    .modal-header {
+        background: var(--amber);
+        color: white;
+        padding: 15px 20px;
+        border: none;
+    }
+
+    .modal-title {
+        font-family: var(--font-display);
+        font-size: 22px;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .modal-body {
+        padding: 30px;
+        line-height: 1.6;
+        color: var(--ink-mid);
+    }
+
+    .modal-body p {
+        margin-bottom: 18px;
+        border-bottom: 1px solid var(--bg);
+        padding-bottom: 10px;
+    }
+
+    .modal-body strong {
+        display: block;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        color: var(--muted);
+        margin-bottom: 4px;
+    }
+
+    /* Adaptation mobile pour modals */
+    @media (max-width: 768px) {
+        .modal-dialog { width: 95%; }
+        .tab-btn { padding: 12px 8px; font-size: 11px; }
+    }
+   
+   
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .dash-header {
+            padding: 20px;
+        }
+        .dash-header-left h1 {
+            font-size: 26px;
+        }
+        .dash-completion-num {
+            font-size: 38px;
+        }
+        .form-grid-2 {
+            grid-template-columns: 1fr;
+        }
+        .tabs-nav {
+            flex-wrap: wrap;
+        }
+        .recommandations-table th,
+        .recommandations-table td {
+            padding: 10px 8px;
+            font-size: 12px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- EN-TÊTE DASHBOARD -->
+<div class="dash-header">
+    <div class="dash-header-left">
+        <h1>Bienvenue, <span>{{ entreprise.raisonSociale }}</span></h1>
+        <div class="dash-tags">
+            <div class="dash-tag">
+                <i class="fa fa-building"></i>
+                {{ entreprise.domaineActive|default:"Domaine non défini" }}
+            </div>
+            <div class="dash-tag">
+                <i class="fa fa-map-marker-alt"></i>
+                {{ entreprise.localisation|default:"Localisation non définie" }}
+            </div>
+            {% if entreprise.pays_intervention %}
+            <div class="dash-tag">
+                <i class="fa fa-globe"></i>
+                {{ entreprise.pays_intervention|join:", "|truncatechars:40 }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="dash-header-right">
+        <div class="dash-completion-num">{{ pourcentage_completion }}<span>%</span></div>
+        <div class="dash-completion-lbl">Profil complété</div>
+        <div class="dash-prog-track">
+            <div class="dash-prog-fill"></div>
+        </div>
+    </div>
+</div>
+
+<!-- STATISTIQUES -->
+<div class="stats-row" style="margin-bottom:24px">
+    <div class="stat-cell">
+        <div class="n">{{ recommandations_count|default:"0" }}</div>
+        <div class="l">Recommandations reçues</div>
+    </div>
+    <div class="stat-cell">
+        <div class="n">{{ entreprise.nb_candidatures_emises|default:"0" }}</div>
+        <div class="l">Candidatures envoyées</div>
+    </div>
+    <div class="stat-cell accent">
+        <div class="n">{{ entreprise.taux_succes|default:"0" }}%</div>
+        <div class="l">Taux de succès</div>
+    </div>
+    <div class="stat-cell">
+        <div class="n">{{ entreprise.nb_projets_realises|default:"0" }}</div>
+        <div class="l">Projets réalisés</div>
+    </div>
+</div>
+
+<!-- BANNER PROFIL COMPLET -->
+{% if profil_complet %}
+<div class="success-banner">
+    <i class="fa fa-circle-check"></i>
+    <div>
+        <strong>Profil entreprise complété à 100%</strong>
+        <p>Vous recevez maintenant des recommandations personnalisées. Vous pouvez modifier votre profil à tout moment.</p>
+    </div>
+    <button class="btn-app sm outline" onclick="toggleEditMode()">
+        <i class="fa fa-pen"></i> Modifier
+    </button>
+</div>
+{% endif %}
+
+<!-- FORMULAIRE DE COMPLÉTION -->
+<div class="card-edit" id="profile-form-section" {% if profil_complet %}style="display:none"{% endif %}>
+    <div class="card-edit-head">
+        <h3>{% if profil_complet %}Modifier{% else %}Compléter{% endif %} votre profil entreprise</h3>
+        <span style="font-size:11px;color:var(--hint)">
+            <span style="color:var(--red)">*</span> Champs obligatoires pour les recommandations
+        </span>
+    </div>
+
+    <!-- ONGLETS -->
+    <div class="tabs-nav">
+        <button class="tab-btn active" onclick="showTab('informations')">
+            <i class="fa fa-building"></i> Informations
+        </button>
+        <button class="tab-btn" onclick="showTab('competences')">
+            <i class="fa fa-code"></i> Compétences
+        </button>
+        <button class="tab-btn" onclick="showTab('intervention')">
+            <i class="fa fa-map-marker-alt"></i> Zones
+        </button>
+        <button class="tab-btn" onclick="showTab('financier')">
+            <i class="fa fa-chart-line"></i> Financier
+        </button>
+        <button class="tab-btn" onclick="showTab('preferences')">
+            <i class="fa fa-sliders-h"></i> Préférences
+        </button>
+    </div>
+
+    <form method="POST" action="{% url 'myAppli:completer_profil_entreprise' %}" id="profile-form">
+        {% csrf_token %}
+
+        <!-- Onglet Informations -->
+        <div id="tab-informations" class="tab-content active">
+            <div class="form-grid-2">
+                <div class="form-field">
+                    <label class="required-star">Domaine d'activité principal</label>
+                    <input type="text" name="domaineActive" value="{{ entreprise.domaineActive }}" placeholder="Ex: BTP, Technologies, Finance..." required>
+                </div>
+                <div class="form-field">
+                    <label class="required-star">Localisation (Ville, Pays)</label>
+                    <input type="text" name="localisation" value="{{ entreprise.localisation }}" placeholder="Ex: Ouagadougou, Burkina Faso" required>
+                </div>
+                <div class="form-field">
+                    <label>Taille (nombre d'employés)</label>
+                    <input type="number" name="taille" value="{{ entreprise.taille }}" placeholder="Ex: 50">
+                </div>
+                <div class="form-field">
+                    <label>Année de création</label>
+                    <input type="number" name="annee_creation" value="{{ entreprise.annee_creation }}" placeholder="Ex: 2010">
+                </div>
+                <div class="form-field">
+                    <label>Site web</label>
+                    <input type="url" name="site_web" value="{{ entreprise.site_web }}" placeholder="https://www.example.com">
+                </div>
+            </div>
+        </div>
+
+        <!-- Onglet Compétences -->
+        <div id="tab-competences" class="tab-content">
+            <div class="form-grid-2">
+                <div class="form-field full">
+                    <label class="required-star">Compétences clés</label>
+                    <textarea name="competencesCles" rows="3" placeholder="Génie civil, Développement web, Conseil..." required>{{ entreprise.competencesCles }}</textarea>
+                    <div class="field-note">Séparez par des virgules</div>
+                </div>
+                <div class="form-field">
+                    <label>Années d'expérience</label>
+                    <input type="number" name="annees_experience" value="{{ entreprise.annees_experience }}" placeholder="Ex: 10">
+                </div>
+                <div class="form-field">
+                    <label>Nombre de projets réalisés</label>
+                    <input type="number" name="nb_projets_realises" value="{{ entreprise.nb_projets_realises }}" placeholder="Ex: 25">
+                </div>
+                <div class="form-field full">
+                    <label>Description de l'entreprise</label>
+                    <textarea name="description" rows="4" placeholder="Présentez votre entreprise...">{{ entreprise.description }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Onglet Zones d'intervention -->
+        <div id="tab-intervention" class="tab-content">
+            <div class="form-grid-2">
+                <div class="form-field">
+                    <label class="required-star">Pays d'intervention</label>
+                    <input type="text" name="pays_intervention" value="{{ entreprise.pays_intervention|join:', ' }}" placeholder="Burkina Faso, Côte d'Ivoire, Sénégal" required>
+                    <div class="field-note">Séparez par des virgules</div>
+                </div>
+                <div class="form-field">
+                    <label>Rayon d'action (km)</label>
+                    <input type="number" name="rayon_action" value="{{ entreprise.rayon_action }}" placeholder="Ex: 500">
+                </div>
+            </div>
+        </div>
+
+        <!-- Onglet Financier -->
+        <div id="tab-financier" class="tab-content">
+            <div class="form-grid-2">
+                <div class="form-field">
+                    <label class="required-star">Chiffre d'affaires annuel (FCFA)</label>
+                    <input type="number" name="chiffre_affaires" value="{{ entreprise.chiffre_affaires }}" placeholder="Ex: 100000000" required>
+                </div>
+                <div class="form-field">
+                    <label>Capital social (FCFA)</label>
+                    <input type="number" name="capital_social" value="{{ entreprise.capital_social }}" placeholder="Ex: 5000000">
+                </div>
+            </div>
+        </div>
+
+        <!-- Onglet Préférences -->
+        <div id="tab-preferences" class="tab-content">
+            <div class="form-grid-2">
+                <div class="form-field full">
+                    <label class="required-star">Types d'opportunités recherchées</label>
+                    <select name="types_opportunites" multiple size="3" required>
+                        <option value="AMI" {% if 'AMI' in entreprise.types_opportunites %}selected{% endif %}>AMI</option>
+                        <option value="APPEL_OFFRE" {% if 'APPEL_OFFRE' in entreprise.types_opportunites %}selected{% endif %}>Appel d'offres</option>
+                        <option value="MARCHE_PUBLIC" {% if 'MARCHE_PUBLIC' in entreprise.types_opportunites %}selected{% endif %}>Marché public</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label>Montant minimum (FCFA)</label>
+                    <input type="number" name="montant_min" value="{{ entreprise.montant_min }}" placeholder="Ex: 1000000">
+                </div>
+                <div class="form-field">
+                    <label>Montant maximum (FCFA)</label>
+                    <input type="number" name="montant_max" value="{{ entreprise.montant_max }}" placeholder="Ex: 100000000">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-footer">
+            <div class="nav-btns">
+                <button type="button" class="btn-app outline sm" onclick="prevTab()" id="prevBtn" disabled>
+                    <i class="fa fa-arrow-left"></i> Précédent
+                </button>
+                <button type="button" class="btn-app outline sm" onclick="nextTab()" id="nextBtn">
+                    Suivant <i class="fa fa-arrow-right"></i>
+                </button>
+            </div>
+            <button type="submit" class="btn-app" id="submit-btn">
+                <i class="fa fa-save"></i> Enregistrer le profil
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- SECTION RECOMMANDATIONS -->
+<div class="card-edit">
+    <div class="card-edit-head">
+        <h3>Opportunités recommandées pour vous</h3>
+    </div>
+
+    {% if profil_complet %}
+        {% if recommandations %}
+            <div class="recommandations-wrapper">
+                <table class="recommandations-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Référence</th>
+                            <th>Description</th>
+                            <th>Score</th>
+                            <th>Date limite</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reco in recommandations %}
+                            <tr>
+                                <td>
+                                    {% if reco.opportunite_type == 'Offre_uemoa' %}
+                                        <span class="type-badge type-offre">APPEL D'OFFRE</span>
+                                    {% else %}
+                                        <span class="type-badge type-ami">AMI</span>
+                                    {% endif %}
+                                </td>
+                                <td><span class="ref-id">
+                                    {% if reco.opportunite_type == 'Offre_uemoa' %}OFFRE-{% else %}AMI-{% endif %}{{ reco.opportunite.id }}
+                                </span></td>
+                                <td>{{ reco.opportunite.description|truncatechars:90 }}</td>
+                                <td><span class="score-badge">{{ reco.score_global }}%</span></td>
+                                <td class="date-limite">
+                                    {{ reco.opportunite.date_limite|date:"d/m/Y"|default:"Non spécifiée" }}
+                                </td>
+                                <td class="actions-col">
+                                    <button type="button" class="btn-fasoia-outline btn-action"
+                                            data-toggle="modal" data-target="#modalReco{{ reco.opportunite.id }}">
+                                        Détails
+                                    </button>
+
+                                    <a href="{% url 'myAppli:nouvelle_soumission' reco.opportunite_type reco.opportunite.id %}" 
+                                    class="btn-fasoia-primary btn-action">
+                                        Postuler
+                                    </a>
+
+                                    <div class="modal fade" id="modalReco{{ reco.opportunite.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header" style="background:var(--ink); color:white;">
+                                                    <h5 class="modal-title">Détails de l'opportunité</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" style="color:white;">&times;</button>
+                                                </div>
+                                                <div class="modal-body" style="text-align:left;">
+                                                    <p><strong>Référence :</strong> {{ reco.opportunite.id }}</p>
+                                                    <p><strong>Description :</strong> {{ reco.opportunite.description }}</p>
+                                                    <p><strong>Score :</strong> {{ reco.score_global|floatformat:0 }}%</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div style="padding:40px 20px; text-align:center; color:var(--hint);">
+                Aucune recommandation disponible pour le moment.
+            </div>
+        {% endif %}
+    {% else %}
+        <div style="padding:40px 20px; text-align:center; color:var(--hint); font-style:italic;">
+            Complétez votre profil (champs obligatoires *) pour recevoir des recommandations personnalisées.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var currentTab = 0;
+var tabs = ['informations', 'competences', 'intervention', 'financier', 'preferences'];
+
+function showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    
+    document.getElementById('tab-' + tabName).classList.add('active');
+    document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+    
+    currentTab = tabs.indexOf(tabName);
+    updateNavBtns();
+}
+
+function nextTab() {
+    if (currentTab < tabs.length - 1) showTab(tabs[currentTab + 1]);
+}
+function prevTab() {
+    if (currentTab > 0) showTab(tabs[currentTab - 1]);
+}
+function updateNavBtns() {
+    document.getElementById('prevBtn').disabled = (currentTab === 0);
+    document.getElementById('nextBtn').disabled = (currentTab === tabs.length - 1);
+}
+
+function toggleEditMode() {
+    var section = document.getElementById('profile-form-section');
+    if (section.style.display === 'none' || section.style.display === '') {
+        section.style.display = 'block';
+        section.scrollIntoView({ behavior: 'smooth' });
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+/* Soumission avec loader */
+const form = document.getElementById('profile-form');
+if (form) {
+    form.addEventListener('submit', function() {
+        const btn = document.getElementById('submit-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Enregistrement en cours...';
+    });
+}
+
+updateNavBtns();
+</script>
+{% endblock %}

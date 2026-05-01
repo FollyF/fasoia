@@ -1,0 +1,92 @@
+"Génère-moi un template de CV moderne en HTML/CSS avec :
+- Une photo de profil
+- Une barre latérale gauche pour les contacts et compétences
+- Une section principale pour expériences et formations
+- Utilise des variables comme {{nom}}, {{email}}, etc.
+- Style professionnel avec couleurs bleu et gris"
+
+tu peux apporter tes ameliorations et genere 6
+
+#############################################################Pour peupler ModelCV avec les templates correspondant#######
+
+# Dans le shell Django ou une migration
+from myAppli.models import ModeleCV
+
+styles = [
+    ('Executive Gold',  'executive',  True,  False, 1),
+    ('Geometric Tech',  'geometric',  False, False, 2),
+    ('Diagonal Clip',   'diagonal',   False, False, 3),
+    ('Dark Premium',    'dark',       False, True,  4),
+    ('Swiss Grid',      'swiss',      False, False, 5),
+    ('Split Card',      'splitcard',  False, False, 6),
+]
+
+for nom, cat, populaire, premium, ordre in styles:
+    ModeleCV.objects.update_or_create(
+        categorie=cat,
+        defaults={
+            'nom': nom,
+            'est_populaire': populaire,
+            'est_premium': premium,
+            'ordre_affichage': ordre,
+            'est_actif': True,
+        }
+    )
+
+
+/* Centrage vertical pour Bootstrap 3 */
+    .modal-dialog {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) !important;
+        margin: 0 !important;
+        width: 600px;
+        max-width: 90%;
+    }
+
+    
+<div class="btn-container">
+    <!-- Bouton pour ouvrir le modal (AVEC ID UNIQUE) -->
+    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#modal{{ i.id }}">
+        <i class="fa fa-info-circle"></i> Détails
+    </button>
+
+    <!-- Modal avec ID unique -->
+    <div class="modal fade" id="modal{{ i.id }}" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Détails de l'offre</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Référence:</strong> AO-2026-00{{ forloop.counter }}</p>
+                    <p><strong>Description:</strong> {{ i.description }}</p>
+                    <p><strong>Date limite:</strong> {{ i.date_limite }}</p>
+                    {% if i.fichier_local %}
+                        <p>
+                            <strong>Télécharger:</strong> 
+                            <a href="{{ i.fichier_local.url }}" class="btn btn-sm btn-success" download>
+                                <i class="fa fa-download"></i> Télécharger le PDF
+                            </a>
+                        </p>
+                    {% else %}
+                        <p>
+                            <strong>Télécharger:</strong> 
+                            <a href="{{ i.download_url }}" target="_blank" class="btn btn-sm btn-info">
+                                <i class="fa fa-external-link"></i> Voir sur le site
+                            </a>
+                        </p>
+                    {% endif %}    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="#" class="btn btn-success btn-sm">
+        <i class="fa fa-paper-plane"></i> Postuler
+    </a>
+</div>

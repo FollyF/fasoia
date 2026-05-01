@@ -1,0 +1,821 @@
+{% extends "base_app.html" %}
+{% load static %}
+
+{% block title %}FASOIA — Tableau de bord candidat{% endblock %}
+{% block breadcrumb %}Tableau de bord{% endblock %}
+
+{% block app_extra_css %}
+<style>
+  /* ===== EN-TÊTE ===== */
+  .dash-header {
+    background: var(--ink);
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    border-bottom: 3px solid var(--red);
+  }
+  .dash-header-left h1 {
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 700;
+    color: #862323;
+    line-height: 1.1;
+    margin-bottom: 10px;
+  }
+  .dash-header-left h1 span { color: var(--red); }
+  .dash-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+  .dash-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--ink);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .dash-tag i { font-size: 10px; color: rgba(255,255,255,0.3); }
+  .dash-header-right {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .dash-completion-num {
+    font-family: var(--font-display);
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .dash-completion-num span { color: var(--red); }
+  .dash-completion-lbl {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--red);
+    margin-top: 4px;
+  }
+  .dash-prog-track {
+    height: 3px;
+    background: rgba(255,255,255,0.1);
+    margin-top: 10px;
+    width: 120px;
+    margin-left: auto;
+    overflow: hidden;
+  }
+  .dash-prog-fill {
+    height: 100%;
+    background: var(--red);
+    width: {{ progression }}%;
+  }
+
+  /* ===== SUCCÈS PROFIL COMPLET ===== */
+  .success-banner {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--teal);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .success-banner i { color: var(--teal); font-size: 18px; flex-shrink: 0; }
+  .success-banner strong { font-size: 13px; color: var(--ink); }
+  .success-banner p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .success-banner .btn-app { margin-left: auto; flex-shrink: 0; }
+
+  /* ===== ONGLETS ===== */
+  .tabs-nav {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+    border-bottom: 2px solid var(--ink);
+    overflow-x: auto;
+  }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    color: var(--muted);
+    padding: 10px 20px;
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .tab-btn i { font-size: 11px; }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.active {
+    color: var(--ink);
+    border-bottom-color: var(--red);
+  }
+
+  .tab-content { display: none; padding-top: 24px; }
+  .tab-content.active { display: block; }
+
+  /* ===== FORMULAIRE ===== */
+  .form-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+  }
+  .form-grid-2 .full { grid-column: 1 / -1; }
+
+  .field-note {
+    font-size: 11px;
+    color: var(--hint);
+    margin-top: 4px;
+  }
+
+  .required-star::after { content: " *"; color: var(--red); }
+
+  /* Navigation onglets */
+  .form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 28px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .nav-btns { display: flex; gap: 8px; }
+
+  /* Checkbox personnalisé */
+  .check-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    transition: border-color 0.15s;
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .check-field:hover { border-color: var(--ink); }
+  .check-field input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--ink); flex-shrink: 0; }
+
+  /* Upload file */
+  .file-field input[type="file"] {
+    width: 100%;
+    border: 1px dashed var(--border);
+    padding: 10px 12px;
+    font-size: 12px;
+    font-family: var(--font-body);
+    color: var(--muted);
+    background: var(--cream);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .file-field input[type="file"]:hover { border-color: var(--ink); }
+  .file-current {
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--teal);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .type-badge {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+  }
+  
+  .score-badge {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--teal);
+  }
+  .ref-id {
+      font-family: monospace;
+      color: var(--red);
+      font-weight: 600;
+  }
+  .date-limite {
+      color: #862323;
+      font-weight: 500;
+  }
+
+  /* ===== RECOMMANDATIONS ===== */
+  .recommandations-wrapper {
+      margin-top: 20px;
+  }
+  .recommandations-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+  }
+  .recommandations-table th {
+      background: var(--ink);
+      color: white;
+      padding: 14px 12px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+  }
+  .recommandations-table td {
+      padding: 14px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--ink);
+  }
+  .recommandations-table tr:hover {
+      background: var(--cream);
+  }
+
+  /* ===== BOUTONS ACTIONS (CORRIGÉS) ===== */
+  .actions-col { min-width: 140px; text-align: center; }
+  .btn-action {
+      display: block; width: 100%; max-width: 130px;
+      margin: 4px auto; padding: 7px 12px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      cursor: pointer; border: none; text-decoration: none; text-align: center;
+  }
+  .btn-fasoia-primary { background: var(--red); color: white; }
+  .btn-fasoia-outline { background: transparent; border: 1px solid var(--ink); color: var(--ink); }
+  .btn-fasoia-outline:hover { background: var(--ink); color: white; }
+
+  /* MODALS COMPACTS */
+  .modal {
+      text-align: center;
+      padding: 0 !important;
+  }
+
+  .modal:before {
+      content: '';
+      display: inline-block;
+      height: 100%;
+      vertical-align: middle;
+      margin-right: -4px;
+  }
+
+  .modal-dialog {
+      display: inline-block;
+      text-align: left;
+      vertical-align: middle;
+      width: 90%;
+      max-width: 500px; /* Réduit de 600px à 500px */
+      margin: 10px auto;
+  }
+
+  .modal-content {
+      border-radius: 4px; /* Un léger arrondi adoucit le bloc */
+      border: 1px solid var(--ink);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+  }
+
+  .modal-header {
+      background: var(--amber);
+      color: white;
+      padding: 10px 15px; /* Plus fin */
+      border: none;
+  }
+
+  .modal-title {
+      font-family: var(--font-display);
+      font-size: 18px; /* Réduit de 22px */
+      font-weight: 700;
+      margin: 0;
+  }
+
+  .modal-body {
+      padding: 20px; /* Réduit de 30px */
+      line-height: 1.4; /* Texte plus serré */
+      color: var(--ink-mid);
+  }
+
+  .modal-body p {
+      margin-bottom: 10px; /* Espace réduit entre les lignes */
+      padding-bottom: 5px;
+      border-bottom: 1px dotted var(--border); /* Bordure plus discrète */
+      justify-content: space-between;
+      align-items: baseline;
+  }
+
+  .modal-body strong {
+      display: inline-block; /* Aligné avec le texte */
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-right: 10px;
+      min-width: 100px; /* Aligne les valeurs verticalement */
+  }
+
+  /* Adaptation mobile */
+  @media (max-width: 768px) {
+      .modal-dialog { width: 95%; margin: 5px auto; }
+      .modal-body { padding: 15px; }
+      .modal-body p { flex-direction: column; } /* Repasse en colonne sur mobile si besoin */
+  }
+
+  * Responsive adjustments */
+  @media (max-width: 768px) {
+      .dash-header {
+          padding: 20px;
+      }
+      .dash-header-left h1 {
+          font-size: 26px;
+      }
+      .dash-completion-num {
+          font-size: 38px;
+      }
+      .form-grid-2 {
+          grid-template-columns: 1fr;
+      }
+      .tabs-nav {
+          flex-wrap: wrap;
+      }
+      .recommandations-table th,
+      .recommandations-table td {
+          padding: 10px 8px;
+          font-size: 12px;
+      }
+  }
+
+  /* Spinner submit */
+  .fa-spin { animation: fa-spin 0.8s linear infinite; }
+  @keyframes fa-spin { to { transform: rotate(360deg); } }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- EN-TÊTE DASHBOARD -->
+<div class="dash-header">
+  <div class="dash-header-left">
+    <h1>Bonjour, <span>{{ candidat.prenom }}</span> {{ candidat.nom }}</h1>
+    <div class="dash-tags">
+      <div class="dash-tag">
+        <i class="fa fa-map-marker-alt"></i>
+        {{ candidat.localisation_recherche|default:"Localisation non définie" }}
+      </div>
+      <div class="dash-tag">
+        <i class="fa fa-briefcase"></i>
+        {{ candidat.type_contrat_recherche|default:"Tous contrats" }}
+      </div>
+      {% if candidat.disponibilite %}
+      <div class="dash-tag">
+        <i class="fa fa-clock"></i>
+        Disponible : {{ candidat.disponibilite }}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="dash-header-right">
+    <div class="dash-completion-num">{{ progression }}<span>%</span></div>
+    <div class="dash-completion-lbl">Profil complété</div>
+    <div class="dash-prog-track">
+      <div class="dash-prog-fill"></div>
+    </div>
+  </div>
+</div>
+
+<!-- STATISTIQUES -->
+<div class="stats-row" style="margin-bottom:24px">
+  <div class="stat-cell">
+    <div class="n">{{ candidat.nb_candidatures_envoyees|default:0 }}</div>
+    <div class="l">Candidatures envoyées</div>
+  </div>
+  <div class="stat-cell">
+    <div class="n">{{ candidat.nb_entretiens_obtenus|default:0 }}</div>
+    <div class="l">Entretiens obtenus</div>
+  </div>
+  <div class="stat-cell accent">
+    <div class="n">{{ offres_recommandees|length|default:0 }}</div>
+    <div class="l">Offres recommandées</div>
+  </div>
+  <div class="stat-cell">
+    <div class="n">{{ champs_remplis|default:0 }}/{{ total_champs }}</div>
+    <div class="l">Champs du profil</div>
+  </div>
+</div>
+
+<!-- BANNIÈRE PROFIL COMPLET -->
+{% if profil_complet %}
+<div class="success-banner">
+  <i class="fa fa-circle-check"></i>
+  <div>
+    <strong>Profil complété à 100%</strong>
+    <p>Votre profil est visible par les recruteurs. Vous pouvez le modifier à tout moment.</p>
+  </div>
+  <button class="btn-app sm outline" onclick="toggleEditMode()">
+    <i class="fa fa-pen"></i> Modifier
+  </button>
+</div>
+{% endif %}
+
+<!-- FORMULAIRE PROFIL -->
+<div class="card-edit" id="profile-form-section" {% if profil_complet %}style="display:none"{% endif %}>
+
+  <div class="card-edit-head">
+    <h3>{% if profil_complet %}Modifier{% else %}Compléter{% endif %} votre profil</h3>
+    <span style="font-size:11px;color:var(--hint)"><span style="color:var(--red)">*</span> Champs obligatoires</span>
+  </div>
+
+  <!-- ONGLETS -->
+  <div class="tabs-nav">
+    <button class="tab-btn active" onclick="showTab('personnel')">
+      <i class="fa fa-user"></i> Infos personnelles
+    </button>
+    <button class="tab-btn" onclick="showTab('professionnel')">
+      <i class="fa fa-briefcase"></i> Profil pro
+    </button>
+    <button class="tab-btn" onclick="showTab('recherche')">
+      <i class="fa fa-search"></i> Recherche d'emploi
+    </button>
+    <button class="tab-btn" onclick="showTab('documents')">
+      <i class="fa fa-file-pdf"></i> Documents
+    </button>
+  </div>
+
+  <form method="POST" action="{% url 'myAppli:completer_profil_candidat' %}" enctype="multipart/form-data" id="profileForm">
+    {% csrf_token %}
+
+    <!-- ONGLET 1 — Infos personnelles -->
+    <div id="tab-personnel" class="tab-content active">
+      <div class="form-grid-2">
+        <div class="form-field">
+          <label class="required-star">Nom</label>
+          <input type="text" name="nom" value="{{ candidat.nom }}" placeholder="Votre nom" required>
+        </div>
+        <div class="form-field">
+          <label class="required-star">Prénom</label>
+          <input type="text" name="prenom" value="{{ candidat.prenom }}" placeholder="Votre prénom" required>
+        </div>
+        <div class="form-field">
+          <label class="required-star">Email</label>
+          <input type="email" name="email" value="{{ candidat.email }}" placeholder="nom@domaine.com" required>
+        </div>
+        <div class="form-field">
+          <label class="required-star">Téléphone</label>
+          <input type="tel" name="telephone" value="{{ candidat.telephone }}" placeholder="+226 XX XX XX XX" required>
+        </div>
+        <div class="form-field">
+          <label>Date de naissance</label>
+          <input type="date" name="date_naissance" value="{{ candidat.date_naissance|date:'Y-m-d' }}">
+        </div>
+        <div class="form-field">
+          <label>Adresse</label>
+          <input type="text" name="adresse" value="{{ candidat.adresse }}" placeholder="Votre adresse">
+        </div>
+        <div class="form-field">
+          <label>Ville</label>
+          <input type="text" name="ville" value="{{ candidat.ville }}" placeholder="Ex: Ouagadougou">
+        </div>
+        <div class="form-field">
+          <label>Pays</label>
+          <input type="text" name="pays" value="{{ candidat.pays }}" placeholder="Ex: Burkina Faso">
+        </div>
+      </div>
+    </div>
+
+    <!-- ONGLET 2 — Profil professionnel -->
+    <div id="tab-professionnel" class="tab-content">
+      <div class="form-grid-2">
+        <div class="form-field">
+          <label class="required-star">Niveau d'étude</label>
+          <input type="text" name="niveauEtude" value="{{ candidat.niveauEtude }}" placeholder="Ex: Bac+5, Master" required>
+        </div>
+        <div class="form-field">
+          <label>Années d'expérience</label>
+          <input type="number" name="anneesExperiences" value="{{ candidat.anneesExperiences }}" placeholder="Ex: 5" min="0">
+        </div>
+        <div class="form-field full">
+          <label class="required-star">Compétences</label>
+          <textarea name="competences" rows="3" placeholder="Python, Django, JavaScript, Gestion de projet…" required>{{ candidat.competences }}</textarea>
+          <div class="field-note">Séparez vos compétences par des virgules</div>
+        </div>
+        <div class="form-field">
+          <label>Langues</label>
+          <input type="text" name="niveauLangues" value="{{ candidat.niveauLangues }}" placeholder="Français (courant), Anglais (professionnel)">
+        </div>
+        <div class="form-field">
+          <label class="required-star">Disponibilité</label>
+          <select name="disponibilite" required>
+            <option value="">Sélectionnez…</option>
+            <option value="immédiate"   {% if candidat.disponibilite == 'immédiate'   %}selected{% endif %}>Immédiate</option>
+            <option value="1 semaine"   {% if candidat.disponibilite == '1 semaine'   %}selected{% endif %}>1 semaine</option>
+            <option value="2 semaines"  {% if candidat.disponibilite == '2 semaines'  %}selected{% endif %}>2 semaines</option>
+            <option value="1 mois"      {% if candidat.disponibilite == '1 mois'      %}selected{% endif %}>1 mois</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ONGLET 3 — Recherche d'emploi -->
+    <div id="tab-recherche" class="tab-content">
+      <div class="form-grid-2">
+        <div class="form-field">
+          <label>Secteur recherché</label>
+          <input type="text" name="secteur_recherche" value="{{ candidat.secteur_recherche }}" placeholder="Informatique, Finance, BTP…">
+        </div>
+        <div class="form-field">
+          <label>Type de contrat</label>
+          <select name="type_contrat_recherche">
+            <option value="">Tous les contrats</option>
+            <option value="CDI"        {% if candidat.type_contrat_recherche == 'CDI'        %}selected{% endif %}>CDI</option>
+            <option value="CDD"        {% if candidat.type_contrat_recherche == 'CDD'        %}selected{% endif %}>CDD</option>
+            <option value="Stage"      {% if candidat.type_contrat_recherche == 'Stage'      %}selected{% endif %}>Stage</option>
+            <option value="Alternance" {% if candidat.type_contrat_recherche == 'Alternance' %}selected{% endif %}>Alternance</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Localisation souhaitée</label>
+          <input type="text" name="localisation_recherche" value="{{ candidat.localisation_recherche }}" placeholder="Ex: Ouagadougou">
+        </div>
+        <div class="form-field">
+          <label>Salaire souhaité (FCFA)</label>
+          <input type="number" name="salaire_souhaite" value="{{ candidat.salaire_souhaite }}" placeholder="Ex: 500000">
+        </div>
+        <div class="form-field full">
+          <label class="check-field">
+            <input type="checkbox" name="mobilite" {% if candidat.mobilite %}checked{% endif %}>
+            <span>Disponible pour des déplacements ou mobilité géographique</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ONGLET 4 — Documents -->
+    <div id="tab-documents" class="tab-content">
+      <div class="form-grid-2">
+        <div class="form-field file-field">
+          <label class="required-star">CV</label>
+
+          {% if candidat.cv %}
+            <!-- CV uploadé -->
+            <div class="file-current">
+              <i class="fa fa-circle-check"></i> CV uploadé : {{ candidat.cv.name }}
+            </div>
+            <input type="file" name="cv" accept=".pdf,.doc,.docx">
+            <div class="field-note">Remplacer le CV uploadé</div>
+
+          {% elif cvs_generes %}
+            <!-- CV généré -->
+            <div class="file-current">
+              <i class="fa fa-circle-check"></i> CV généré : {{ cv_actif.titre }}
+            </div>
+            <input type="file" name="cv" accept=".pdf,.doc,.docx">
+            <div class="field-note">Ou uploader un CV externe</div>
+
+          {% else %}
+            <!-- Aucun CV -->
+            <input type="file" name="cv" accept=".pdf,.doc,.docx" required>
+            <div class="field-note">
+              Ou <a href="{% url 'myAppli:generer_cv' %}">générer un CV sur la plateforme</a>
+            </div>
+          {% endif %}
+
+        </div>
+        <div class="form-field file-field">
+          <label>Lettre de motivation (optionnel)</label>
+          <input type="file" name="lettre_motivation" accept=".pdf,.doc,.docx">
+          {% if candidat.lettre_motivation %}
+          <div class="file-current"><i class="fa fa-circle-check"></i> {{ candidat.lettre_motivation.name }}</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- PIED DU FORMULAIRE -->
+    <div class="form-footer">
+      <div class="nav-btns">
+        <button type="button" class="btn-app outline sm" onclick="prevTab()" id="prevBtn" disabled>
+          <i class="fa fa-arrow-left"></i> Précédent
+        </button>
+        <button type="button" class="btn-app outline sm" onclick="nextTab()" id="nextBtn">
+          Suivant <i class="fa fa-arrow-right"></i>
+        </button>
+      </div>
+      <button type="submit" class="btn-app" id="submitBtn">
+        <i class="fa fa-floppy-disk"></i> Enregistrer le profil
+      </button>
+    </div>
+
+  </form>
+</div>
+
+<!-- OFFRES RECOMMANDÉES -->
+<div class="card-edit">
+  <div class="card-edit-head">
+    <h3>Offres recommandées pour vous</h3>
+    <a href="{% url 'myAppli:dashboard_opportunites' %}" class="btn-app sm outline">
+      Voir toutes les offres <i class="fa fa-arrow-right"></i>
+    </a>
+  </div>
+
+  {% if profil_complet %}
+    {% if offres_recommandees %}
+      <div class="recommandations-wrapper">
+        <table class="recommandations-table">
+          <thead>
+            <tr>
+              <th>Titre</th>
+              <th>Entreprise</th>
+              <th>Lieu</th>
+              <th>Contrat</th>
+              <th>Score</th>
+              <th>Date limite</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for offre in offres_recommandees %}
+            <tr>
+              <td>
+                <span style="font-weight:600;color:var(--ink)">{{ offre.titre }}</span>
+              </td>
+              <td>
+                {{ offre.recruteur.organisation|default:"Entreprise partenaire" }}
+              </td>
+              <td>{{ offre.ville|default:offre.localisation }}</td>
+              <td>
+                <span class="type-badge type-offre">
+                  {{ offre.get_type_contrat_display|default:"Emploi" }}
+                </span>
+              </td>
+              <td>
+                <span class="score-badge">{{ offre.score|default:0 }}%</span>
+              </td>
+              <td class="date-limite">
+                {{ offre.date_limite|date:"d/m/Y"|default:"Non spécifiée" }}
+              </td>
+              <td class="actions-col">
+                <!-- Détails -->
+                <button type="button" class="btn-fasoia-outline btn-action"
+                        data-toggle="modal" data-target="#modalOffre{{ offre.id }}">
+                  Détails
+                </button>
+
+                <!-- Postuler -->
+                <a href="{% url 'myAppli:soumettre_candidature' offre.id %}"
+                   class="btn-fasoia-primary btn-action">
+                  Postuler
+                </a>
+
+                <!-- Modal détails -->
+                <div class="modal fade" id="modalOffre{{ offre.id }}"
+                     tabindex="-1" role="dialog" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header" style="background:var(--ink);color:white">
+                        <h5 class="modal-title">{{ offre.titre }}</h5>
+                        <button type="button" class="close"
+                                data-dismiss="modal" style="color:white">&times;</button>
+                      </div>
+                      <div class="modal-body" style="text-align:left">
+                        <p><strong>Entreprise :</strong>
+                          {{ offre.entreprise_nom|default:"Non précisée" }}
+                        </p>
+                        <p><strong>Lieu :</strong> {{ offre.localisation }}</p>
+                        <p><strong>Contrat :</strong> {{ offre.get_type_contrat_display }}</p>
+                        <p><strong>Expérience :</strong>
+                          {{ offre.get_niveau_experience_display }}
+                        </p>
+                        <p><strong>Niveau d'étude :</strong>
+                          {{ offre.niveau_etude_requis|default:"Non précisé" }}
+                        </p>
+                        <p><strong>Description :</strong>
+                          {{ offre.description|truncatechars:300 }}
+                        </p>
+                        <p><strong>Score de compatibilité :</strong>
+                          {{ offre.score|default:0 }}%
+                        </p>
+                        <p><strong>Date limite :</strong>
+                          {{ offre.date_limite|date:"d/m/Y"|default:"Non spécifiée" }}
+                        </p>
+                      </div>
+                      <div class="modal-footer">
+                        <a href="{% url 'myAppli:soumettre_candidature' offre.id %}"
+                           class="btn-fasoia-primary">
+                          <i class="fa fa-paper-plane"></i> Postuler
+                        </a>
+                        <button type="button" class="btn-fasoia-outline"
+                                data-dismiss="modal">Fermer</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    {% else %}
+      <div style="padding:40px 20px;text-align:center;color:var(--hint)">
+        Aucune recommandation disponible pour le moment.
+      </div>
+    {% endif %}
+
+  {% else %}
+    <div style="padding:40px 20px;text-align:center;color:var(--hint);font-style:italic">
+      Complétez votre profil pour recevoir des recommandations personnalisées.
+    </div>
+  {% endif %}
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  var currentTab = 0;
+  var tabs = ['personnel', 'professionnel', 'recherche', 'documents'];
+
+  function showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.getElementById('tab-' + tabName).classList.add('active');
+    document.querySelector('[onclick="showTab(\'' + tabName + '\')"]').classList.add('active');
+    currentTab = tabs.indexOf(tabName);
+    updateNavBtns();
+  }
+
+  function nextTab() {
+    if (currentTab < tabs.length - 1) showTab(tabs[currentTab + 1]);
+  }
+
+  function prevTab() {
+    if (currentTab > 0) showTab(tabs[currentTab - 1]);
+  }
+
+  function updateNavBtns() {
+    document.getElementById('prevBtn').disabled = (currentTab === 0);
+    document.getElementById('nextBtn').disabled = (currentTab === tabs.length - 1);
+  }
+
+  function toggleEditMode() {
+    var section = document.getElementById('profile-form-section');
+    if (section.style.display === 'none') {
+      section.style.display = 'block';
+      section.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      section.style.display = 'none';
+    }
+  }
+
+  /* Validation */
+  var form = document.getElementById('profileForm');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      var required = this.querySelectorAll('[required]');
+      var valid = true;
+      var first = null;
+
+      required.forEach(function(f) {
+        var empty = (f.type === 'file') ? f.files.length === 0 : !f.value.trim();
+        if (empty) {
+          f.style.borderColor = 'var(--red)';
+          valid = false;
+          if (!first) first = f;
+        } else {
+          f.style.borderColor = '';
+        }
+      });
+
+      if (!valid) {
+        e.preventDefault();
+        if (first) {
+          var tab = first.closest('.tab-content');
+          if (tab) showTab(tab.id.replace('tab-', ''));
+          first.focus();
+        }
+      } else {
+        var btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Enregistrement…';
+      }
+    });
+  }
+
+  updateNavBtns();
+</script>
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends "base_app.html" %}
+{% load static %}
+
+{% block title %}FASOIA — Dossier de candidature{% endblock %}
+{% block breadcrumb %}Ma candidature{% endblock %}
+
+{% block content %}
+
+<!-- STATUT -->
+<div style="background:var(--ink);padding:24px 32px;margin-bottom:24px;border-bottom:3px solid var(--red)">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+    <div>
+      <div style="font-family:var(--font-display);font-size:22px;font-weight:700;color:#862323;margin-bottom:6px">
+        {{ offre.titre }}
+      </div>
+      <div style="font-size:12px;color:var(--muted)">
+        {{ offre.entreprise_nom|default:"Entreprise partenaire" }} —
+        Candidature du {{ dossier.date_creation|date:"d/m/Y" }}
+      </div>
+    </div>
+
+    <div style="text-align:right">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px">
+        Statut
+      </div>
+      <div style="font-size:16px;font-weight:700;
+        {% if dossier.statut == 'SOUMIS' %}color:var(--teal)
+        {% elif dossier.statut == 'ACCEPTE' %}color:green
+        {% elif dossier.statut == 'REFUSE' %}color:var(--red)
+        {% else %}color:var(--muted){% endif %}">
+        {% if dossier.statut == 'EN_PREPARATION' %}⏳ En préparation
+        {% elif dossier.statut == 'SOUMIS' %}✅ Soumise
+        {% elif dossier.statut == 'VU' %}👁️ Vue par le recruteur
+        {% elif dossier.statut == 'ACCEPTE' %}🎉 Acceptée
+        {% elif dossier.statut == 'REFUSE' %}❌ Refusée
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCORE -->
+{% if dossier.score_compatibilite %}
+<div style="background:var(--surface);border:1px solid var(--border);
+            border-left:3px solid var(--teal);padding:16px 20px;
+            margin-bottom:20px;display:flex;align-items:center;gap:16px">
+  <div style="font-family:var(--font-display);font-size:40px;font-weight:700;color:var(--teal)">
+    {{ dossier.score_compatibilite|floatformat:0 }}%
+  </div>
+  <div>
+    <div style="font-size:13px;font-weight:600;color:var(--ink)">Score de compatibilité</div>
+    <div style="font-size:11px;color:var(--muted)">Votre CV vs cette offre</div>
+  </div>
+</div>
+{% endif %}
+
+<!-- DOCUMENTS -->
+<div class="card-edit" style="margin-bottom:20px">
+  <div class="card-edit-head">
+    <h3>Documents soumis</h3>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+
+    <!-- CV -->
+    <div style="border:1px solid var(--border);padding:16px;text-align:center">
+      <i class="fa fa-file-pdf" style="font-size:32px;color:var(--red);margin-bottom:8px;display:block"></i>
+      <div style="font-size:12px;font-weight:600;margin-bottom:8px">CV</div>
+      {% if dossier.cv %}
+        <a href="{{ dossier.cv.url }}" target="_blank" class="btn-app sm outline">
+          <i class="fa fa-eye"></i> Voir
+        </a>
+      {% elif dossier.cv_genere and dossier.cv_genere.fichier_pdf %}
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">
+          {{ dossier.cv_genere.titre }}
+        </div>
+        <a href="{{ dossier.cv_genere.fichier_pdf.url }}" target="_blank" class="btn-app sm outline">
+          <i class="fa fa-eye"></i> Voir
+        </a>
+      {% else %}
+        <span style="font-size:11px;color:var(--hint)">Non fourni</span>
+      {% endif %}
+    </div>
+
+    <!-- Lettre -->
+    <div style="border:1px solid var(--border);padding:16px;text-align:center">
+      <i class="fa fa-pen" style="font-size:32px;color:var(--red);margin-bottom:8px;display:block"></i>
+      <div style="font-size:12px;font-weight:600;margin-bottom:8px">Lettre de motivation</div>
+      {% if dossier.lettre_motivation %}
+        <a href="{{ dossier.lettre_motivation.url }}" target="_blank" class="btn-app sm outline">
+          <i class="fa fa-eye"></i> Voir
+        </a>
+      {% elif dossier.lettre_generee %}
+        <span style="font-size:11px;color:var(--teal)">✅ Générée par IA</span>
+      {% else %}
+        <span style="font-size:11px;color:var(--hint)">Non fournie</span>
+      {% endif %}
+    </div>
+
+    <!-- Autres -->
+    {% if dossier.autres_documents %}
+    <div style="border:1px solid var(--border);padding:16px;text-align:center">
+      <i class="fa fa-folder" style="font-size:32px;color:var(--red);margin-bottom:8px;display:block"></i>
+      <div style="font-size:12px;font-weight:600;margin-bottom:8px">Autres documents</div>
+      <a href="{{ dossier.autres_documents.url }}" target="_blank" class="btn-app sm outline">
+        <i class="fa fa-eye"></i> Voir
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- LETTRE GÉNÉRÉE -->
+{% if dossier.lettre_generee %}
+<div class="card-edit" style="margin-bottom:20px">
+  <div class="card-edit-head">
+    <h3><i class="fa fa-magic"></i> Lettre de motivation générée</h3>
+  </div>
+  <div style="font-size:13px;line-height:1.8;color:var(--ink);
+              white-space:pre-line;padding:16px;background:var(--cream)">
+    {{ dossier.lettre_generee }}
+  </div>
+</div>
+{% endif %}
+
+<!-- ACTIONS -->
+<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+  {% if dossier.statut == 'EN_PREPARATION' %}
+  <a href="{% url 'myAppli:soumettre_candidature' offre.id %}" class="btn-app">
+    <i class="fa fa-pen"></i> Modifier et soumettre
+  </a>
+  {% endif %}
+  <a href="{% url 'myAppli:dashboard_candidat' %}" class="btn-app outline">
+    <i class="fa fa-home"></i> Tableau de bord
+  </a>
+</div>
+
+{% endblock %}

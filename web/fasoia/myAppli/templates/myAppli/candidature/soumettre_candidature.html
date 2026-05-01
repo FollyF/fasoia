@@ -1,0 +1,630 @@
+{% extends "base_app.html" %}
+{% load static %}
+
+{% block title %}FASOIA — Postuler : {{ offre.titre }}{% endblock %}
+{% block breadcrumb %}Soumettre ma candidature{% endblock %}
+
+{% block app_extra_css %}
+<style>
+  .candidature-header {
+    background: var(--ink);
+    padding: 24px 32px;
+    margin-bottom: 24px;
+    border-bottom: 3px solid var(--red);
+  }
+  .offre-titre {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+    color: #862323;
+    margin-bottom: 6px;
+  }
+  .offre-meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .score-badge {
+    font-family: var(--font-display);
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--teal);
+    text-align: right;
+  }
+  .score-badge span { font-size: 14px; color: var(--muted) }
+
+  .section-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-head h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .cv-option {
+    border: 2px solid var(--border);
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .cv-option:hover { border-color: var(--ink); }
+  .cv-option.selected { border-color: var(--teal); background: rgba(0,200,150,0.05); }
+  .cv-option input[type="radio"] { accent-color: var(--teal); }
+
+  .analyse-box {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--teal);
+    padding: 16px;
+    margin-top: 16px;
+    display: none;
+  }
+  .analyse-box.visible { display: block; }
+
+  .lettre-textarea {
+    width: 100%;
+    min-height: 300px;
+    border: 1px solid var(--border);
+    padding: 16px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1.7;
+    resize: vertical;
+    background: var(--surface);
+    color: var(--ink);
+    outline: none;
+  }
+  .lettre-textarea:focus { border-color: var(--ink); }
+
+  .doc-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 4px;
+  }
+  .doc-badge.required { border-color: var(--red); color: var(--red); }
+
+  .action-bar {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- EN-TÊTE -->
+<div class="candidature-header">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
+    <div>
+      <div class="offre-titre">{{ offre.titre }}</div>
+      <div class="offre-meta">
+        <span><i class="fa fa-building"></i> {{ offre.entreprise_nom|default:"Entreprise partenaire" }}</span>
+        <span><i class="fa fa-map-marker-alt"></i> {{ offre.localisation }}</span>
+        <span><i class="fa fa-file-contract"></i> {{ offre.get_type_contrat_display }}</span>
+        {% if offre.date_limite %}
+        <span><i class="fa fa-calendar"></i> Limite : {{ offre.date_limite|date:"d/m/Y" }}</span>
+        {% endif %}
+      </div>
+
+      <!-- Documents exigés -->
+      <div style="margin-top:12px">
+        <span style="font-size:11px;color:var(--muted);font-weight:600">Documents exigés :</span>
+        {% for doc in documents_exiges %}
+        <span class="doc-badge required">
+          <i class="fa fa-file"></i> {{ doc }}
+        </span>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if score %}
+    <div class="score-badge">
+      {{ score }}%
+      <span><br>Compatibilité</span>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<form method="POST" action="{% url 'myAppli:enregistrer_dossier' offre.id %}"
+      enctype="multipart/form-data" id="dossierForm">
+  {% csrf_token %}
+
+  <!-- ===== SECTION CV ===== -->
+  <div class="section-card">
+    <div class="section-head">
+      <h3>
+        <i class="fa fa-file-pdf" style="color:var(--red)"></i> CV
+        <span style="font-size:10px;color:var(--red);font-weight:600">* Obligatoire</span>
+      </h3>
+      <button type="button" class="btn-app sm outline" id="btnAnalyserCV"
+              onclick="analyserCV()">
+        <i class="fa fa-robot"></i> Analyser avec l'IA
+      </button>
+    </div>
+
+    <!-- CVs générés -->
+    {% if cvs_generes %}
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
+      Choisissez un CV généré ou uploadez un nouveau :
+    </p>
+
+    {% for cv in cvs_generes %}
+    <label class="cv-option" onclick="selectCV(this, '{{ cv.id }}')">
+      <input type="radio" name="cv_genere_id" value="{{ cv.id }}"
+             {% if cv.est_utilise %}checked{% endif %}>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:var(--ink)">
+          {{ cv.titre }}
+          {% if cv.est_utilise %}
+          <span style="font-size:10px;color:var(--teal);margin-left:6px">
+            <i class="fa fa-circle-check"></i> Utilisé
+          </span>
+          {% endif %}
+        </div>
+        <div style="font-size:11px;color:var(--muted)">
+          Généré le {{ cv.date_generation|date:"d/m/Y" }}
+        </div>
+      </div>
+      {% if cv.fichier_pdf %}
+      <a href="{{ cv.fichier_pdf.url }}" target="_blank"
+         class="btn-app sm outline" onclick="event.stopPropagation()">
+        <i class="fa fa-eye"></i>
+      </a>
+      {% endif %}
+    </label>
+    {% endfor %}
+
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+      <label style="font-size:12px;color:var(--muted);font-weight:600">
+        Ou uploader un CV externe :
+      </label>
+    {% endif %}
+
+    <div class="form-field file-field" style="margin-top:8px">
+      <input type="file" name="cv" accept=".pdf,.doc,.docx">
+      {% if candidat.cv %}
+      <div class="file-current">
+        <i class="fa fa-circle-check"></i> CV actuel : {{ candidat.cv.name }}
+      </div>
+      {% endif %}
+    </div>
+
+    {% if cvs_generes %}</div>{% endif %}
+
+    <!-- Résultat analyse CV -->
+    <div class="analyse-box" id="analyseCV">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <div style="font-family:var(--font-display);font-size:32px;font-weight:700;color:var(--teal)"
+             id="scoreCV">--</div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--ink)">Score de compatibilité</div>
+          <div style="font-size:11px;color:var(--muted)">CV ↔ Offre</div>
+        </div>
+      </div>
+      <div id="analyseDetails"></div>
+    </div>
+  </div>
+
+  <!-- ===== SECTION LETTRE ===== -->
+  <div class="section-card">
+    <div class="section-head">
+      <h3>
+        <i class="fa fa-pen" style="color:var(--red)"></i> Lettre de motivation
+        <span style="font-size:10px;color:var(--red);font-weight:600">* Obligatoire</span>
+      </h3>
+      <button type="button" class="btn-app sm outline" onclick="genererLettre()">
+        <i class="fa fa-magic"></i> Générer avec l'IA
+      </button>
+    </div>
+
+    <!-- Tabs lettre -->
+    <div style="display:flex;gap:0;border-bottom:2px solid var(--ink);margin-bottom:16px">
+      <button type="button" class="tab-btn active" onclick="showLettreTab('generer')"
+              id="tabGenerer"
+              style="background:transparent;border:none;border-bottom:2px solid transparent;
+                     margin-bottom:-2px;padding:8px 16px;font-size:11px;font-weight:700;
+                     text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;color:var(--muted)">
+        <i class="fa fa-magic"></i> Générée par IA
+      </button>
+      <button type="button" onclick="showLettreTab('uploader')"
+              id="tabUploader"
+              style="background:transparent;border:none;border-bottom:2px solid transparent;
+                     margin-bottom:-2px;padding:8px 16px;font-size:11px;font-weight:700;
+                     text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;color:var(--muted)">
+        <i class="fa fa-upload"></i> Uploader
+      </button>
+    </div>
+
+    <!-- Lettre générée -->
+    <div id="panelGenerer">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
+        Cliquez sur "Générer avec l'IA" pour créer une lettre personnalisée,
+        puis modifiez-la si nécessaire.
+      </p>
+      <textarea class="lettre-textarea" name="lettre_generee"
+                id="lettreTexte"
+                placeholder="Votre lettre de motivation apparaîtra ici…"></textarea>
+    </div>
+
+    <!-- Lettre uploadée -->
+    <div id="panelUploader" style="display:none">
+      <div class="form-field file-field">
+        <input type="file" name="lettre_motivation" accept=".pdf,.doc,.docx">
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SECTION AUTRES DOCUMENTS ===== -->
+  {% if documents_exiges|length > 2 %}
+  <div class="section-card">
+    <div class="section-head">
+      <h3>
+        <i class="fa fa-folder" style="color:var(--red)"></i> Autres documents
+        <span style="font-size:10px;color:var(--red);font-weight:600">* Obligatoire</span>
+      </h3>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
+      Documents supplémentaires exigés :
+      {% for doc in documents_exiges %}
+        {% if doc != 'CV' and doc != 'Lettre de motivation' %}
+        <span class="doc-badge required">{{ doc }}</span>
+        {% endif %}
+      {% endfor %}
+    </p>
+    <div class="form-field file-field">
+      <input type="file" name="autres_documents" accept=".pdf,.doc,.docx,.zip">
+      <div class="field-note">
+        Si plusieurs documents, regroupez-les dans un ZIP
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ===== MESSAGE PERSONNALISÉ ===== -->
+  <div class="section-card">
+    <div class="section-head">
+      <h3><i class="fa fa-comment" style="color:var(--red)"></i> Message au recruteur</h3>
+      <span style="font-size:11px;color:var(--muted)">Optionnel</span>
+    </div>
+    <div class="form-field">
+      <textarea name="message_candidat" rows="3"
+                placeholder="Ajoutez un message personnalisé au recruteur…"
+                style="resize:vertical">{{ dossier_existant.message_candidat|default:'' }}</textarea>
+    </div>
+  </div>
+
+  <!-- ===== ACTIONS ===== -->
+  <div class="action-bar">
+    <button type="submit" name="action" value="telecharger" class="btn-app outline">
+      <i class="fa fa-download"></i> Télécharger le dossier (ZIP)
+    </button>
+    <button type="submit" name="action" value="soumettre" class="btn-app"
+      <i class="fa fa-paper-plane"></i> Soumettre ma candidature
+    </button>
+  </div>
+
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // ===== TOAST SYSTEM =====
+  function showToast(message, type) {
+    // Créer le container si inexistant
+    var container = document.getElementById('toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toast-container';
+      container.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-width: 360px;
+      `;
+      document.body.appendChild(container);
+    }
+
+    // Créer le toast
+    var toast = document.createElement('div');
+    toast.style.cssText = `
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid ${type === 'error' ? 'var(--red)' : type === 'success' ? 'var(--teal)' : '#f59e0b'};
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      animation: slideIn 0.3s ease;
+      min-width: 280px;
+    `;
+
+    var icon = type === 'error' ? '❌' : type === 'success' ? '✅' : '⚠️';
+
+    toast.innerHTML = `
+      <span style="font-size:16px;flex-shrink:0">${icon}</span>
+      <div style="flex:1;font-size:13px;color:var(--ink);line-height:1.4">${message}</div>
+      <button onclick="this.parentElement.remove()"
+              style="background:none;border:none;cursor:pointer;color:var(--muted);
+                    font-size:16px;padding:0;flex-shrink:0;line-height:1">×</button>
+    `;
+
+    container.appendChild(toast);
+
+    // Disparaît après 5 secondes
+    setTimeout(function() {
+      toast.style.animation = 'slideOut 0.3s ease';
+      setTimeout(function() { toast.remove(); }, 280);
+    }, 5000);
+  }
+
+  // Animations CSS
+  var style = document.createElement('style');
+  style.textContent = `
+    @keyframes slideIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+    @keyframes slideOut {
+      from { transform: translateX(0);    opacity: 1; }
+      to   { transform: translateX(120%); opacity: 0; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Sélection CV
+  function selectCV(el, cvId) {
+    document.querySelectorAll('.cv-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  // Initialiser la sélection
+  document.querySelectorAll('.cv-option input:checked').forEach(function(input) {
+    input.closest('.cv-option').classList.add('selected');
+  });
+
+  // Vérifier si CV fourni
+  function cvFourni() {
+    var cvGenereChecked = document.querySelector('input[name="cv_genere_id"]:checked');
+    var cvUpload = document.querySelector('input[name="cv"]');
+    var cvActuel = {{ candidat.cv|yesno:"true,false" }};
+    return cvGenereChecked || (cvUpload && cvUpload.files.length > 0) || cvActuel;
+  }
+
+  // Vérifier si lettre fournie
+  function lettreFournie() {
+    var lettreTexte = document.getElementById('lettreTexte');
+    var lettreUpload = document.querySelector('input[name="lettre_motivation"]');
+    var panelGenerer = document.getElementById('panelGenerer');
+    var panelUploader = document.getElementById('panelUploader');
+
+    if (panelGenerer.style.display !== 'none') {
+      // Mode IA
+      return lettreTexte && lettreTexte.value.trim().length > 50;
+    } else {
+      // Mode upload
+      return lettreUpload && lettreUpload.files.length > 0;
+    }
+  }
+
+  // Vérifier autres documents
+  function autresDocsFournis() {
+    {% if documents_exiges|length > 2 %}
+    var autresUpload = document.querySelector('input[name="autres_documents"]');
+    return autresUpload && autresUpload.files.length > 0;
+    {% else %}
+    return true;
+    {% endif %}
+  }
+
+  // Validation complète
+  function validerDossier(action) {
+    var erreurs = [];
+
+    if (!cvFourni()) {
+      erreurs.push('CV manquant — choisissez un CV généré ou uploadez-en un');
+    }
+
+    if (!lettreFournie()) {
+      erreurs.push('Lettre de motivation manquante — générez-en une ou uploadez-en une');
+    }
+
+    {% if documents_exiges|length > 2 %}
+    if (!autresDocsFournis()) {
+      erreurs.push('Documents supplémentaires manquants');
+    }
+    {% endif %}
+
+    if (erreurs.length > 0) {
+      erreurs.forEach(function(e) {
+        showToast(e, 'error');
+      });
+      return false;
+    }
+
+    if (action === 'soumettre') {
+      return confirm('Confirmer la soumission de votre candidature ?\n\nCette action est irréversible.');
+    }
+
+    return true;
+  }
+
+  // Intercepter le formulaire
+  document.getElementById('dossierForm').addEventListener('submit', function(e) {
+    var action = e.submitter ? e.submitter.value : '';
+
+    // Sauvegarder ne nécessite pas de validation
+    if (action === 'sauvegarder') return true;
+
+    // Soumettre et télécharger nécessitent validation
+    if (!validerDossier(action)) {
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  // Analyser CV
+  function analyserCV() {
+    var cvId = document.querySelector('input[name="cv_genere_id"]:checked');
+    var btn = document.getElementById('btnAnalyserCV');
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Analyse…';
+
+    var formData = new FormData();
+    if (cvId) formData.append('cv_genere_id', cvId.value);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    fetch("{% url 'myAppli:analyser_cv_offre' offre.id %}", {
+      method: 'POST',
+      body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-robot"></i> Analyser avec l\'IA';
+
+      if (data.success) {
+        document.getElementById('scoreCV').textContent = data.score + '%';
+        var html = '';
+
+        if (data.points_forts.length) {
+          html += '<div style="margin-bottom:8px">';
+          html += '<strong style="font-size:11px;color:var(--teal)">✅ Points forts</strong>';
+          html += '<ul style="margin:4px 0 0 16px;font-size:12px;color:var(--muted)">';
+          data.points_forts.forEach(p => html += '<li>' + p + '</li>');
+          html += '</ul></div>';
+        }
+
+        if (data.points_faibles.length) {
+          html += '<div style="margin-bottom:8px">';
+          html += '<strong style="font-size:11px;color:var(--red)">⚠️ Points faibles</strong>';
+          html += '<ul style="margin:4px 0 0 16px;font-size:12px;color:var(--muted)">';
+          data.points_faibles.forEach(p => html += '<li>' + p + '</li>');
+          html += '</ul></div>';
+        }
+
+        if (data.conseil) {
+          html += '<div style="font-size:12px;color:var(--ink);font-style:italic;';
+          html += 'padding:8px;background:var(--cream);border-left:3px solid var(--teal)">';
+          html += '💡 ' + data.conseil + '</div>';
+        }
+
+        document.getElementById('analyseDetails').innerHTML = html;
+        document.getElementById('analyseCV').classList.add('visible');
+      }
+    })
+    .catch(e => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-robot"></i> Analyser avec l\'IA';
+      alert('Erreur lors de l\'analyse');
+    });
+  }
+
+  // Générer lettre
+  function genererLettre() {
+    var btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Génération…';
+
+    var formData = new FormData();
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    fetch("{% url 'myAppli:generer_lettre' offre.id %}", {
+      method: 'POST',
+      body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-magic"></i> Générer avec l\'IA';
+
+        if (data.success) {
+            document.getElementById('lettreTexte').value = data.lettre;
+
+            // Stocker l'ID de la lettre générée
+            var lettreIdInput = document.getElementById('lettre_id_input');
+            if (!lettreIdInput) {
+                lettreIdInput = document.createElement('input');
+                lettreIdInput.type = 'hidden';
+                lettreIdInput.name = 'lettre_id';
+                lettreIdInput.id = 'lettre_id_input';
+                document.getElementById('dossierForm').appendChild(lettreIdInput);
+            }
+            lettreIdInput.value = data.lettre_id;
+
+            showLettreTab('generer');
+        } else {
+            alert('Erreur : ' + data.error);
+        }
+    })
+    .catch(e => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-magic"></i> Générer avec l\'IA';
+      alert('Erreur lors de la génération');
+    });
+  }
+
+  // Tabs lettre
+  function showLettreTab(tab) {
+    var panelGenerer = document.getElementById('panelGenerer');
+    var panelUploader = document.getElementById('panelUploader');
+    var tabGenerer = document.getElementById('tabGenerer');
+    var tabUploader = document.getElementById('tabUploader');
+
+    if (tab === 'generer') {
+      panelGenerer.style.display = 'block';
+      panelUploader.style.display = 'none';
+      tabGenerer.style.color = 'var(--ink)';
+      tabGenerer.style.borderBottomColor = 'var(--red)';
+      tabUploader.style.color = 'var(--muted)';
+      tabUploader.style.borderBottomColor = 'transparent';
+    } else {
+      panelGenerer.style.display = 'none';
+      panelUploader.style.display = 'block';
+      tabUploader.style.color = 'var(--ink)';
+      tabUploader.style.borderBottomColor = 'var(--red)';
+      tabGenerer.style.color = 'var(--muted)';
+      tabGenerer.style.borderBottomColor = 'transparent';
+    }
+  }
+</script>
+{% endblock %}

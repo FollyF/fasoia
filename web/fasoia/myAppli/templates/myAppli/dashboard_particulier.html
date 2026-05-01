@@ -1,0 +1,270 @@
+{% extends "base_app.html" %}
+{% load static %}
+
+{% block title %}FASOIA — Choisissez votre rôle{% endblock %}
+{% block breadcrumb %}Mon espace{% endblock %}
+
+{% block app_extra_css %}
+<style>
+  /* ===== EN-TÊTE ===== */
+  .dash-header {
+    background: var(--ink);
+    padding: 28px 32px;
+    margin-bottom: 32px;
+    border-bottom: 3px solid var(--red);
+  }
+  .dash-header h1 {
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+  .dash-header h1 span { color: var(--red); }
+  .dash-header p {
+    font-size: 13px;
+    color: var(--ink-mid);
+    margin: 0;
+  }
+
+  /* ===== GRILLE DE CHOIX ===== */
+  .choice-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+
+  /* ===== CARTE DE CHOIX ===== */
+  .choice-card {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--border);
+    padding: 32px 28px;
+    text-decoration: none;
+    color: var(--ink);
+    position: relative;
+    transition: border-color 0.2s, border-top-color 0.2s;
+    opacity: 0;
+    transform: translateY(12px);
+    animation: fadeUp 0.4s ease forwards;
+  }
+  .choice-card:nth-child(1) { animation-delay: 0.05s; }
+  .choice-card:nth-child(2) { animation-delay: 0.15s; }
+
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .choice-card:hover {
+    border-color: var(--ink);
+    border-top-color: var(--red);
+    color: var(--ink);
+  }
+
+  /* Badge recommandé */
+  .badge-recommended {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+  }
+
+  /* Icône */
+  .card-icon {
+    width: 52px;
+    height: 52px;
+    border: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: var(--ink-mid);
+    margin-bottom: 20px;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .choice-card:hover .card-icon {
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  /* Titre & description */
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 6px;
+    line-height: 1.2;
+  }
+  .card-desc {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 20px;
+    line-height: 1.6;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Liste de fonctionnalités */
+  .features-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 24px;
+  }
+  .features-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--ink-mid);
+  }
+  .features-list li:last-child { border-bottom: none; }
+  .features-list li i {
+    width: 14px;
+    font-size: 11px;
+    color: var(--teal);
+    flex-shrink: 0;
+  }
+
+  /* Bouton CTA */
+  .card-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--ink);
+    color: #fff;
+    padding: 10px 22px;
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    transition: background 0.15s;
+    width: 100%;
+    justify-content: center;
+  }
+  .choice-card:hover .card-cta { background: var(--red); }
+
+  /* ===== LIEN "PLUS TARD" ===== */
+  .skip-row {
+    text-align: center;
+    padding: 8px 0 4px;
+  }
+  .skip-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 8px 18px;
+    border: 1px solid var(--border);
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+  }
+  .skip-link:hover {
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+  .skip-link i { font-size: 11px; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 768px) {
+    .choice-grid { grid-template-columns: 1fr; gap: 16px; }
+    .dash-header { padding: 20px; }
+    .dash-header h1 { font-size: 24px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- EN-TÊTE -->
+<div class="dash-header">
+  <h1>Bienvenue, <span>{{ particulier.prenom }}</span> {{ particulier.nom }}</h1>
+  <p>Choisissez comment vous souhaitez utiliser FASOIA</p>
+</div>
+
+<!-- GRILLE DE CHOIX -->
+<div class="choice-grid">
+
+  <!-- Carte : Demandeur d'emploi -->
+  <a href="{% url 'myAppli:activer_profil_candidat' %}" class="choice-card">
+
+    {% if not a_profil_candidat %}
+    <div class="badge-recommended">
+      <i class="fa fa-star" style="font-size:8px;margin-right:4px"></i> Recommandé
+    </div>
+    {% endif %}
+
+    <div class="card-icon">
+      <i class="fa fa-graduation-cap"></i>
+    </div>
+
+    <div class="card-title">Je cherche un emploi</div>
+    <div class="card-desc">
+      Accédez aux offres d'emploi, postulez facilement et suivez vos candidatures grâce aux recommandations personnalisées.
+    </div>
+
+    <ul class="features-list">
+      <li><i class="fa fa-circle-check"></i> Parcourir les offres d'emploi</li>
+      <li><i class="fa fa-circle-check"></i> Postuler en un clic</li>
+      <li><i class="fa fa-circle-check"></i> Suivre vos candidatures</li>
+      <li><i class="fa fa-circle-check"></i> Recevoir des recommandations IA</li>
+      <li><i class="fa fa-circle-check"></i> Créer et gérer vos CV</li>
+    </ul>
+
+    <div class="card-cta">
+      Commencer <i class="fa fa-arrow-right"></i>
+    </div>
+
+  </a>
+
+  <!-- Carte : Recruteur -->
+  <a href="{% url 'myAppli:activer_profil_recruteur' %}" class="choice-card">
+
+    <div class="card-icon">
+      <i class="fa fa-building"></i>
+    </div>
+
+    <div class="card-title">Je recrute des talents</div>
+    <div class="card-desc">
+      Publiez vos offres d'emploi, gérez les candidatures reçues et trouvez les profils qui correspondent à vos besoins.
+    </div>
+
+    <ul class="features-list">
+      <li><i class="fa fa-circle-check"></i> Publier des offres d'emploi</li>
+      <li><i class="fa fa-circle-check"></i> Gérer les candidatures reçues</li>
+      <li><i class="fa fa-circle-check"></i> Rechercher des talents</li>
+      <li><i class="fa fa-circle-check"></i> Développer votre réseau</li>
+      <li><i class="fa fa-circle-check"></i> Analyser les candidatures</li>
+    </ul>
+
+    <div class="card-cta">
+      Commencer <i class="fa fa-arrow-right"></i>
+    </div>
+
+  </a>
+
+</div>
+
+<!-- LIEN PLUS TARD -->
+<div class="skip-row">
+  <a href="{% url 'myAppli:home' %}" class="skip-link">
+    <i class="fa fa-clock"></i> Je choisis plus tard
+  </a>
+</div>
+
+{% endblock %}

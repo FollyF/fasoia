@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CV – {{ prenom }} {{ nom }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #e63946; --dark: #1d3557; --accent: #457b9d; --bg: #f1faee;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Poppins', sans-serif; background:var(--bg); padding:30px 20px; }
+  .cv { width:920px; margin:auto; background:white; box-shadow:0 25px 80px rgba(230,57,70,0.15); overflow:hidden; border-radius:12px; }
+  
+  .top-bar { height:18px; background:linear-gradient(90deg, var(--primary), var(--accent)); }
+  
+  .header { padding:50px 60px 30px; background:var(--dark); color:white; position:relative; }
+  .header::after { content:''; position:absolute; bottom:-20px; left:60px; width:80px; height:4px; background:var(--primary); }
+  
+  .name { font-family:'Playfair Display', serif; font-size:48px; line-height:1; margin-bottom:8px; }
+  .title { font-size:15px; letter-spacing:3px; opacity:0.8; text-transform:uppercase; }
+  
+  .container { display:grid; grid-template-columns: 280px 1fr; }
+  
+  .left { background:#f8f9fa; padding:50px 45px; }
+  .right { padding:50px 55px; }
+  
+  .ls-title { font-size:12px; letter-spacing:2.5px; text-transform:uppercase; color:var(--primary); margin-bottom:18px; font-weight:600; }
+  
+  .photo-wrap { width:160px; height:160px; border-radius:50%; overflow:hidden; border:6px solid white; box-shadow:0 10px 30px rgba(0,0,0,0.2); margin-bottom:25px; }
+  .photo-wrap img { width:100%; height:100%; object-fit:cover; }
+  
+  .summary { font-size:14px; line-height:1.8; color:#444; font-style:italic; }
+  
+  .r-section-title { font-size:15px; color:var(--dark); border-bottom:2px solid var(--primary); padding-bottom:8px; margin-bottom:20px; font-weight:600; }
+</style>
+</head>
+<body>
+<div class="cv">
+  <div class="top-bar"></div>
+  <div class="header">
+    <div class="name">{{ prenom }} {{ nom }}</div>
+    <div class="title">Curriculum Vitae</div>
+  </div>
+  
+  <div class="container">
+    <div class="left">
+      <div class="photo-wrap">
+        {% if photo_src %}
+          <img src="{{ photo_src }}" alt="Photo">
+        {% else %}
+          <div style="width:100%;height:100%;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:48px;color:#999;">{{ prenom|slice:":1" }}{{ nom|slice:":1" }}</div>
+        {% endif %}
+      </div>
+      
+      <div class="ls-title">Contact</div>
+      {% if email %}<div style="margin-bottom:10px;">{{ email }}</div>{% endif %}
+      {% if telephone %}<div style="margin-bottom:10px;">{{ telephone }}</div>{% endif %}
+      {% if adresse %}<div>{{ adresse }}{% if ville %}, {{ ville }}{% endif %}</div>{% endif %}
+      
+      {% if competences %}
+      <div style="margin-top:45px;">
+        <div class="ls-title">Compétences</div>
+        {% for competence in competences %}
+        <div style="margin-bottom:12px;">• {{ competence }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    
+    <div class="right">
+      {% if resume %}<div class="summary">{{ resume }}</div>{% endif %}
+      
+      {% if experiences %}
+      <div style="margin-top:35px;">
+        <div class="r-section-title">Expériences</div>
+        {% for exp in experiences %}
+        <div style="margin-bottom:28px;">
+          <strong style="font-size:15.5px;">{{ exp.titre }}</strong> — <span style="color:#e63946;">{{ exp.entreprise }}</span><br>
+          <small style="color:#666;">{{ exp.date_debut }}{% if exp.date_fin %} – {{ exp.date_fin }}{% endif %}</small>
+          {% if exp.description %}<p style="margin-top:8px; font-size:13.5px; line-height:1.6;">{{ exp.description }}</p>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      
+      {% if formations %}
+      <div style="margin-top:35px;">
+        <div class="r-section-title">Formation</div>
+        {% for formation in formations %}
+        <div style="margin-bottom:18px;">
+          <strong>{{ formation.diplome }}</strong><br>
+          <span style="color:#555;">{{ formation.etablissement }} • {{ formation.annee }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CV – {{ prenom }} {{ nom }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #0a2540; --electric: #0066ff; --ice: #e3eeff;
+    --mid: #4a6fa5; --gray: #6b7c93; --light: #f4f7fb;
+    --white: #ffffff; --line: #dce6f0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: #c8d6e8; display: flex; justify-content: center; padding: 40px 20px; min-height: 100vh; }
+  .cv { width: 900px; background: var(--white); box-shadow: 0 40px 100px rgba(10,37,64,0.22); position: relative; overflow: hidden; }
+  .top-header { background: var(--blue); display: grid; grid-template-columns: 220px 1fr; min-height: 200px; position: relative; }
+  .top-header::after { content: ''; position: absolute; bottom: -1px; left: 220px; right: 0; height: 4px; background: var(--electric); }
+  .photo-col { position: relative; overflow: hidden; }
+  .photo-col img { width: 100%; height: 100%; object-fit: cover; mix-blend-mode: luminosity; opacity: 0.8; }
+  .photo-col-placeholder { width: 100%; height: 100%; min-height: 200px; background: linear-gradient(160deg, #0d3268 0%, #0a2540 100%); display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: 52px; color: rgba(0,102,255,0.35); letter-spacing: -2px; }
+  .geo-corner { position: absolute; top: 0; right: -30px; width: 80px; height: 200px; background: var(--blue); transform: skewX(-8deg); z-index: 2; }
+  .name-col { padding: 36px 40px 36px 50px; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 1; }
+  .name-tag { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--electric); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 12px; }
+  .full-name { font-family: 'DM Sans', sans-serif; font-size: 40px; font-weight: 700; color: var(--white); line-height: 1.1; letter-spacing: -1px; }
+  .title-line { margin-top: 10px; font-size: 14px; color: rgba(255,255,255,0.55); font-weight: 300; }
+  .body { display: grid; grid-template-columns: 220px 1fr; }
+  .sidebar { background: var(--light); padding: 32px 22px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 26px; }
+  .s-section-title { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--electric); letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .s-section-title::before { content: ''; width: 20px; height: 2px; background: var(--electric); flex-shrink: 0; }
+  .contact-row { display: flex; flex-direction: column; gap: 9px; }
+  .c-item { font-size: 11.5px; color: var(--gray); line-height: 1.5; word-break: break-word; }
+  .c-label { font-family: 'Space Mono', monospace; font-size: 8.5px; color: var(--mid); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 1px; }
+  .skill-row { display: flex; flex-direction: column; gap: 8px; }
+  .s-skill { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--blue); font-weight: 500; }
+  .s-dots { display: flex; gap: 3px; }
+  .s-dot { width: 7px; height: 7px; background: var(--electric); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
+  .s-dot.empty { background: var(--line); }
+  .main { padding: 36px 38px; display: flex; flex-direction: column; gap: 28px; }
+  .m-section-title { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--mid); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+  .m-section-title span.bracket { color: var(--electric); }
+  .timeline { display: flex; flex-direction: column; position: relative; padding-left: 20px; border-left: 2px solid var(--line); }
+  .t-item { position: relative; padding: 0 0 22px 20px; }
+  .t-item:last-child { padding-bottom: 0; }
+  .t-dot { position: absolute; left: -27px; top: 5px; width: 10px; height: 10px; background: var(--electric); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
+  .t-date { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--electric); letter-spacing: 0.5px; margin-bottom: 4px; }
+  .t-role { font-size: 14px; font-weight: 700; color: var(--blue); margin-bottom: 2px; }
+  .t-company { font-size: 12px; color: var(--mid); margin-bottom: 7px; }
+  .t-desc { font-size: 12.5px; color: var(--gray); line-height: 1.65; }
+  .edu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .edu-card { background: var(--light); border: 1px solid var(--line); border-left: 3px solid var(--electric); padding: 14px 16px; }
+  .edu-year { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--electric); margin-bottom: 5px; }
+  .edu-deg { font-size: 13px; font-weight: 700; color: var(--blue); margin-bottom: 3px; }
+  .edu-sch { font-size: 11.5px; color: var(--gray); }
+  .profile-text { font-size: 13px; color: var(--gray); line-height: 1.75; border-left: 3px solid var(--electric); padding-left: 16px; font-weight: 300; font-style: italic; }
+  .lang-grid { display: flex; flex-direction: column; gap: 8px; }
+  .lang-item { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--blue); }
+  .int-chip { font-family: 'Space Mono', monospace; font-size: 9.5px; color: var(--electric); border: 1px solid var(--ice); background: var(--ice); padding: 2px 7px; letter-spacing: 0.5px; display: inline-block; margin: 2px; }
+</style>
+</head>
+<body>
+<div class="cv">
+  <div class="top-header">
+    <div class="photo-col">
+      {% if photo_src %}
+        <img src="{{ photo_src }}" alt="Photo de profil" />
+      {% else %}
+        <div class="photo-col-placeholder">{{ prenom|slice:":1" }}{{ nom|slice:":1" }}</div>
+      {% endif %}
+      <div class="geo-corner"></div>
+    </div>
+    <div class="name-col">
+      <div class="name-tag">// profil candidat</div>
+      <div class="full-name">{{ prenom }} {{ nom }}</div>
+      <div class="title-line">{{ resume|truncatewords:12 }}</div>
+    </div>
+  </div>
+
+  <div class="body">
+    <aside class="sidebar">
+
+      <div>
+        <div class="s-section-title">Contact</div>
+        <div class="contact-row">
+          {% if email %}<div class="c-item"><span class="c-label">Email</span>{{ email }}</div>{% endif %}
+          {% if telephone %}<div class="c-item"><span class="c-label">Téléphone</span>{{ telephone }}</div>{% endif %}
+          {% if adresse %}<div class="c-item"><span class="c-label">Adresse</span>{{ adresse }}{% if ville %}, {{ ville }}{% endif %}</div>{% endif %}
+          {% if permis %}<div class="c-item"><span class="c-label">Permis</span>{{ permis }}</div>{% endif %}
+        </div>
+      </div>
+
+      {% if competences %}
+      <div>
+        <div class="s-section-title">Compétences</div>
+        <div class="skill-row">
+          {% for competence in competences %}
+          <div class="s-skill">
+            <span>{{ competence }}</span>
+            <div class="s-dots">
+              <div class="s-dot"></div><div class="s-dot"></div><div class="s-dot"></div><div class="s-dot"></div><div class="s-dot empty"></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if langues %}
+      <div>
+        <div class="s-section-title">Langues</div>
+        <div class="lang-grid">
+          {% for langue in langues %}<div class="lang-item"><span>{{ langue }}</span></div>{% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if centres_interet %}
+      <div>
+        <div class="s-section-title">Intérêts</div>
+        {% for interet in centres_interet %}<span class="int-chip">{{ interet }}</span>{% endfor %}
+      </div>
+      {% endif %}
+
+    </aside>
+
+    <main class="main">
+      {% if resume %}
+      <div>
+        <div class="m-section-title"><span><span class="bracket">[</span> profil <span class="bracket">]</span></span></div>
+        <p class="profile-text">{{ resume }}</p>
+      </div>
+      {% endif %}
+
+      {% if experiences %}
+      <div>
+        <div class="m-section-title"><span><span class="bracket">[</span> expériences <span class="bracket">]</span></span></div>
+        <div class="timeline">
+          {% for exp in experiences %}
+          <div class="t-item">
+            <div class="t-dot"></div>
+            <div class="t-date">{{ exp.date_debut }}{% if exp.date_fin %} – {{ exp.date_fin }}{% endif %}</div>
+            <div class="t-role">{{ exp.titre }}</div>
+            <div class="t-company">{{ exp.entreprise }}</div>
+            {% if exp.description %}<div class="t-desc">{{ exp.description }}</div>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if formations %}
+      <div>
+        <div class="m-section-title"><span><span class="bracket">[</span> formations <span class="bracket">]</span></span></div>
+        <div class="edu-grid">
+          {% for formation in formations %}
+          <div class="edu-card">
+            <div class="edu-year">{{ formation.annee }}</div>
+            <div class="edu-deg">{{ formation.diplome }}</div>
+            <div class="edu-sch">{{ formation.etablissement }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </main>
+  </div>
+</div>
+</body>
+</html>

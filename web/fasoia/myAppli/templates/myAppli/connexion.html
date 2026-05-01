@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Connexion - FASOIA{% endblock %}
+
+{% block extra_css %}
+<style>
+    .connexion-page {
+        background: linear-gradient(145deg, #F8F4ED 0%, #EDE4D4 45%, #D9C9B0 100%);
+        min-height: calc(100vh - 180px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+    }   
+
+    .login-card {
+        width: 100%;
+        max-width: 420px;
+        background: rgba(255, 255, 255, 0.97);
+        border: 1px solid var(--border);
+        padding: 48px 40px;
+        box-shadow: 0 20px 60px rgba(28, 25, 23, 0.10);
+        backdrop-filter: blur(8px); /* effet verre léger si tu veux */
+    }
+
+    .logo {
+        margin-bottom: 32px;
+        text-align: center;
+    }
+
+    .logo svg {
+        width: 58px;
+        height: 58px;
+    }
+
+    .login-card h1 {
+        font-family: var(--font-display);
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--ink);
+        text-align: center;
+        margin-bottom: 8px;
+        letter-spacing: -0.4px;
+    }
+
+    .login-card .subtitle {
+        text-align: center;
+        color: var(--muted);
+        font-size: 15px;
+        margin-bottom: 40px;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--muted);
+        margin-bottom: 8px;
+    }
+
+    .fasoia-input {
+        width: 100%;
+        padding: 14px 16px;
+        font-size: 15px;
+        border: 1.5px solid var(--border);
+        background: var(--surface);
+        color: var(--ink);
+        transition: all 0.2s;
+    }
+
+    .fasoia-input:focus {
+        border-color: var(--red);
+        box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.08);
+    }
+
+    .remember-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 28px;
+        font-size: 13px;
+    }
+
+    .remember-row a {
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    .remember-row a:hover {
+        color: var(--red);
+    }
+
+    .btn-fasoia-primary {
+        width: 100%;
+        padding: 14px;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin-bottom: 24px;
+    }
+
+    .divider {
+        position: relative;
+        text-align: center;
+        margin: 32px 0;
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    .divider::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--border);
+    }
+
+    .divider span {
+        background: var(--surface);
+        padding: 0 20px;
+        position: relative;
+    }
+
+    .social-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .btn-social {
+        width: 100%;
+        padding: 13px 16px;
+        background: transparent;
+        border: 1.5px solid var(--border);
+        color: var(--ink);
+        font-weight: 600;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        transition: all 0.2s;
+    }
+
+    .btn-social:hover {
+        background: var(--cream);
+        border-color: var(--ink);
+    }
+
+    .btn-social img {
+        width: 22px;
+        height: 22px;
+    }
+
+    .no-account {
+        text-align: center;
+        margin-top: 40px;
+        color: var(--muted);
+        font-size: 14px;
+    }
+
+    .signup-link {
+        display: inline-block;
+        margin-top: 8px;
+        color: var(--red);
+        font-weight: 700;
+        font-size: 15px;
+    }
+
+    .signup-link:hover {
+        text-decoration: underline;
+    }
+
+    .legal-footer {
+        margin-top: 40px;
+        text-align: center;
+        font-size: 11px;
+        color: var(--muted);
+        line-height: 1.5;
+    }
+
+    .legal-footer a {
+        color: var(--muted);
+        text-decoration: underline;
+    }
+
+    @media (max-width: 480px) {
+        .login-card {
+            padding: 40px 24px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="connexion-page">
+    <div class="login-card">
+        
+        <!-- Logo FASOIA -->
+        <div class="logo">
+            <svg width="58" height="58" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M50 5L85 25V65L50 85L15 65V25L50 5Z" fill="var(--red)" fill-opacity="0.12"/>
+                <path d="M50 5L85 25V65L50 85L15 65V25L50 5Z" stroke="var(--red)" stroke-width="6"/>
+                <path d="M50 5V85" stroke="var(--red)" stroke-width="3"/>
+            </svg>
+        </div>
+
+        <h1>Bon retour parmi nous</h1>
+        <p class="subtitle">Connectez-vous pour accéder à votre espace carrière</p>
+
+        <form method="POST" action="{% url 'myAppli:connexion' %}">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>Adresse e-mail</label>
+                <input type="email" 
+                       class="fasoia-input" 
+                       name="username" 
+                       placeholder="votre@email.com" 
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label>Mot de passe</label>
+                <input type="password" 
+                       class="fasoia-input" 
+                       name="password" 
+                       placeholder="••••••••" 
+                       required>
+            </div>
+
+            <div class="remember-row">
+                <label style="cursor: pointer; user-select: none;">
+                    <input type="checkbox" name="remember_me"> 
+                    <span style="margin-left: 6px;">Se souvenir de moi</span>
+                </label>        
+            </div>
+
+            <button type="submit" class="btn-fasoia-primary">
+                Se connecter
+            </button>
+        </form>
+
+        <div class="divider"><span>ou</span></div>
+
+        <div class="social-container">
+            <button type="button" class="btn-social">
+                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google">
+                Continuer avec Google
+            </button>
+            <button type="button" class="btn-social">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" alt="Facebook">
+                Continuer avec Facebook
+            </button>
+        </div>
+
+        <div class="no-account">
+            Vous n'avez pas encore de compte ?<br>
+            <a href="{% url 'myAppli:inscription' %}" class="signup-link">Créer un compte gratuitement</a>
+        </div>
+        <div class="legal-footer">
+            Ce site est protégé par reCAPTCHA.<br>
+            La <a href="#">Politique de confidentialité</a> et les <a href="#">Conditions d'utilisation</a> s'appliquent.
+        </div>
+
+    </div>
+</div>
+{% endblock %}

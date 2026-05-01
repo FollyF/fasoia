@@ -1,0 +1,209 @@
+{% extends "base_app.html" %}
+
+{% block extra_css %}
+<style>
+/* Reset et base responsive */
+* {
+    box-sizing: border-box;
+}
+
+/* Conteneur principal qui force le contenu à rester dans l'écran */
+.container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 20px;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+/* Force le tableau à être scrollable horizontalement sur mobile */
+.desktop-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+}
+
+.desktop-table table {
+    min-width: 650px;
+    width: 100%;
+}
+
+/* Supprime la max-width sur mobile */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+        max-width: 100%;
+        overflow-x: auto;
+    }
+    
+    .desktop-table {
+        display: none;
+    }
+    
+    .mobile-cards {
+        display: block !important;
+    }
+}
+
+@media (min-width: 769px) {
+    .desktop-table {
+        display: block;
+    }
+    .mobile-cards {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 20px; max-width: 1200px; margin: 0 auto;">
+    <h1 style="font-size: 22px; margin-bottom: 20px;">📋 Mes dossiers de soumission</h1>
+    
+    {% if dossiers %}
+        <!-- Version desktop: tableau -->
+        <div class="desktop-table" style="overflow-x: auto;">
+            <table style="width:100%; border-collapse: collapse; min-width: 600px;">
+                <thead>
+                    <tr style="background:#f0f0f0; border-bottom: 2px solid #ddd;">
+                        <th style="padding: 12px 10px; text-align: left;">Référence</th>
+                        <th style="padding: 12px 10px; text-align: left;">Type</th>
+                        <th style="padding: 12px 10px; text-align: left;">Date création</th>
+                        <th style="padding: 12px 10px; text-align: left;">Date soumission</th>
+                        <th style="padding: 12px 10px; text-align: left;">Statut</th>
+                        <th style="padding: 12px 10px; text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dossier in dossiers %}
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 12px 10px;">{{ dossier.reference }}</td>
+                        <td style="padding: 12px 10px;">{{ dossier.opportunite_type }}</td>
+                        <td style="padding: 12px 10px;">{{ dossier.date_creation|date:"d/m/Y H:i" }}</td>
+                        <td style="padding: 12px 10px;">
+                            {% if dossier.date_soumission_effective %}
+                                {{ dossier.date_soumission_effective|date:"d/m/Y H:i" }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td style="padding: 12px 10px;">
+                            {% if dossier.statut == 'SOUMIS' %}
+                                <span style="background: #d4edda; color: #155724; padding: 4px 10px; border-radius: 20px; font-size: 12px;">✅ Soumis</span>
+                            {% elif dossier.statut == 'COMPLET' %}
+                                <span style="background: #d1ecf1; color: #0c5460; padding: 4px 10px; border-radius: 20px; font-size: 12px;">📄 Complet</span>
+                            {% else %}
+                                <span style="background: #fff3cd; color: #856404; padding: 4px 10px; border-radius: 20px; font-size: 12px;">📝 En préparation</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 12px 10px; text-align: center;">
+                            {% if dossier.statut == 'SOUMIS' %}
+                                <button onclick="telechargerDossier({{ dossier.id }})" style="background: #3498db; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 13px;">
+                                    📥 Télécharger
+                                </button>
+                            {% else %}
+                                <a href="{% url 'myAppli:nouvelle_soumission' dossier.opportunite_type dossier.opportunite_id %}" style="background: #1ed760; color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; display: inline-block; font-size: 13px;">
+                                    ✏️ Continuer
+                                </a>
+                            {% endif %}
+                        </td>
+                     </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Version mobile: cartes -->
+        <div class="mobile-cards" style="display: none;">
+            {% for dossier in dossiers %}
+            <div style="background: white; border: 1px solid #e0e0e0; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                    <div>
+                        <strong style="font-size: 14px;">{{ dossier.reference }}</strong>
+                        <div style="font-size: 12px; color: #666; margin-top: 4px;">{{ dossier.opportunite_type }}</div>
+                    </div>
+                    <div>
+                        {% if dossier.statut == 'SOUMIS' %}
+                            <span style="background: #d4edda; color: #155724; padding: 2px 8px; border-radius: 20px; font-size: 11px;">✅ Soumis</span>
+                        {% elif dossier.statut == 'COMPLET' %}
+                            <span style="background: #d1ecf1; color: #0c5460; padding: 2px 8px; border-radius: 20px; font-size: 11px;">📄 Complet</span>
+                        {% else %}
+                            <span style="background: #fff3cd; color: #856404; padding: 2px 8px; border-radius: 20px; font-size: 11px;">📝 En préparation</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div style="font-size: 12px; color: #555; margin-bottom: 8px;">
+                    <div>Créé le : {{ dossier.date_creation|date:"d/m/Y H:i" }}</div>
+                    {% if dossier.date_soumission_effective %}
+                        <div>Soumis le : {{ dossier.date_soumission_effective|date:"d/m/Y H:i" }}</div>
+                    {% endif %}
+                </div>
+                <div style="margin-top: 12px;">
+                    {% if dossier.statut == 'SOUMIS' %}
+                        <button onclick="telechargerDossier({{ dossier.id }})" style="background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 14px;">
+                            📥 Télécharger le dossier
+                        </button>
+                    {% else %}
+                        <a href="{% url 'myAppli:nouvelle_soumission' dossier.opportunite_type dossier.opportunite_id %}" style="background: #1ed760; color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; display: block; text-align: center; font-size: 14px;">
+                            ✏️ Continuer la soumission
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="text-align: center; color: #666; padding: 40px;">Aucun dossier trouvé.</p>
+    {% endif %}
+    
+    <div style="margin-top: 30px; text-align: center;">
+        <a href="{% url 'myAppli:dashboard_opportunites' %}" style="color: #1ed760; text-decoration: none;">← Retour aux opportunités</a>
+    </div>
+</div>
+
+<!-- Modal de choix du format -->
+<div id="downloadDossierModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 20px; border-radius: 8px; max-width: 400px; width: 90%; margin: 16px;">
+        <h3 style="margin: 0 0 15px 0; font-size: 18px;">📥 Télécharger le dossier</h3>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-size: 14px;">Format :</label>
+            <select id="dossier_format" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                <option value="pdf">PDF</option>
+                <option value="docx">DOCX</option>
+            </select>
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button onclick="closeDownloadDossierModal()" style="padding: 8px 16px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer;">Annuler</button>
+            <button id="btn-confirmer-dossier-download" style="padding: 8px 16px; background: #1ed760; color: white; border: none; border-radius: 4px; cursor: pointer;">Télécharger</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentDossierId = null;
+
+function telechargerDossier(dossierId) {
+    currentDossierId = dossierId;
+    document.getElementById('downloadDossierModal').style.display = 'flex';
+}
+
+function closeDownloadDossierModal() {
+    document.getElementById('downloadDossierModal').style.display = 'none';
+    currentDossierId = null;
+}
+
+function telechargerDossierComplet() {
+    const format = document.getElementById('dossier_format').value;
+    if (!currentDossierId) return;
+    
+    const url = `/api/dossier/telecharger_complet/${currentDossierId}/?format=${format}`;
+    window.open(url, '_blank');
+    closeDownloadDossierModal();
+}
+
+document.getElementById('btn-confirmer-dossier-download').addEventListener('click', telechargerDossierComplet);
+</script>
+{% endblock %}

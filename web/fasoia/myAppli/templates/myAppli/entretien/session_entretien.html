@@ -1,0 +1,165 @@
+{% extends "base_app.html" %}
+{% load static %}
+
+{% block title %}FASOIA — Session entretien{% endblock %}
+{% block breadcrumb %}Session d'entretien{% endblock %}
+
+{% block content %}
+
+<!-- PROGRESSION -->
+<div style="background:var(--ink);padding:20px 32px;margin-bottom:24px;border-bottom:3px solid var(--red)">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div>
+      <h2 style="font-family:var(--font-display);font-size:22px;font-weight:700;color:#862323">
+        {{ session.poste_vise|default:"Entretien général" }}
+      </h2>
+      <p style="font-size:11px;color:var(--muted);margin-top:4px">
+        Question {{ session.nb_questions_repondues|add:1 }} sur 10
+      </p>
+    </div>
+    <div style="text-align:right">
+      <div style="font-family:var(--font-display);font-size:36px;font-weight:700;color:var(--ink)">
+        {{ progression }}<span style="color:var(--red)">%</span>
+      </div>
+      <div style="font-size:10px;color:var(--red);text-transform:uppercase;letter-spacing:1px">
+        Progression
+      </div>
+    </div>
+  </div>
+
+  <!-- Barre de progression -->
+  <div style="height:4px;background:rgba(255,255,255,0.1);overflow:hidden">
+    <div style="height:100%;background:var(--red);width:{{ progression }}%;transition:width 0.3s"></div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 280px;gap:20px">
+
+  <!-- QUESTION COURANTE -->
+  <div>
+    {% if question_courante %}
+    <div class="card-edit">
+      <div class="card-edit-head">
+        <h3>
+          <span style="font-size:10px;background:var(--red);color:white;
+                       padding:2px 8px;margin-right:8px">
+            {{ question_courante.get_type_question_display }}
+          </span>
+          Question {{ question_courante.ordre }}
+        </h3>
+      </div>
+
+      <p style="font-size:16px;font-weight:600;color:var(--ink);
+                line-height:1.5;padding:20px 0;border-bottom:1px solid var(--border)">
+        {{ question_courante.question }}
+      </p>
+
+      <form method="POST"
+            action="{% url 'myAppli:repondre_question' session.id question_courante.id %}">
+        {% csrf_token %}
+        <div class="form-field" style="margin-top:20px">
+          <label>Votre réponse</label>
+          <textarea name="reponse" rows="6"
+                    placeholder="Répondez à cette question comme si vous étiez en entretien réel…"
+                    style="resize:vertical"
+                    required></textarea>
+          <div class="field-note">
+            Conseil : Structurez votre réponse avec la méthode STAR
+            (Situation, Tâche, Action, Résultat)
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:16px">
+          <button type="submit" class="btn-app">
+            <i class="fa fa-paper-plane"></i> Envoyer ma réponse
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- DERNIÈRE ÉVALUATION -->
+    {{ derniere_question }}
+    {% if derniere.feedback_ia %}
+    <div class="card-edit" style="margin-top:20px;border-left:3px solid var(--teal)">
+      <div class="card-edit-head">
+        <h3><i class="fa fa-robot" style="color:var(--teal)"></i> Feedback — Question précédente</h3>
+        <span style="font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--teal)">
+          {{ derniere.score }}/10
+        </span>
+      </div>
+      <p style="font-size:13px;color:var(--ink);margin-bottom:12px">
+        {{ derniere.feedback_ia }}
+      </p>
+      {% if derniere.points_forts %}
+      <div style="margin-bottom:8px">
+        <strong style="font-size:11px;color:var(--teal)">✅ Points forts</strong>
+        <ul style="margin:4px 0 0 16px;font-size:12px;color:var(--muted)">
+          {% for p in derniere.points_forts %}<li>{{ p }}</li>{% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      {% if derniere.points_amelioration %}
+      <div>
+        <strong style="font-size:11px;color:var(--red)">⚠️ À améliorer</strong>
+        <ul style="margin:4px 0 0 16px;font-size:12px;color:var(--muted)">
+          {% for p in derniere.points_amelioration %}<li>{{ p }}</li>{% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Toutes les questions répondues -->
+    <div class="card-edit" style="text-align:center;padding:40px">
+      <i class="fa fa-circle-check" style="font-size:48px;color:var(--teal);margin-bottom:16px;display:block"></i>
+      <h3 style="font-size:20px;margin-bottom:8px">Toutes les questions répondues !</h3>
+      <p style="color:var(--muted);margin-bottom:20px">
+        Consultez vos résultats et le feedback global de l'IA
+      </p>
+      <a href="{% url 'myAppli:terminer_session' session.id %}" class="btn-app">
+        <i class="fa fa-trophy"></i> Voir mes résultats
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- SIDEBAR — Liste des questions -->
+  <div>
+    <div class="card-edit">
+      <div class="card-edit-head">
+        <h3 style="font-size:12px">Questions</h3>
+      </div>
+      {% for q in questions %}
+      <div style="display:flex;align-items:center;gap:10px;
+                  padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="width:24px;height:24px;border-radius:50%;
+                    display:flex;align-items:center;justify-content:center;
+                    font-size:11px;font-weight:700;flex-shrink:0;
+                    {% if q.reponse_candidat %}
+                      background:var(--teal);color:white;
+                    {% elif q == question_courante %}
+                      background:var(--red);color:white;
+                    {% else %}
+                      background:var(--border);color:var(--muted);
+                    {% endif %}">
+          {{ q.ordre }}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:11px;color:var(--muted);
+                      white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            {{ q.question|truncatechars:40 }}
+          </div>
+          {% if q.reponse_candidat %}
+          <div style="font-size:10px;color:var(--teal);font-weight:600">
+            {{ q.score }}/10
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

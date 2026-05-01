@@ -1,0 +1,186 @@
+/* ========== STYLES POUR LE NAVBAR ========== */
+
+/* Styles pour le bouton Dashboard */
+.btn-dashboard {
+    background: linear-gradient(135deg, #1ed760, #15b050) !important;
+    color: white !important;
+    border-radius: 25px !important;
+    margin: 8px 10px !important;
+    padding: 8px 20px !important;
+    transition: all 0.3s ease !important;
+    font-weight: bold !important;
+    box-shadow: 0 2px 5px rgba(30, 215, 96, 0.3) !important;
+    display: inline-block !important;
+}
+
+.btn-dashboard:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 15px rgba(30, 215, 96, 0.4) !important;
+    background: linear-gradient(135deg, #15b050, #0e8a3a) !important;
+    color: white !important;
+}
+
+.btn-dashboard i {
+    margin-right: 8px;
+}
+
+/* Badge de notification */
+.badge-notification {
+    background-color: #ff4444;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: bold;
+    margin-left: 8px;
+    animation: pulse 1.5s infinite;
+    display: inline-block;
+    min-width: 20px;
+    text-align: center;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7);
+    }
+    70% {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 10px rgba(255, 68, 68, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 68, 68, 0);
+    }
+}
+
+/* Avatar utilisateur */
+.user-avatar {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 8px 15px !important;
+}
+
+.user-avatar .user-name {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.avatar-img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #1ed760;
+}
+
+.user-avatar i.fa-user-circle {
+    font-size: 28px;
+    color: #1ed760;
+}
+
+/* Boutons Connexion/Inscription */
+.btn-connexion {
+    background: transparent !important;
+    border: 2px solid #1ed760 !important;
+    color: #1ed760 !important;
+    border-radius: 25px !important;
+    margin: 8px 5px !important;
+    padding: 6px 20px !important;
+    transition: all 0.3s ease !important;
+    font-weight: 500 !important;
+}
+
+.btn-connexion:hover {
+    background: #1ed760 !important;
+    color: white !important;
+    transform: translateY(-2px) !important;
+}
+
+.btn-inscription {
+    background: linear-gradient(135deg, #1ed760, #15b050) !important;
+    color: white !important;
+    border-radius: 25px !important;
+    margin: 8px 5px !important;
+    padding: 6px 20px !important;
+    transition: all 0.3s ease !important;
+    font-weight: 500 !important;
+}
+
+.btn-inscription:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 15px rgba(30, 215, 96, 0.4) !important;
+}
+
+/* Dropdown menu personnalisé */
+.dropdown-menu {
+    border-radius: 10px !important;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15) !important;
+    border: none !important;
+    margin-top: 10px !important;
+}
+
+.dropdown-menu li a {
+    padding: 10px 20px !important;
+    transition: all 0.2s ease !important;
+}
+
+.dropdown-menu li a:hover {
+    background-color: rgba(30, 215, 96, 0.1) !important;
+    padding-left: 25px !important;
+}
+
+.dropdown-menu .divider {
+    background-color: #e0e0e0 !important;
+}
+
+/* Version mobile */
+@media (max-width: 768px) {
+    .btn-dashboard {
+        margin: 10px 0 !important;
+        display: block !important;
+        text-align: center !important;
+    }
+    
+    .btn-connexion,
+    .btn-inscription {
+        margin: 5px 0 !important;
+        display: block !important;
+        text-align: center !important;
+    }
+    
+    .user-avatar {
+        justify-content: center !important;
+    }
+    
+    .dropdown-menu {
+        background-color: #1e1e1e !important;
+    }
+    
+    .dropdown-menu li a {
+        color: white !important;
+    }
+    
+    .dropdown-menu li a:hover {
+        background-color: rgba(30, 215, 96, 0.2) !important;
+    }
+}
+
+/* Animation d'entrée pour le dashboard */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.btn-dashboard {
+    animation: slideIn 0.5s ease-out;
+}

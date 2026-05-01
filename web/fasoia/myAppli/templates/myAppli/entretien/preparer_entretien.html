@@ -1,0 +1,125 @@
+{% extends "base_app.html" %}
+{% load static %}
+
+{% block title %}FASOIA — Préparer mon entretien{% endblock %}
+{% block breadcrumb %}Préparer un entretien{% endblock %}
+
+{% block content %}
+
+<!-- EN-TÊTE -->
+<div class="dash-header" style="background:var(--ink);padding:28px 32px;margin-bottom:24px;border-bottom:3px solid var(--red)">
+  <div>
+    <h1 style="font-family:var(--font-display);font-size:28px;font-weight:700;color:#862323;margin-bottom:8px">
+      <i class="fa fa-comments"></i> Préparer mon entretien
+    </h1>
+    <p style="font-size:13px;color:var(--muted)">
+      Entraînez-vous avec des questions générées par IA selon votre profil ou une offre spécifique
+    </p>
+  </div>
+</div>
+
+<!-- DÉMARRER UNE SESSION -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+
+  <!-- Offre spécifique -->
+  <div class="card-edit">
+    <div class="card-edit-head">
+      <h3><i class="fa fa-bullseye"></i> Offre spécifique</h3>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px">
+      Préparez-vous pour une offre précise parmi vos recommandations
+    </p>
+    <form method="POST" action="{% url 'myAppli:demarrer_session' %}">
+      {% csrf_token %}
+      <div class="form-field" style="margin-bottom:12px">
+        <label>Choisir une offre</label>
+        <select name="offre_id" required>
+          <option value="">Sélectionnez une offre…</option>
+          {% for offre in offres_recommandees %}
+          <option value="{{ offre.id }}">{{ offre.titre }} — {{ offre.entreprise_nom|default:"Entreprise" }}</option>
+          {% empty %}
+          <option disabled>Aucune offre recommandée</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn-app" style="width:100%">
+        <i class="fa fa-play"></i> Démarrer la session
+      </button>
+    </form>
+  </div>
+
+  <!-- Cas général -->
+  <div class="card-edit">
+    <div class="card-edit-head">
+      <h3><i class="fa fa-graduation-cap"></i> Cas général</h3>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px">
+      Entraînez-vous sur un poste de votre choix
+    </p>
+    <form method="POST" action="{% url 'myAppli:demarrer_session' %}">
+      {% csrf_token %}
+      <div class="form-field" style="margin-bottom:12px">
+        <label>Poste visé</label>
+        <input type="text" name="poste_vise"
+               placeholder="Ex: Développeur Python, Comptable…"
+               value="{{ candidat.secteur_recherche }}"
+               required>
+      </div>
+      <button type="submit" class="btn-app" style="width:100%">
+        <i class="fa fa-play"></i> Démarrer la session
+      </button>
+    </form>
+  </div>
+
+</div>
+
+<!-- SESSIONS PASSÉES -->
+<div class="card-edit">
+  <div class="card-edit-head">
+    <h3>Sessions passées</h3>
+  </div>
+
+  {% for session in sessions %}
+  <div style="display:flex;align-items:center;justify-content:space-between;
+              padding:12px 0;border-bottom:1px solid var(--border)">
+    <div>
+      <div style="font-size:13px;font-weight:700;color:var(--ink)">
+        {{ session.poste_vise|default:"Cas général" }}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px">
+        {{ session.date_creation|date:"d/m/Y H:i" }} —
+        {{ session.nb_questions_repondues }}/10 questions —
+        {% if session.statut == 'TERMINEE' %}
+          <span style="color:var(--teal)">✅ Terminée</span>
+        {% else %}
+          <span style="color:var(--red)">⏳ En cours</span>
+        {% endif %}
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      {% if session.statut == 'TERMINEE' %}
+        <span style="font-family:var(--font-display);font-size:22px;
+                     font-weight:700;color:var(--teal)">
+          {{ session.score_global }}/10
+        </span>
+        <a href="{% url 'myAppli:terminer_session' session.id %}"
+           class="btn-app sm outline">
+          <i class="fa fa-eye"></i> Résultats
+        </a>
+      {% else %}
+        <a href="{% url 'myAppli:session_entretien' session.id %}"
+           class="btn-app sm">
+          <i class="fa fa-play"></i> Reprendre
+        </a>
+      {% endif %}
+    </div>
+  </div>
+  {% empty %}
+  <div style="padding:28px 0;text-align:center;color:var(--hint);font-style:italic">
+    Aucune session pour le moment — démarrez votre première simulation !
+  </div>
+  {% endfor %}
+
+</div>
+
+{% endblock %}

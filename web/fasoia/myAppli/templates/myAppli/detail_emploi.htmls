@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}{{ emploi.titre }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'myAppli:home' %}">Accueil</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'myAppli:opportunites' %}">Opportunités</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ emploi.titre }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3>{{ emploi.titre }}</h3>
+                </div>
+                <div class="card-body">
+                    <h5>Description</h5>
+                    <p>{{ emploi.description|linebreaks }}</p>
+                    
+                    {% if emploi.missions %}
+                    <h5>Missions</h5>
+                    <p>{{ emploi.missions|linebreaks }}</p>
+                    {% endif %}
+                    
+                    {% if emploi.profil_recherche %}
+                    <h5>Profil recherché</h5>
+                    <p>{{ emploi.profil_recherche|linebreaks }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5>Informations</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><strong>Entreprise:</strong> 
+                            {% if emploi.recruteur %}
+                                {{ emploi.recruteur.organisation }}
+                            {% else %}
+                                Non spécifié
+                            {% endif %}
+                        </li>
+                        <li><strong>Localisation:</strong> {{ emploi.localisation }}</li>
+                        <li><strong>Type de contrat:</strong> {{ emploi.get_type_contrat_display }}</li>
+                        {% if emploi.teletravail %}
+                        <li><strong>Télétravail:</strong> Possible</li>
+                        {% endif %}
+                        <li><strong>Expérience requise:</strong> {{ emploi.niveau_experience }}</li>
+                        <li><strong>Niveau d'étude:</strong> {{ emploi.niveau_etude_requis|default:"Non spécifié" }}</li>
+                        {% if emploi.salaire_min and emploi.salaire_max %}
+                        <li><strong>Salaire:</strong> {{ emploi.salaire_min }} - {{ emploi.salaire_max }} FCFA</li>
+                        {% elif emploi.salaire_affiche %}
+                        <li><strong>Salaire:</strong> {{ emploi.salaire_affiche }}</li>
+                        {% endif %}
+                        <li><strong>Date limite:</strong> 
+                            {% if emploi.date_limite %}
+                                {{ emploi.date_limite|date:"d/m/Y" }}
+                                {% if emploi.est_urgente %}
+                                    <span class="badge bg-danger">Urgent</span>
+                                {% endif %}
+                            {% else %}
+                                Non spécifiée
+                            {% endif %}
+                        </li>
+                    </ul>
+                    
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="#" class="btn btn-success btn-lg">Postuler maintenant</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5>Compétences requises</h5>
+                </div>
+                <div class="card-body">
+                    {% if emploi.competences_requises %}
+                        {% for comp in emploi.competences_requises %}
+                            <span class="badge bg-primary me-1 mb-1">{{ comp }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <p>Aucune compétence spécifiée</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
