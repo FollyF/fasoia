@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import AnalyseDocument, DocumentSource, ElementsExtraits, Recommandation, RecommandationEmploi, ElementsCVExtraits, ElementsOffreExtraits, SessionEntretien, QuestionEntretien
+from .models import *
 
 admin.site.register(AnalyseDocument)
 admin.site.register(DocumentSource)
@@ -10,3 +10,4 @@ admin.site.register(ElementsOffreExtraits)
 admin.site.register(ElementsCVExtraits)
 admin.site.register(SessionEntretien)
 admin.site.register(QuestionEntretien)
+admin.site.register(RecommandationCandidatRecruteur)

@@ -470,7 +470,6 @@
         transform: rotate(180deg);
     }
 
-
     /* Adaptation mobile */
     @media (max-width: 768px) {
         .modal-dialog { width: 95%; margin: 5px auto; }
@@ -626,6 +625,164 @@
     </form>
 </div>
 
+<!-- SECTION CANDIDATS RECOMMANDÉS PAR L'IA -->
+<div class="card-edit" style="margin-bottom:24px">
+  <div class="card-edit-head">
+    <h3>
+      <i class="fa fa-robot" style="color:var(--teal)"></i>
+      Meilleurs profils recommandés par l'IA
+    </h3>
+  </div>
+
+  {% if talents_recommandes %}
+  <div class="expandable-wrapper" id="talentsWrapper">
+    <div class="form-grid-3">
+      {% for dossier in talents_recommandes %}
+      <div class="manage-offer-card">
+
+        <!-- Header carte : score + date -->
+        <div class="offer-status-bar">
+
+          <span class="status-badge"
+            style="background:{% if dossier.score_compatibilite >= 80 %}#e6fffa;color:#2c7a7b;border:1px solid #b2f5ea
+                    {% elif dossier.score_compatibilite >= 60 %}#fffbeb;color:#d97706;border:1px solid #fde68a
+                    {% else %}#fff5f5;color:#c53030;border:1px solid #feb2b2{% endif %}">
+            {{ dossier.score_compatibilite|floatformat:0 }}% match
+          </span>
+
+          <span class="ref-id" style="font-size:11px;color:var(--hint)">
+            {{ dossier.date_soumission|date:"d/m/Y"|default:"—" }}
+          </span>
+        </div>
+
+        <!-- Corps : infos candidat -->
+        <div class="offer-body">
+          <h5 style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:6px">
+            {{ dossier.candidat.prenom }} {{ dossier.candidat.nom }}
+          </h5>
+
+          <p class="offer-meta">
+            <i class="fa fa-briefcase"></i>
+            {{ dossier.candidat.anneesExperiences }} ans d'expérience
+          </p>
+          <p class="offer-meta">
+            <i class="fa fa-graduation-cap"></i>
+            {{ dossier.candidat.niveauEtude|default:"Niveau non précisé" }}
+          </p>
+          <p class="offer-meta">
+            <i class="fa fa-bullseye"></i>
+            {{ dossier.offre.titre|truncatechars:35 }}
+          </p>
+
+          <!-- Barre de score -->
+          <div style="margin-top:10px;margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;
+                        font-size:10px;color:var(--muted);margin-bottom:4px">
+              <span>Compatibilité globale</span>
+              <strong style="color:var(--ink)">{{ dossier.score_compatibilite|floatformat:0 }}%</strong>
+            </div>
+            <div class="prog-track">
+              <div class="prog-fill"
+                   style="width:{{ dossier.score_compatibilite|floatformat:0 }}%;
+                          background:{% if dossier.score_compatibilite >= 0.8 %}var(--teal)
+                          {% elif dossier.score_compatibilite >= 0.6 %}var(--amber)
+                          {% else %}var(--red){% endif %}">
+              </div>
+            </div>
+          </div>
+
+          <!-- Scores détaillés -->
+          {% if dossier.score_competences %}
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+            <span style="font-size:10px;color:var(--muted)">
+              🎯 {{ dossier.score_competences|floatformat:0 }}%
+            </span>
+            <span style="font-size:10px;color:var(--muted)">
+              💼 {{ dossier.score_experience|floatformat:0 }}%
+            </span>
+            <span style="font-size:10px;color:var(--muted)">
+              🎓 {{ dossier.score_formation|floatformat:0 }}%
+            </span>
+          </div>
+          {% endif %}
+
+          <!-- Points forts -->
+          {% if dossier.points_forts %}
+          <div style="margin-top:6px">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;
+                        letter-spacing:0.5px;color:var(--teal);margin-bottom:4px">
+              ✅ Points forts
+            </div>
+            <ul style="margin:0;padding-left:14px;font-size:11px;color:var(--muted)">
+              {% for point in dossier.points_forts|slice:":2" %}
+              <li>{{ point }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          <!-- Message du candidat -->
+          {% if dossier.message_candidat %}
+          <div style="margin-top:8px;padding:8px;background:var(--cream);
+                      border-left:3px solid var(--teal);font-size:11px;
+                      color:var(--muted);font-style:italic">
+            "{{ dossier.message_candidat|truncatechars:80 }}"
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Actions -->
+        <div class="offer-footer-actions">
+          <a href=""
+             class="btn-fasoia-primary btn-action">
+            <i class="fa fa-eye"></i> Consulter
+          </a>
+          {% if dossier.cv_final %}
+          <a href="{{ dossier.cv_final.url }}" target="_blank"
+             class="btn-fasoia-outline btn-action">
+            <i class="fa fa-file-pdf"></i> CV
+          </a>
+          {% else %}
+          <span class="btn-fasoia-outline btn-action"
+                style="opacity:0.4;cursor:default">
+            <i class="fa fa-file-pdf"></i> CV
+          </span>
+          {% endif %}
+        </div>
+
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if talents_recommandes|length > 6 %}
+  <div class="view-more-container">
+    <button class="btn-view-more" id="btnToggleTalents"
+            onclick="toggleTalentsMore()">
+      <span class="txt">Voir tous les profils</span>
+      <i class="fa fa-chevron-down"></i>
+    </button>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div style="padding:40px 20px;text-align:center;color:var(--hint);
+              border:2px dashed var(--border);margin-top:16px">
+    <i class="fa fa-users"
+       style="font-size:32px;margin-bottom:12px;display:block;color:var(--border)"></i>
+    <strong style="font-size:14px;color:var(--muted)">
+      Aucun profil recommandé pour le moment
+    </strong>
+    <p style="font-size:12px;margin-top:8px">
+      Les candidats qui postuleront à vos offres apparaîtront ici,
+      classés par pertinence par l'IA.
+    </p>
+  </div>
+  {% endif %}
+
+</div>
+
+
 <!-- SECTION OFFRES PUBLIÉES -->
 <div class="card-edit">
     <div class="card-edit-head d-flex justify-content-between align-items-center">
@@ -653,13 +810,35 @@
                         <span><i class="fa fa-map-marker-alt"></i> {{ offre.localisation }}</span>
                     </p>
                     <p class="offer-meta">
-                         <span><i class="fa fa-users"></i> <strong>{{ offre.candidatures.count|default:0 }}</strong> candidats</span>
+                        <span>
+                            <i class="fa fa-users"></i> 
+                            {% if offre.nb_candidats_reels > 0 %}
+                                <!-- Style si au moins 1 candidat : Rouge Fasoia, Gras et une petite animation -->
+                                <strong style="color: var(--red); font-weight: 800; font-size: 1.1em;">
+                                    {{ offre.nb_candidats_reels }}
+                                </strong> 
+                                <span style="color: var(--red); font-weight: 700;">candidats</span>
+                            {% else %}
+                                <!-- Style par défaut si 0 candidat -->
+                                <strong>0</strong> candidat
+                            {% endif %}
+                        </span>
                     </p>
                 </div>
 
-                <div class="offer-footer-actions">
-                    <a href="{% url 'myAppli:detail_emploi' offre.id %}" class="btn-manage secondary">Voir</a>
-                    <a href="#" class="btn-manage danger">Fermer</a>
+                <div class="offer-footer-actions d-flex">
+                    <!-- Bouton Détails -->
+                    <button type="button" class="btn-fasoia-outline btn-action mr-2"
+                            data-toggle="modal" data-target="#modalOffre{{ offre.id }}">
+                        Détails
+                    </button>
+                    
+                    <!-- Lien Modifier (on lui donne la même classe que le bouton) -->
+                    <a href="{% url 'myAppli:modifier_offre' offre.id %}" 
+                    class="btn-fasoia-outline btn-action text-center" 
+                    style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                        Modifier
+                    </a>
                 </div>
             </div>
             {% endfor %}
@@ -683,40 +862,147 @@
 {% endif %}
 </div>
 
-<!-- TALENTS RECOMMANDÉS -->
-<div class="card-edit">
-    <div class="card-edit-head">
-        <h3>Talents recommandés</h3>
-    </div>
+<!-- Modal détails -->
+{% for offre in offres_publiees %}
+<div class="modal fade" id="modalOffre{{ offre.id }}" tabindex="-1" role="dialog" aria-labelledby="modalLabel{{ offre.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document"> <!-- modal-lg pour plus d'espace -->
+        <div class="modal-content shadow-lg border-0">
+            
+            <!-- Header avec dégradé et titre -->
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%);">
+                <div class="d-flex flex-column">
+                    <small class="text-uppercase fw-bold opacity-75" style="letter-spacing: 1px;">Réf: {{ offre.reference }}</small>
+                    <h5 class="modal-title h4" id="modalLabel{{ offre.id }}">{{ offre.titre }}</h5>
+                </div>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
 
-    {% if talents_recommandes %}
-        <div class="row">
-            {% for talent in talents_recommandes %}
-            <div class="col-md-6 mb-3">
-                <div class="candidat-card">
-                    <div class="d-flex justify-content-between">
-                        <h5>{{ talent.prenom }} {{ talent.nom }}</h5>
-                        <span class="match-badge">{{ talent.score|default:75 }}%</span>
+            <div class="modal-body p-4">
+                <!-- 1. Grille d'informations clés -->
+                <div class="row mb-4">
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-2 border rounded text-center bg-light">
+                            <small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">Contrat</small>
+                            <span class="badge badge-pill {% if offre.type_contrat == 'CDI' %}badge-success{% else %}badge-primary{% endif %}">
+                                {{ offre.get_type_contrat_display }}
+                            </span>
+                        </div>
                     </div>
-                    <p class="text-muted">{{ talent.competences|truncatechars:120 }}</p>
-                    <div class="btn-actions">
-                        <a href="#" class="btn-app sm outline">Voir profil</a>
-                        <a href="#" class="btn-app sm">Contacter</a>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-2 border rounded text-center bg-light">
+                            <small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">Localisation</small>
+                            <i class="fas fa-map-marker-alt text-danger"></i> <strong>{{ offre.ville|default:offre.localisation }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-2 border rounded text-center bg-light">
+                            <small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">Expérience</small>
+                            <strong>{{ offre.get_niveau_experience_display }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-2 border rounded text-center bg-light">
+                            <small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">Date Limite</small>
+                            <strong class="{% if offre.est_expiree %}text-danger{% endif %}">
+                                {{ offre.date_limite|date:"d M Y"|default:"Non définie" }}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- 2. Description et Missions -->
+                <div class="row">
+                    <div class="col-md-8">
+                        <h6 class="font-weight-bold text-primary"><i class="fas fa-file-alt mr-2"></i>Description du poste</h6>
+                        <p class="text-justify">{{ offre.description|linebreaksbr }}</p>
+
+                        {% if offre.missions %}
+                        <h6 class="font-weight-bold text-primary mt-4"><i class="fas fa-tasks mr-2"></i>Missions principales</h6>
+                        <p>{{ offre.missions|linebreaksbr }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- 3. Sidebar d'infos complémentaires -->
+                    <div class="col-md-4 border-left">
+                        {% if offre.salaire_affiche or offre.salaire_min %}
+                        <div class="mb-4">
+                            <h6 class="font-weight-bold"><i class="fas fa-money-bill-wave mr-2 text-success"></i>Rémunération</h6>
+                            <p class="text-success font-weight-bold h5">
+                                {% if offre.salaire_affiche %}
+                                    {{ offre.salaire_affiche }}
+                                {% else %}
+                                    {{ offre.salaire_min|floatformat:0 }} {{ offre.salaire_devise }}
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-4">
+                            <h6 class="font-weight-bold"><i class="fas fa-graduation-cap mr-2"></i>Formation</h6>
+                            <p class="small">{{ offre.niveau_etude_requis }}<br><span class="text-muted">{{ offre.domaine_etude }}</span></p>
+                        </div>
+
+                        {% if offre.competences_requises %}
+                        <div class="mb-4">
+                            <h6 class="font-weight-bold"><i class="fas fa-tools mr-2"></i>Compétences</h6>
+                            {% for comp in offre.competences_requises %}
+                                <span class="badge badge-light border mb-1">{{ comp }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        {% if offre.documents_exiges %}
+                        <div class="mb-4">
+                            <h6 class="font-weight-bold"><i class="fas fa-paperclip mr-2"></i>Pièces à fournir</h6>
+                            <ul class="list-unstyled small">
+                                {% for doc in offre.documents_exiges %}
+                                    <li><i class="fas fa-check-circle text-muted mr-1"></i> {{ doc }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
-            {% endfor %}
+
+            <!-- Footer avec actions -->
+            <div class="modal-footer bg-light">
+                <span class="mr-auto small text-muted">
+                    <i class="far fa-eye mr-1"></i> {{ offre.nb_vues }} vues
+                </span>
+                
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-dismiss="modal">Fermer</button>
+                
+                <!-- Le bouton principal qui mène au formulaire -->
+                <a href="{% url 'myAppli:modifier_offre' offre.id %}" class="btn btn-primary">
+                    <i class="fas fa-pen-to-square mr-1"></i> Modifier cette offre
+                </a>
+            </div>
         </div>
-    {% else %}
-        <div style="padding:40px 20px; text-align:center; color:var(--hint);">
-            Aucun talent recommandé pour le moment.
-        </div>
-    {% endif %}
+    </div>
 </div>
+{% endfor %}
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
+
+function toggleTalentsMore() {
+    const wrapper = document.getElementById('talentsWrapper');
+    const btn = document.getElementById('btnToggleTalents');
+    const txt = btn.querySelector('.txt');
+
+    wrapper.classList.toggle('expanded');
+    btn.classList.toggle('active');
+    txt.innerText = wrapper.classList.contains('expanded')
+        ? "Réduire la liste"
+        : "Voir tous les profils";
+}    
 
 function toggleViewMore() {
     const wrapper = document.getElementById('offersWrapper');

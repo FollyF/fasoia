@@ -1,0 +1,48 @@
+{% extends "base_app.html" %}
+{% load static %}
+
+{% block title %}Modifier l'offre : {{ offre.titre }}{% endblock %}
+
+{% block content %}
+<div class="card-edit">
+    <div class="card-edit-head">
+        <h3><i class="fa fa-pen"></i> Modifier l'offre d'emploi</h3>
+        <p class="text-muted">Référence : {{ offre.reference }}</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="p-4">
+        {% csrf_token %}
+        
+        <!-- Affichage des erreurs globales -->
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                Veuillez corriger les erreurs ci-dessous.
+            </div>
+        {% endif %}
+
+        <div class="form-grid-2">
+            {% for field in form %}
+                <div class="form-field {% if field.name == 'description' or field.name == 'missions' %}full{% endif %}">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small class="field-note">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% if field.errors %}
+                        <div class="text-danger small">{{ field.errors }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="form-footer mt-4">
+            <a href="{% url 'myAppli:dashboard_recruteur' %}" class="btn-fasoia-outline" style="text-decoration: none; padding: 10px 20px;">
+                Annuler
+            </a>
+            <button type="submit" class="btn-app">
+                <i class="fa fa-save"></i> Enregistrer les modifications
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

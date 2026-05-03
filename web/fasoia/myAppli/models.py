@@ -1326,11 +1326,27 @@ class DossierCandidature(models.Model):
         blank=True
     )
 
-    # Analyse IA
+    # Analyse IA - Scores
     score_compatibilite = models.FloatField(
         default=0.0,
         help_text="Score de compatibilité CV ↔ Offre"
     )
+
+    score_competences = models.FloatField(
+        default=0.0,
+        help_text="Score de compatibilité sur les compétences"
+    )
+    score_experience = models.FloatField(
+        default=0.0,
+        help_text="Score de compatibilité sur l'expérience"
+    )
+    score_formation = models.FloatField(
+        default=0.0,
+        help_text="Score de compatibilité sur la formation"
+    )
+
+    # Analyse IA - Textes
+
     analyse_cv = models.TextField(
         blank=True,
         help_text="Analyse IA du CV par rapport à l'offre"
@@ -1338,6 +1354,17 @@ class DossierCandidature(models.Model):
     analyse_lettre = models.TextField(
         blank=True,
         help_text="Analyse IA de la lettre"
+    )
+
+    points_forts = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Points forts identifiés par l'IA"
+    )
+    points_faibles = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Points faibles identifiés par l'IA"
     )
 
     # Message personnalisé

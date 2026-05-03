@@ -528,28 +528,40 @@
           <span class="current">{% block breadcrumb %}Tableau de bord{% endblock %}</span>
         </div>
       </div>
+      
       <div class="topbar-right">
         {% if user.is_authenticated %}
-            {% if user.entreprise %}
-              <a href="{% url 'myAppli:dashboard_entreprise' %}" class="topbar-link">
-            {% endif %}
-            {% if user.particulier.candidat %}
-              <a href="{% url 'myAppli:dashboard_candidat' %}" class="topbar-link">
-            {% endif %}
-            {% if user.particulier.recruteur %}
-              <a href="{% url 'myAppli:dashboard_particulier' %}" class="topbar-link">
-            {% endif %}
-              
-            <i class="fa fa-circle-user" style="font-size:11px"></i>
-            {% if user.particulier %}{{ user.particulier.prenom }}
-            {% elif user.entreprise %}{{ user.entreprise.raisonSociale|truncatechars:16 }}{% endif %}
-          </a>
+
+          {% if user.entreprise %}
+            <a href="{% url 'myAppli:dashboard_entreprise' %}" class="topbar-link">
+
+          {% elif user.particulier and user.particulier.candidat %}
+            <a href="{% url 'myAppli:dashboard_candidat' %}" class="topbar-link">
+
+          {% elif user.particulier and user.particulier.recruteur %}
+            <a href="{% url 'myAppli:dashboard_particulier' %}" class="topbar-link">
+
+          {% endif %}
+
+              <i class="fa fa-circle-user" style="font-size:11px"></i>
+
+              {% if user.particulier %}
+                {{ user.particulier.prenom }}
+              {% elif user.entreprise %}
+                {{ user.entreprise.raisonSociale|truncatechars:16 }}
+              {% endif %}
+
+            </a>
+
           <a href="{% url 'myAppli:deconnexion' %}" class="topbar-link danger">
             <i class="fa fa-right-from-bracket" style="font-size:11px"></i>
           </a>
+
         {% else %}
           <a href="{% url 'myAppli:connexion' %}" class="topbar-link">Connexion</a>
-          <a href="{% url 'myAppli:inscription' %}" class="topbar-link" style="background:var(--ink);color:#fff;border-color:var(--ink)">Inscription</a>
+          <a href="{% url 'myAppli:inscription' %}" class="topbar-link" style="background:var(--ink);color:#fff;border-color:var(--ink)">
+            Inscription
+          </a>
         {% endif %}
       </div>
     </div>

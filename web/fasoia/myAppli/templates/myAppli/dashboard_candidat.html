@@ -357,6 +357,117 @@
       }
   }
 
+  /* ===== TOAST SYSTEM ===== */
+  .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: 360px;
+  }
+
+  .toast {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      animation: slideIn 0.3s ease;
+      min-width: 280px;
+      border-radius: 8px;
+  }
+
+  .toast.toast-success { border-left: 4px solid var(--teal); }
+  .toast.toast-error { border-left: 4px solid var(--red); }
+  .toast.toast-warning { border-left: 4px solid #f59e0b; }
+
+  .toast-icon { font-size: 16px; flex-shrink: 0; }
+  .toast-message { flex: 1; font-size: 13px; color: var(--ink); line-height: 1.4; }
+  .toast-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 16px;
+      padding: 0;
+      flex-shrink: 0;
+      line-height: 1;
+  }
+
+  @keyframes slideIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+  }
+  @keyframes slideOut {
+      from { transform: translateX(0);    opacity: 1; }
+      to   { transform: translateX(120%); opacity: 0; }
+  }
+
+  /* Champs en erreur */
+  .field-error {
+      border-color: var(--red) !important;
+      border-left: 3px solid var(--red) !important;
+      background-color: rgba(231, 76, 60, 0.05) !important;
+      animation: shake 0.3s ease-in-out;
+  }
+
+  @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+  }
+
+  .error-message {
+      color: var(--red);
+      font-size: 11px;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+  }
+
+  /* Barre de progression du profil */
+  .profil-progress-container {
+      margin: 16px 0;
+      padding: 0 20px;
+  }
+
+  .profil-progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+  }
+
+  .profil-progress-label {
+      font-size: 12px;
+      color: var(--muted);
+  }
+
+  .profil-progress-percent {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--teal);
+  }
+
+  .profil-progress-track {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+  }
+
+  .profil-progress-bar {
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s ease;
+      border-radius: 2px;
+  }
+
   /* Spinner submit */
   .fa-spin { animation: fa-spin 0.8s linear infinite; }
   @keyframes fa-spin { to { transform: rotate(360deg); } }
@@ -420,7 +531,7 @@
 <div class="success-banner">
   <i class="fa fa-circle-check"></i>
   <div>
-    <strong>Profil complété à 100%</strong>
+    <strong>Profil complété à {{ progression }}<span>%</span></strong>
     <p>Votre profil est visible par les recruteurs. Vous pouvez le modifier à tout moment.</p>
   </div>
   <button class="btn-app sm outline" onclick="toggleEditMode()">
@@ -461,19 +572,19 @@
       <div class="form-grid-2">
         <div class="form-field">
           <label class="required-star">Nom</label>
-          <input type="text" name="nom" value="{{ candidat.nom }}" placeholder="Votre nom" required>
+          <input type="text" name="nom" value="{{ candidat.nom }}" placeholder="Votre nom" data-required>
         </div>
         <div class="form-field">
           <label class="required-star">Prénom</label>
-          <input type="text" name="prenom" value="{{ candidat.prenom }}" placeholder="Votre prénom" required>
+          <input type="text" name="prenom" value="{{ candidat.prenom }}" placeholder="Votre prénom" data-required>
         </div>
         <div class="form-field">
           <label class="required-star">Email</label>
-          <input type="email" name="email" value="{{ candidat.email }}" placeholder="nom@domaine.com" required>
+          <input type="email" name="email" value="{{ candidat.email }}" placeholder="nom@domaine.com" data-required>
         </div>
         <div class="form-field">
           <label class="required-star">Téléphone</label>
-          <input type="tel" name="telephone" value="{{ candidat.telephone }}" placeholder="+226 XX XX XX XX" required>
+          <input type="tel" name="telephone" value="{{ candidat.telephone }}" placeholder="+226 XX XX XX XX" data-required>
         </div>
         <div class="form-field">
           <label>Date de naissance</label>
@@ -499,24 +610,24 @@
       <div class="form-grid-2">
         <div class="form-field">
           <label class="required-star">Niveau d'étude</label>
-          <input type="text" name="niveauEtude" value="{{ candidat.niveauEtude }}" placeholder="Ex: Bac+5, Master" required>
+          <input type="text" name="niveauEtude" value="{{ candidat.niveauEtude }}" placeholder="Ex: Bac+5, Master" data-required>
         </div>
         <div class="form-field">
-          <label>Années d'expérience</label>
-          <input type="number" name="anneesExperiences" value="{{ candidat.anneesExperiences }}" placeholder="Ex: 5" min="0">
+          <label class="required-star">Années d'expérience</label>
+          <input type="number" name="anneesExperiences" value="{{ candidat.anneesExperiences }}" placeholder="Ex: 5" min="0" data-required>
         </div>
         <div class="form-field full">
           <label class="required-star">Compétences</label>
-          <textarea name="competences" rows="3" placeholder="Python, Django, JavaScript, Gestion de projet…" required>{{ candidat.competences }}</textarea>
+          <textarea name="competences" rows="3" placeholder="Python, Django, JavaScript, Gestion de projet…" data-required>{{ candidat.competences }}</textarea>
           <div class="field-note">Séparez vos compétences par des virgules</div>
         </div>
         <div class="form-field">
-          <label>Langues</label>
-          <input type="text" name="niveauLangues" value="{{ candidat.niveauLangues }}" placeholder="Français (courant), Anglais (professionnel)">
+          <label class="required-star">Langues</label>
+          <input type="text" name="niveauLangues" value="{{ candidat.niveauLangues }}" placeholder="Français (courant), Anglais (professionnel)" data-required>
         </div>
         <div class="form-field">
           <label class="required-star">Disponibilité</label>
-          <select name="disponibilite" required>
+          <select name="disponibilite" data-required>
             <option value="">Sélectionnez…</option>
             <option value="immédiate"   {% if candidat.disponibilite == 'immédiate'   %}selected{% endif %}>Immédiate</option>
             <option value="1 semaine"   {% if candidat.disponibilite == '1 semaine'   %}selected{% endif %}>1 semaine</option>
@@ -531,8 +642,8 @@
     <div id="tab-recherche" class="tab-content">
       <div class="form-grid-2">
         <div class="form-field">
-          <label>Secteur recherché</label>
-          <input type="text" name="secteur_recherche" value="{{ candidat.secteur_recherche }}" placeholder="Informatique, Finance, BTP…">
+          <label class="required-star">Secteur recherché</label>
+          <input type="text" name="secteur_recherche" value="{{ candidat.secteur_recherche }}" placeholder="Informatique, Finance, BTP…" data-required>
         </div>
         <div class="form-field">
           <label>Type de contrat</label>
@@ -545,8 +656,8 @@
           </select>
         </div>
         <div class="form-field">
-          <label>Localisation souhaitée</label>
-          <input type="text" name="localisation_recherche" value="{{ candidat.localisation_recherche }}" placeholder="Ex: Ouagadougou">
+          <label class="required-star">Localisation souhaitée</label>
+          <input type="text" name="localisation_recherche" value="{{ candidat.localisation_recherche }}" placeholder="Ex: Ouagadougou" data-required>
         </div>
         <div class="form-field">
           <label>Salaire souhaité (FCFA)</label>
@@ -585,7 +696,7 @@
 
           {% else %}
             <!-- Aucun CV -->
-            <input type="file" name="cv" accept=".pdf,.doc,.docx" required>
+            <input type="file" name="cv" accept=".pdf,.doc,.docx" data-required>
             <div class="field-note">
               Ou <a href="{% url 'myAppli:generer_cv' %}">générer un CV sur la plateforme</a>
             </div>
@@ -746,76 +857,268 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-  var currentTab = 0;
-  var tabs = ['personnel', 'professionnel', 'recherche', 'documents'];
 
-  function showTab(tabName) {
+<script>
+// ========== TON ANCIEN JS (conservé) ==========
+var currentTab = 0;
+var tabs = ['personnel', 'professionnel', 'recherche', 'documents'];
+
+function showTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
     document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
     document.getElementById('tab-' + tabName).classList.add('active');
     document.querySelector('[onclick="showTab(\'' + tabName + '\')"]').classList.add('active');
     currentTab = tabs.indexOf(tabName);
     updateNavBtns();
-  }
+}
 
-  function nextTab() {
+function nextTab() {
     if (currentTab < tabs.length - 1) showTab(tabs[currentTab + 1]);
-  }
+}
 
-  function prevTab() {
+function prevTab() {
     if (currentTab > 0) showTab(tabs[currentTab - 1]);
-  }
+}
 
-  function updateNavBtns() {
+function updateNavBtns() {
     document.getElementById('prevBtn').disabled = (currentTab === 0);
     document.getElementById('nextBtn').disabled = (currentTab === tabs.length - 1);
-  }
+}
 
-  function toggleEditMode() {
+function toggleEditMode() {
     var section = document.getElementById('profile-form-section');
     if (section.style.display === 'none') {
-      section.style.display = 'block';
-      section.scrollIntoView({ behavior: 'smooth' });
+        section.style.display = 'block';
+        section.scrollIntoView({ behavior: 'smooth' });
     } else {
-      section.style.display = 'none';
+        section.style.display = 'none';
     }
-  }
+}
 
-  /* Validation */
-  var form = document.getElementById('profileForm');
-  if (form) {
-    form.addEventListener('submit', function(e) {
-      var required = this.querySelectorAll('[required]');
-      var valid = true;
-      var first = null;
+// ========== TOAST SYSTEM ==========
+function showToast(message, type) {
+    var container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
 
-      required.forEach(function(f) {
-        var empty = (f.type === 'file') ? f.files.length === 0 : !f.value.trim();
-        if (empty) {
-          f.style.borderColor = 'var(--red)';
-          valid = false;
-          if (!first) first = f;
+    var toast = document.createElement('div');
+    toast.className = 'toast toast-' + (type || 'info');
+    
+    var icon = type === 'error' ? '❌' : type === 'success' ? '✅' : '⚠️';
+
+    toast.innerHTML = `
+        <span class="toast-icon">${icon}</span>
+        <div class="toast-message">${message}</div>
+        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(function() {
+        if (toast && toast.parentElement) {
+            toast.style.animation = 'slideOut 0.3s ease';
+            setTimeout(function() { if (toast && toast.parentElement) toast.remove(); }, 280);
+        }
+    }, 5000);
+}
+
+// ========== CHAMPS OBLIGATOIRES ==========
+const champsObligatoires = [
+    { name: 'nom', label: 'Nom', tab: 'personnel' },
+    { name: 'prenom', label: 'Prénom', tab: 'personnel' },
+    { name: 'email', label: 'Email', tab: 'personnel' },
+    { name: 'telephone', label: 'Téléphone', tab: 'personnel' },
+    { name: 'niveauEtude', label: 'Niveau d\'étude', tab: 'professionnel' },
+    { name: 'anneesExperiences', label: 'Années d\'expérience', tab: 'professionnel' },
+    { name: 'competences', label: 'Compétences', tab: 'professionnel' },
+    { name: 'niveauLangues', label: 'Langues', tab: 'professionnel' },
+    { name: 'disponibilite', label: 'Disponibilité', tab: 'professionnel' },
+    { name: 'secteur_recherche', label: 'Secteur recherché', tab: 'recherche' },
+    { name: 'localisation_recherche', label: 'Localisation souhaitée', tab: 'recherche' },
+    { name: 'cv', label: 'CV', tab: 'documents' }
+];
+
+function getChampsManquants() {
+    var manquants = [];
+    
+    for (var i = 0; i < champsObligatoires.length; i++) {
+        var champ = champsObligatoires[i];
+        var input = document.querySelector('[name="' + champ.name + '"]');
+        
+        if (champ.name === 'cv') {
+            if (!input || input.files.length === 0) {
+                manquants.push(champ);
+            }
+        } else if (champ.name === 'disponibilite') {
+            if (!input || !input.value || input.value === '') {
+                manquants.push(champ);
+            }
+        } else if (champ.name === 'anneesExperiences') {
+            if (!input || !input.value || parseFloat(input.value) === 0) {
+                manquants.push(champ);
+            }
         } else {
-          f.style.borderColor = '';
+            if (!input || !input.value || input.value.trim() === '') {
+                manquants.push(champ);
+            }
         }
-      });
+    }
+    
+    return manquants;
+}
 
-      if (!valid) {
-        e.preventDefault();
-        if (first) {
-          var tab = first.closest('.tab-content');
-          if (tab) showTab(tab.id.replace('tab-', ''));
-          first.focus();
+function mettreEnEvidenceChampsManquants() {
+    document.querySelectorAll('.field-error').forEach(function(el) {
+        el.classList.remove('field-error');
+    });
+    document.querySelectorAll('.error-message').forEach(function(el) {
+        el.remove();
+    });
+    
+    var manquants = getChampsManquants();
+    
+    for (var i = 0; i < manquants.length; i++) {
+        var champ = manquants[i];
+        var input = document.querySelector('[name="' + champ.name + '"]');
+        if (input) {
+            input.classList.add('field-error');
+            
+            if (!input.parentElement.querySelector('.error-message')) {
+                var errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.innerHTML = '<i class="fa fa-exclamation-circle"></i> Champ obligatoire';
+                input.parentElement.appendChild(errorDiv);
+            }
         }
-      } else {
+    }
+    
+    return manquants;
+}
+
+function afficherToastChampsManquants() {
+    var manquants = getChampsManquants();
+    
+    if (manquants.length > 0) {
+        var labels = [];
+        for (var i = 0; i < manquants.length; i++) {
+            labels.push(manquants[i].label);
+        }
+        var champsListe = labels.join(', ');
+        showToast('📋 Champs obligatoires manquants : ' + champsListe, 'error');
+        
+        // Aller au premier champ manquant
+        var premierChamp = manquants[0];
+        var input = document.querySelector('[name="' + premierChamp.name + '"]');
+        if (input) {
+            var tabId = premierChamp.tab;
+            if (tabId && tabs.indexOf(currentTab) !== tabs.indexOf(tabId)) {
+                showTab(tabId);
+            }
+            input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            input.focus();
+        }
+    }
+    
+    return manquants;
+}
+
+// ========== VALIDATION FINALE (SANS required HTML) ==========
+var form = document.getElementById('profileForm');
+if (form) {
+    form.addEventListener('submit', function(e) {
+        // 1. Vérifier les champs avec data-required
+        var dataRequired = this.querySelectorAll('[data-required]');
+        var allValid = true;
+        var firstInvalid = null;
+
+        dataRequired.forEach(function(field) {
+            var isEmpty = false;
+            
+            if (field.type === 'file') {
+                isEmpty = field.files.length === 0;
+                // Cas particulier : si un CV généré existe déjà
+                var hasCvGenere = document.querySelector('.file-current');
+                if (hasCvGenere && !field.files.length) {
+                    isEmpty = false; // CV généré existant, pas besoin d'upload
+                }
+            } else if (field.tagName === 'SELECT') {
+                isEmpty = !field.value || field.value === '';
+            } else if (field.type === 'number') {
+                isEmpty = !field.value || parseFloat(field.value) === 0;
+            } else {
+                isEmpty = !field.value || field.value.trim() === '';
+            }
+            
+            if (isEmpty) {
+                allValid = false;
+                field.classList.add('field-error');
+                if (!firstInvalid) firstInvalid = field;
+            } else {
+                field.classList.remove('field-error');
+            }
+        });
+        
+        // 2. Vérification supplémentaire avec la liste des champs obligatoires
+        var manquants = getChampsManquants();
+        
+        if (manquants.length > 0) {
+            e.preventDefault();
+            mettreEnEvidenceChampsManquants();
+            afficherToastChampsManquants();
+            return false;
+        }
+        
+        if (!allValid) {
+            e.preventDefault();
+            if (firstInvalid) {
+                var tab = firstInvalid.closest('.tab-content');
+                if (tab) showTab(tab.id.replace('tab-', ''));
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalid.focus();
+            }
+            showToast('❌ Veuillez remplir tous les champs obligatoires', 'error');
+            return false;
+        }
+        
+        // Tout est bon, on soumet
         var btn = document.getElementById('submitBtn');
         btn.disabled = true;
         btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Enregistrement…';
-      }
+        showToast('✅ Enregistrement en cours...', 'success');
     });
-  }
+}
 
-  updateNavBtns();
-</script>
-{% endblock %}
+// ========== NETTOYAGE DES ERREURS VISUELLES QUAND L'UTILISATEUR REMPLIT ==========
+function nettoyerErreur(champ) {
+    champ.classList.remove('field-error');
+    var errorMsg = champ.parentElement.querySelector('.error-message');
+    if (errorMsg) errorMsg.remove();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Nettoyer les erreurs quand l'utilisateur modifie un champ
+    var tousLesChamps = document.querySelectorAll('input, select, textarea');
+    for (var i = 0; i < tousLesChamps.length; i++) {
+        tousLesChamps[i].addEventListener('change', function() {
+            nettoyerErreur(this);
+        });
+        tousLesChamps[i].addEventListener('input', function() {
+            nettoyerErreur(this);
+        });
+    }
+    
+    // Cas spécial CV
+    var cvInput = document.querySelector('input[name="cv"]');
+    if (cvInput) {
+        cvInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                nettoyerErreur(this);
+            }
+        });
+    }
+});
+</script>{% endblock %}

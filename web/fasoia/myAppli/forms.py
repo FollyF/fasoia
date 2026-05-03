@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.core.exceptions import ValidationError
-from .models import Entreprise, Particulier, Recruteur, Candidat
+from .models import *
 
 class InscriptionForm(UserCreationForm):
     """
@@ -232,7 +232,6 @@ class InscriptionForm(UserCreationForm):
         
         return user
 
-
 class ConnexionForm(AuthenticationForm):
     """
     Formulaire de connexion personnalisé
@@ -267,3 +266,17 @@ class ConnexionForm(AuthenticationForm):
         'invalid_login': "Email ou mot de passe incorrect",
         'inactive': "Ce compte est désactivé",
     }
+
+class OffreEmploiForm(forms.ModelForm):
+    class Meta:
+        model = OffreEmploi
+        # Liste les champs que tu veux autoriser à la modification
+        fields = [
+            'titre', 'secteur', 'description', 'missions', 'profil_recherche',
+            'localisation', 'ville', 'type_contrat', 'niveau_experience',
+            'salaire_min', 'date_limite', 'competences_requises', 'documents_exiges'
+        ]
+        widgets = {
+            'date_limite': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'rows': 5, 'class': 'form-control'}),
+        }

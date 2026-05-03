@@ -4,6 +4,8 @@ import os
 import sys
 import django
 import requests
+import json
+import re
 
 # --- CONFIGURATION DJANGO ---
 current_file_path = os.path.abspath(__file__)
@@ -16,17 +18,21 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'fasoia.settings')
 django.setup()
 # ----------------------------
 
-from myAppli.models import OffreEmploi, Candidat
+from myAppli.models import OffreEmploi, Candidat, DossierCandidature
 from analyse_ia.analyser_pdfs import extraire_texte_cv, extraire_texte_offre
+from analyse_ia.ia_client import IAClient
 
 
-def recommander_offres(candidat_id, modele='gemma2:2b', nb_recommandations=3):
+def analyser_compatibilite(candidat_id, offre_id):
     """
-    Recommande les meilleures offres d'emploi à un candidat selon son CV
+    Analyse la compatibilité via GROQ
     """
 
+    ia = IAClient()
+    
     print("\n" + "="*60)
-    print(f"🎯 RECOMMANDATION POUR CANDIDAT #{candidat_id}")
+    print(f"🎯 ANALYSE COMPATIBILITE")
+    print(f"   Candidat #{candidat_id} ↔ Offre #{offre_id}")
     print("="*60)
 
     # 1. Extraire le texte du CV
@@ -39,97 +45,126 @@ def recommander_offres(candidat_id, modele='gemma2:2b', nb_recommandations=3):
 
     print(f"✅ CV extrait: {len(cv_texte)} caractères")
 
-    # 2. Récupérer les offres actives
-    print("\n📋 Etape 2 - Récupération des offres...")
-    offres = OffreEmploi.objects.filter(
-        est_active=True,
-        statut='PUBLIEE'
-    ).first()
+    # 2. Extraire le texte de l'offre
+    print("\n📋 Etape 2 - Extraction de l'offre...")
+    try:
+        offre = OffreEmploi.objects.get(id=offre_id)
+        offre_texte = extraire_texte_offre(offre)
+        print(f"✅ Offre extraite: {len(offre_texte)} caractères")
+    except OffreEmploi.DoesNotExist:
+        print(f"❌ Offre #{offre_id} non trouvée")
+        return None
 
-    """if not offres.exists():
-        print("❌ Aucune offre disponible")
-        return None"""
-
-    #print(f"✅ {offres.count()} offres trouvées")
-
-    # 3. Extraire le contenu de chaque offre
-    print("\n📑 Etape 3 - Extraction du contenu des offres...")
-    offres_texte = ""
-
-    """for offre in offres:
-        print(f"\n   Offre #{offre.id} - {offre.titre}")
-        contenu_offre = extraire_texte_offre(offre)
-        offres_texte += f"\n{'='*40}\n"
-        offres_texte += f"OFFRE ID: {offre.id}\n"
-        offres_texte += contenu_offre"""
+    # 3. Construire le prompt pour Ollama
+    print("\n🧠 Etape 3 - Construction du prompt...")
     
-    print(f"\n   Offre #{offres.id} - {offres.titre}")
-    contenu_offre = extraire_texte_offre(offres)
-    offres_texte += f"\n{'='*40}\n"
-    offres_texte += f"OFFRE ID: {offres.id}\n"
-    offres_texte += contenu_offre
-    print(offres_texte[:50])
-    # 4. Construire le prompt
-    print("\n🧠 Etape 4 - Construction du prompt...")
     prompt = f"""
-    Tu es un conseiller emploi expert en Afrique de l'Ouest.
+    Tu es un recruteur expert en Afrique de l'Ouest spécialisé dans l'analyse de CV.
     
-    Voici le CV du candidat :
-    {cv_texte[:30]}
+    ## CV DU CANDIDAT :
+    {cv_texte[:3000]}
     
-    Voici les offres d'emploi disponibles :
-    {offres_texte[:50]}
+    ## OFFRE D'EMPLOI :
+    {offre_texte[:3000]}
     
-    En te basant sur le CV du candidat, recommande les {nb_recommandations} 
-    meilleures offres parmi celles disponibles.
+    Analyse la compatibilité entre ce candidat et cette offre.
     
-    Pour chaque offre recommandée, donne OBLIGATOIREMENT :
-    - ID de l'offre
-    - Titre du poste
-    - Pourcentage de compatibilité (ex: 85%)
-    - Points forts : pourquoi le candidat correspond
-    - Points faibles : ce qui manque au candidat
-    - Conseil : comment le candidat peut améliorer sa candidature
+    Réponds UNIQUEMENT au format JSON suivant, sans aucun texte avant ou après :
     
-    Classe les offres de la plus compatible à la moins compatible.
-    Réponds en français de manière structurée et précise.
+    {{
+        "score_global": 85,
+        "score_competences": 90,
+        "score_experience": 75,
+        "score_formation": 80,
+        "points_forts": ["Expérience pertinente dans le secteur", "Maîtrise des outils requis"],
+        "points_faibles": ["Manque de certification spécifique", "Expérience un peu légère"],
+        "analyse": "Ce candidat correspond bien au poste. Ses compétences techniques sont solides..."
+    }}
     """
 
-    # 5. Envoyer à Ollama
-    print("\n🤖 Etape 5 - Analyse par Ollama...")
-    print(f"   Modèle utilisé: {modele}")
+    # 4. Envoyer à GROQ
+    print(f"\n🤖 Etape 4 - Analyse par GROQ (Model: {ia.groq_model})...")
 
     try:
-        response = requests.post(
-            'http://localhost:11434/api/generate',
-            json={
-                'model': modele,
-                'prompt': prompt,
-                'stream': False
-            },
-            timeout=120  # 2 minutes max
+        # On utilise le client groq de ton IAClient
+        completion = ia.groq.chat.completions.create(
+            model=ia.groq_model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.2,
+            response_format={"type": "json_object"} # Force Groq à renvoyer du JSON pur
         )
 
-        resultat = response.json()['response']
+        # 5. Récupérer et transformer le résultat
+        resultat_texte = completion.choices[0].message.content
+        scores = json.loads(resultat_texte)
+        
+        # --- DÉBOGAGE : VÉRIFICATION DES TYPES DE DONNÉES ---
+        print(f"DEBUG - Type score_global: {type(scores.get('score_global'))}")
+        print(f"DEBUG - Valeur points_forts: {scores.get('points_forts')}")
 
-        print("\n✅ Recommandations générées !")
-        print("\n" + "="*60)
-        print(resultat)
-        print("="*60)
-
-        return resultat
+        resultat_final = {
+            'score_global': float(scores.get('score_global', 0)),
+            'score_competences': float(scores.get('score_competences', 0)),
+            'score_experience': float(scores.get('score_experience', 0)),
+            'score_formation': float(scores.get('score_formation', 0)),
+            'points_forts': scores.get('points_forts', []),
+            'points_faibles': scores.get('points_faibles', []),
+            'analyse': scores.get('analyse', 'Aucune analyse disponible')
+        }
+        
+        print(f"✅ Analyse réussie ! Score Global: {resultat_final['score_global']}%")
+        return resultat_final
 
     except Exception as e:
-        print(f"❌ Erreur Ollama: {e}")
+        print(f"❌ Erreur Groq: {e}")
         return None
+
+
+def mettre_a_jour_scores_dossier(dossier_id, force=False):
+    """
+    Met à jour les scores IA d'un dossier de candidature
+    """
+    
+    try:
+        dossier = DossierCandidature.objects.select_related('candidat', 'offre').get(id=dossier_id)
+    except DossierCandidature.DoesNotExist:
+        print(f"❌ Dossier #{dossier_id} non trouvé")
+        return False
+    
+    # Ne pas recalculer si déjà fait (sauf force=True)
+    if not force and dossier.score_compatibilite > 0:
+        print(f"⚠️ Dossier #{dossier_id} déjà noté (score: {dossier.score_compatibilite}%)")
+        return True
+    
+    print(f"\n📝 Analyse du dossier #{dossier_id}...")
+    
+    # Analyser la compatibilité
+    resultat = analyser_compatibilite(
+        candidat_id=dossier.candidat.particulier.id,
+        offre_id=dossier.offre.id,
+    )
+    
+    if resultat:
+        # Mettre à jour le dossier
+        dossier.score_compatibilite = resultat['score_global']
+        dossier.score_competences = resultat['score_competences']
+        dossier.score_experience = resultat['score_experience']
+        dossier.score_formation = resultat['score_formation']
+        dossier.points_forts = resultat['points_forts']
+        dossier.points_faibles = resultat['points_faibles']
+        dossier.analyse_cv = resultat['analyse']
+        dossier.save()
+        print(f"SCORE FINAL EN BASE : {dossier.score_compatibilite}")
+        dossier.refresh_from_db()
+        print(f"SCORE FINAL EN BASE : {dossier.score_compatibilite}")
+        
+        print(f"\n✅ Dossier #{dossier_id} mis à jour avec succès !")
+        return True
+    
+    return False
 
 
 # Point d'entrée pour tester
 if __name__ == "__main__":
-
-    if len(sys.argv) < 2:
-        print("Usage: python recommandation_emploi.py <candidat_id>")
-        print("Exemple: python recommandation_emploi.py 1")
-    else:
-        candidat_id = int(sys.argv[1])
-        recommander_offres(candidat_id)
+    if len(sys.argv) >= 3:
+        resultat = analyser_compatibilite(int(sys.argv[1]), int(sys.argv[2]))

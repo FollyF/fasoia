@@ -116,7 +116,9 @@ urlpatterns = [
     path('mes_soumissions/', 
          views.mes_soumissions, name='mes_soumissions'),
     
+    # Emploi
     path('trouver/emploi/', views.trouver_emploi, name='trouver_emploi'),
+    path('offre/modifier/<int:offre_id>/', views.modifier_offre, name='modifier_offre'),
     path('generer/cv/', views.generer_cv, name='generer_cv'),
     path('preparer/entretien/', views.preparer_entretien, name='preparer_entretien'),
     path('alerte/emploi/', views.alertes_emploi, name='alertes_emploi'),

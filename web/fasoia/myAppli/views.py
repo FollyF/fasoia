@@ -19,12 +19,14 @@ from io import BytesIO
 from weasyprint import HTML
 from html2docx import html2docx
 from django.core.mail import EmailMessage
-from .forms import InscriptionForm, ConnexionForm
+from .forms import *
 from .models import *
 from analyse_ia.models import *
+from analyse_ia.recommandation_emploi import mettre_a_jour_scores_dossier
 from .services.generateur_cv_public import GenerateurCVPublic
 from .generateur import GenerateurDocument
 from analyse_ia.ia_client import IAClient
+from django.db.models import Count, Q
 
 import re
 import os
@@ -501,7 +503,7 @@ def dashboard_candidat(request):
             est_rempli = bool(valeur)
         elif nom_champ in ['anneesExperiences', 'salaire_souhaite']:
             # Les nombres : >0 est considéré comme rempli
-            est_rempli = valeur is not None and valeur > 0
+            est_rempli = valeur is not None
         elif nom_champ == 'date_naissance':
             # Date de naissance optionnelle
             est_rempli = bool(valeur)
@@ -652,35 +654,42 @@ def dashboard_recruteur(request):
     
     recruteur = particulier.recruteur
     
-    # Récupérer les offres publiées
-    offres_publiees = OffreEmploi.objects.filter(recruteur=recruteur).order_by('-date_publication')
+    # Offres du recruteur
+    offres_publiees = OffreEmploi.objects.filter(
+        recruteur=recruteur, 
+        statut='PUBLIEE'
+    ).annotate(
+        nb_candidats_reels=Count(
+            'dossiers_candidature',
+            filter=Q(dossiers_candidature__statut__in=['SOUMIS', 'VU'])
+        )
+    ).order_by('-date_publication')
     
-    # ===== CALCUL DE LA PROGRESSION =====
-    champs_obligatoires = ['organisation', 'secteur', 'typeStructure', 'poste_occupe']
-    champs_remplis = 0
-    
-    for champ in champs_obligatoires:
-        valeur = getattr(recruteur, champ)
-        if valeur and str(valeur).strip():
-            champs_remplis += 1
-    
-    total_champs = len(champs_obligatoires)
-    progression = int((champs_remplis / total_champs) * 100) if total_champs > 0 else 0
-    profil_complet = (champs_remplis == total_champs)
-    nombre = 120000
-
-    print(f"🔍 Dashboard recruteur - profil_complet: {profil_complet}")
+    # ✅ RECOMMANDATIONS = candidats qui ont postulé, triés par score IA
+    talents_recommandes = DossierCandidature.objects.filter(
+        offre__recruteur=recruteur,
+        statut__in=[DossierCandidature.SOUMIS, DossierCandidature.VU]
+    ).select_related('offre', 'candidat__particulier').order_by('offre__titre', '-score_compatibilite')[:20]
     
     # Statistiques
     stats = {
         'offres_publiees': offres_publiees.count(),
-        'candidatures_recues': 0,
-        'talents_recommandes': 0,
+        'candidatures_recues': DossierCandidature.objects.filter(
+            offre__recruteur=recruteur,
+            statut__in=[DossierCandidature.SOUMIS, DossierCandidature.VU]
+        ).count(),
+        'talents_recommandes': talents_recommandes.count(),
     }
     
-    talents_recommandes = []
+    # Progression du profil
+    champs_obligatoires = ['organisation', 'secteur', 'typeStructure', 'poste_occupe']
+    champs_remplis = sum(1 for champ in champs_obligatoires 
+                        if getattr(recruteur, champ) and str(getattr(recruteur, champ)).strip())
     
-    # ===== CONTEXTE AVEC TOUTES LES VARIABLES =====
+    total_champs = len(champs_obligatoires)
+    progression = int((champs_remplis / total_champs) * 100) if total_champs > 0 else 0
+    profil_complet = (champs_remplis == total_champs)
+    
     context = {
         'recruteur': recruteur,
         'offres_publiees': offres_publiees,
@@ -689,12 +698,11 @@ def dashboard_recruteur(request):
         'progression': progression,
         'champs_remplis': champs_remplis,
         'total_champs': total_champs,
-        'profil_complet': profil_complet,  # ← ESSENTIEL !
-        'nombre': nombre
+        'profil_complet': profil_complet,
     }
     
     return render(request, 'myAppli/dashboard_recruteur.html', context)
-
+    
 @login_required
 def activer_profil_candidat(request):
     """Active le profil candidat pour un particulier"""
@@ -1176,6 +1184,33 @@ def detail_emploi(request, pk):
     except OffreEmploi.DoesNotExist:
         messages.error(request, "Cette offre d'emploi n'existe pas.")
         return redirect('myAppli:opportunites')
+
+@login_required
+def modifier_offre(request, offre_id):
+    # 1. On récupère l'offre ou on renvoie une erreur 404
+    offre = get_object_or_404(
+        OffreEmploi, 
+        id=offre_id, 
+        recruteur__particulier__user=request.user
+    )
+    
+    if request.method == 'POST':
+        # 2. On lie le formulaire à l'instance existante avec les nouvelles données (POST)
+        # On ajoute request.FILES si tu as des fichiers (ex: fichier_local)
+        form = OffreEmploiForm(request.POST, request.FILES, instance=offre)
+        
+        if form.is_valid():
+            form.save()
+            messages.success(request, "L'offre a été mise à jour avec succès !")
+            return redirect('myAppli:dashboard_recruteur') # Redirige vers ton tableau de bord
+    else:
+        # 3. Mode lecture : on affiche le formulaire pré-rempli
+        form = OffreEmploiForm(instance=offre)
+    
+    return render(request, 'myAppli/outils_emploi/modifier_offre.html', {
+        'form': form,
+        'offre': offre
+    })
 
 @login_required
 def nouvelle_soumission(request, opportunite_type, opportunite_id):
@@ -3851,7 +3886,7 @@ def enregistrer_dossier(request, offre_id):
                 utilisateur=request.user
             )
             dossier.lettre_generee_obj = lettre_obj
-            dossier.lettre_generee = lettre_generee_texte  # garde le texte aussi
+            dossier.lettre_generee = lettre_generee_texte
         except LettreMotivationGeneree.DoesNotExist:
             pass
     elif lettre_generee_texte:
@@ -3865,14 +3900,6 @@ def enregistrer_dossier(request, offre_id):
 
     # Message
     dossier.message_candidat = request.POST.get('message_candidat', '')
-
-    # Score compatibilité
-    try:
-        from analyse_ia.models import RecommandationEmploi
-        reco = RecommandationEmploi.objects.get(candidat=candidat, offre=offre)
-        dossier.score_compatibilite = reco.score_global
-    except Exception:
-        pass
 
     action = request.POST.get('action', 'sauvegarder')
 
@@ -3908,11 +3935,22 @@ def enregistrer_dossier(request, offre_id):
     dossier.save()
 
     if action == 'soumettre':
+        # ✅ Calculer les scores IA avec Ollama
+        print(f"🤖 Calcul des scores IA pour le dossier #{dossier.id}...")
+        succes_ia = mettre_a_jour_scores_dossier(dossier.id, force=False)
+        
+        if succes_ia:
+            print(f"✅ Scores IA calculés avec succès !")
+        else:
+            print(f"⚠️ Échec du calcul IA, scores par défaut conservés")
+        
+        dossier.refresh_from_db()
+        
         dossier.statut = DossierCandidature.SOUMIS
         dossier.date_soumission = timezone.now()
         dossier.save()
 
-        # Incrémenter le compteur de candidatures
+        # Incrémenter les compteurs
         offre.incrementer_candidatures()
         candidat.nb_candidatures_envoyees += 1
         candidat.save(update_fields=['nb_candidatures_envoyees'])
@@ -3930,7 +3968,6 @@ def enregistrer_dossier(request, offre_id):
     else:
         messages.success(request, "Dossier sauvegardé !")
         return redirect('myAppli:soumettre_candidature', offre_id=offre_id)
-
 
 def _envoyer_email_recruteur(dossier, offre, candidat):
     """Envoie un email au recruteur"""

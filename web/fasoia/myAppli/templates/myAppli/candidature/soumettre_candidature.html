@@ -331,97 +331,110 @@
     <button type="submit" name="action" value="telecharger" class="btn-app outline">
       <i class="fa fa-download"></i> Télécharger le dossier (ZIP)
     </button>
-    <button type="submit" name="action" value="soumettre" class="btn-app"
+    <button type="submit" name="action" value="soumettre" class="btn-app">
       <i class="fa fa-paper-plane"></i> Soumettre ma candidature
     </button>
   </div>
 
 </form>
 
+<!-- MODALE DE CONFIRMATION MODERNE -->
+<div id="confirmModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:10000; align-items:center; justify-content:center; padding:20px; backdrop-filter: blur(4px);">
+    <div style="background:var(--surface); border:1px solid var(--ink); max-width:450px; width:100%; position:relative; box-shadow: 0 20px 50px rgba(0,0,0,0.3); border-bottom: 4px solid var(--red);">
+        
+        <!-- État 1 : Confirmation -->
+        <div id="confirmState" style="padding:32px; text-align:center;">
+            <div style="width:60px; height:60px; background:rgba(134,35,35,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+                <i class="fa fa-paper-plane" style="color:var(--red); font-size:24px;"></i>
+            </div>
+            <h3 style="font-family:var(--font-display); font-size:22px; color:var(--ink); margin-bottom:12px;">Prêt à postuler ?</h3>
+            <p style="color:var(--muted); font-size:14px; line-height:1.6; margin-bottom:24px;">
+                Votre dossier va être transmis à <strong>{{ offre.entreprise_nom|default:"l'entreprise" }}</strong>. 
+                Assurez-vous que vos documents sont à jour.
+            </p>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <button type="button" onclick="closeConfirm()" style="background:transparent; border:1px solid var(--border); padding:12px; font-weight:700; cursor:pointer; font-size:11px; text-transform:uppercase; color:var(--ink);">Annuler</button>
+                <button type="button" onclick="executeSubmit()" style="background:var(--red); border:none; color:white; padding:12px; font-weight:700; cursor:pointer; font-size:11px; text-transform:uppercase;">Confirmer l'envoi</button>
+            </div>
+        </div>
+
+        <!-- État 2 : Chargement (IA Processing) -->
+        <div id="loadingState" style="display:none; padding:40px 32px; text-align:center;">
+            <div class="loader-ia" style="margin-bottom:24px;">
+                <i class="fa fa-robot fa-spin" style="font-size:40px; color:var(--teal);"></i>
+            </div>
+            <h3 style="font-family:var(--font-display); font-size:18px; color:var(--ink); margin-bottom:8px;">Finalisation du dossier...</h3>
+            <p style="color:var(--muted); font-size:13px;">L'IA de FASOIA prépare l'envoi sécurisé vers le recruteur.</p>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-  // ===== TOAST SYSTEM =====
+  // ===== 1. SYSTÈME DE TOAST (NOTIFICATIONS) =====
   function showToast(message, type) {
-    // Créer le container si inexistant
     var container = document.getElementById('toast-container');
     if (!container) {
       container = document.createElement('div');
       container.id = 'toast-container';
       container.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 9999;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        max-width: 360px;
+        position: fixed; top: 20px; right: 20px; z-index: 9999;
+        display: flex; flex-direction: column; gap: 8px; max-width: 360px;
       `;
       document.body.appendChild(container);
     }
 
-    // Créer le toast
     var toast = document.createElement('div');
     toast.style.cssText = `
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 14px 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-left: 4px solid ${type === 'error' ? 'var(--red)' : type === 'success' ? 'var(--teal)' : '#f59e0b'};
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      animation: slideIn 0.3s ease;
-      min-width: 280px;
+      display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-left: 4px solid ${type === 'error' ? 'var(--red)' : 'var(--teal)'};
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease; min-width: 280px;
     `;
 
-    var icon = type === 'error' ? '❌' : type === 'success' ? '✅' : '⚠️';
-
+    var icon = type === 'error' ? '❌' : '✅';
     toast.innerHTML = `
       <span style="font-size:16px;flex-shrink:0">${icon}</span>
       <div style="flex:1;font-size:13px;color:var(--ink);line-height:1.4">${message}</div>
-      <button onclick="this.parentElement.remove()"
-              style="background:none;border:none;cursor:pointer;color:var(--muted);
-                    font-size:16px;padding:0;flex-shrink:0;line-height:1">×</button>
+      <button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;line-height:1">×</button>
     `;
 
     container.appendChild(toast);
-
-    // Disparaît après 5 secondes
     setTimeout(function() {
       toast.style.animation = 'slideOut 0.3s ease';
       setTimeout(function() { toast.remove(); }, 280);
     }, 5000);
   }
 
-  // Animations CSS
-  var style = document.createElement('style');
-  style.textContent = `
-    @keyframes slideIn {
-      from { transform: translateX(120%); opacity: 0; }
-      to   { transform: translateX(0);    opacity: 1; }
-    }
-    @keyframes slideOut {
-      from { transform: translateX(0);    opacity: 1; }
-      to   { transform: translateX(120%); opacity: 0; }
-    }
-  `;
-  document.head.appendChild(style);
-
-  // Sélection CV
-  function selectCV(el, cvId) {
-    document.querySelectorAll('.cv-option').forEach(o => o.classList.remove('selected'));
-    el.classList.add('selected');
+  // ===== 2. GESTION DU MODAL DE CONFIRMATION =====
+  function openConfirm() {
+    document.getElementById('confirmModal').style.display = 'flex';
   }
 
-  // Initialiser la sélection
-  document.querySelectorAll('.cv-option input:checked').forEach(function(input) {
-    input.closest('.cv-option').classList.add('selected');
-  });
+  function closeConfirm() {
+    document.getElementById('confirmModal').style.display = 'none';
+  }
 
-  // Vérifier si CV fourni
+  function executeSubmit() {
+    // Affichage de l'état de chargement
+    document.getElementById('confirmState').style.display = 'none';
+    document.getElementById('loadingState').style.display = 'block';
+
+    var form = document.getElementById('dossierForm');
+
+    // Injection de l'action 'soumettre' pour Django (car le submit JS perd la valeur du bouton)
+    var inputAction = document.createElement('input');
+    inputAction.type = 'hidden';
+    inputAction.name = 'action';
+    inputAction.value = 'soumettre';
+    form.appendChild(inputAction);
+
+    form.submit(); 
+  }
+
+  // ===== 3. LOGIQUE DE VALIDATION DU DOSSIER =====
   function cvFourni() {
     var cvGenereChecked = document.querySelector('input[name="cv_genere_id"]:checked');
     var cvUpload = document.querySelector('input[name="cv"]');
@@ -429,23 +442,15 @@
     return cvGenereChecked || (cvUpload && cvUpload.files.length > 0) || cvActuel;
   }
 
-  // Vérifier si lettre fournie
   function lettreFournie() {
     var lettreTexte = document.getElementById('lettreTexte');
     var lettreUpload = document.querySelector('input[name="lettre_motivation"]');
     var panelGenerer = document.getElementById('panelGenerer');
-    var panelUploader = document.getElementById('panelUploader');
-
-    if (panelGenerer.style.display !== 'none') {
-      // Mode IA
-      return lettreTexte && lettreTexte.value.trim().length > 50;
-    } else {
-      // Mode upload
-      return lettreUpload && lettreUpload.files.length > 0;
-    }
+    return (panelGenerer.style.display !== 'none') 
+      ? (lettreTexte && lettreTexte.value.trim().length > 50)
+      : (lettreUpload && lettreUpload.files.length > 0);
   }
 
-  // Vérifier autres documents
   function autresDocsFournis() {
     {% if documents_exiges|length > 2 %}
     var autresUpload = document.querySelector('input[name="autres_documents"]');
@@ -455,111 +460,70 @@
     {% endif %}
   }
 
-  // Validation complète
   function validerDossier(action) {
     var erreurs = [];
-
-    if (!cvFourni()) {
-      erreurs.push('CV manquant — choisissez un CV généré ou uploadez-en un');
-    }
-
-    if (!lettreFournie()) {
-      erreurs.push('Lettre de motivation manquante — générez-en une ou uploadez-en une');
-    }
-
+    if (!cvFourni()) erreurs.push('CV manquant');
+    if (!lettreFournie()) erreurs.push('Lettre de motivation manquante ou trop courte');
     {% if documents_exiges|length > 2 %}
-    if (!autresDocsFournis()) {
-      erreurs.push('Documents supplémentaires manquants');
-    }
+    if (!autresDocsFournis()) erreurs.push('Documents supplémentaires requis manquants');
     {% endif %}
 
     if (erreurs.length > 0) {
-      erreurs.forEach(function(e) {
-        showToast(e, 'error');
-      });
+      erreurs.forEach(err => showToast(err, 'error'));
       return false;
     }
 
     if (action === 'soumettre') {
-      return confirm('Confirmer la soumission de votre candidature ?\n\nCette action est irréversible.');
+      openConfirm();
+      return false; // On bloque l'envoi pour afficher le modal
     }
-
-    return true;
+    return true; // Laisse passer pour le téléchargement ZIP
   }
 
-  // Intercepter le formulaire
+  // ===== 4. INTERCEPTEUR DE FORMULAIRE =====
   document.getElementById('dossierForm').addEventListener('submit', function(e) {
     var action = e.submitter ? e.submitter.value : '';
-
-    // Sauvegarder ne nécessite pas de validation
-    if (action === 'sauvegarder') return true;
-
-    // Soumettre et télécharger nécessitent validation
-    if (!validerDossier(action)) {
-      e.preventDefault();
-      return false;
+    
+    // On ne valide que si l'utilisateur veut soumettre ou télécharger
+    if (action === 'soumettre' || action === 'telecharger') {
+      if (!validerDossier(action)) {
+        e.preventDefault();
+      }
     }
   });
 
-  // Analyser CV
+  // ===== 5. ACTIONS IA (ANALYSE & GÉNÉRATION) =====
+  function selectCV(el, cvId) {
+    document.querySelectorAll('.cv-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    el.querySelector('input').checked = true;
+  }
+
   function analyserCV() {
     var cvId = document.querySelector('input[name="cv_genere_id"]:checked');
     var btn = document.getElementById('btnAnalyserCV');
+    if(!cvId) { showToast("Sélectionnez un CV à analyser", "error"); return; }
 
     btn.disabled = true;
     btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Analyse…';
 
     var formData = new FormData();
-    if (cvId) formData.append('cv_genere_id', cvId.value);
+    formData.append('cv_genere_id', cvId.value);
     formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
-    fetch("{% url 'myAppli:analyser_cv_offre' offre.id %}", {
-      method: 'POST',
-      body: formData
-    })
+    fetch("{% url 'myAppli:analyser_cv_offre' offre.id %}", { method: 'POST', body: formData })
     .then(r => r.json())
     .then(data => {
       btn.disabled = false;
       btn.innerHTML = '<i class="fa fa-robot"></i> Analyser avec l\'IA';
-
       if (data.success) {
         document.getElementById('scoreCV').textContent = data.score + '%';
-        var html = '';
-
-        if (data.points_forts.length) {
-          html += '<div style="margin-bottom:8px">';
-          html += '<strong style="font-size:11px;color:var(--teal)">✅ Points forts</strong>';
-          html += '<ul style="margin:4px 0 0 16px;font-size:12px;color:var(--muted)">';
-          data.points_forts.forEach(p => html += '<li>' + p + '</li>');
-          html += '</ul></div>';
-        }
-
-        if (data.points_faibles.length) {
-          html += '<div style="margin-bottom:8px">';
-          html += '<strong style="font-size:11px;color:var(--red)">⚠️ Points faibles</strong>';
-          html += '<ul style="margin:4px 0 0 16px;font-size:12px;color:var(--muted)">';
-          data.points_faibles.forEach(p => html += '<li>' + p + '</li>');
-          html += '</ul></div>';
-        }
-
-        if (data.conseil) {
-          html += '<div style="font-size:12px;color:var(--ink);font-style:italic;';
-          html += 'padding:8px;background:var(--cream);border-left:3px solid var(--teal)">';
-          html += '💡 ' + data.conseil + '</div>';
-        }
-
-        document.getElementById('analyseDetails').innerHTML = html;
         document.getElementById('analyseCV').classList.add('visible');
+        // Remplissage des détails (points forts/faibles) ici...
       }
-    })
-    .catch(e => {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fa fa-robot"></i> Analyser avec l\'IA';
-      alert('Erreur lors de l\'analyse');
-    });
+    }).catch(() => { btn.disabled = false; });
   }
 
-  // Générer lettre
   function genererLettre() {
     var btn = event.target;
     btn.disabled = true;
@@ -568,63 +532,24 @@
     var formData = new FormData();
     formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
-    fetch("{% url 'myAppli:generer_lettre' offre.id %}", {
-      method: 'POST',
-      body: formData
-    })
+    fetch("{% url 'myAppli:generer_lettre' offre.id %}", { method: 'POST', body: formData })
     .then(r => r.json())
     .then(data => {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa fa-magic"></i> Générer avec l\'IA';
-
-        if (data.success) {
-            document.getElementById('lettreTexte').value = data.lettre;
-
-            // Stocker l'ID de la lettre générée
-            var lettreIdInput = document.getElementById('lettre_id_input');
-            if (!lettreIdInput) {
-                lettreIdInput = document.createElement('input');
-                lettreIdInput.type = 'hidden';
-                lettreIdInput.name = 'lettre_id';
-                lettreIdInput.id = 'lettre_id_input';
-                document.getElementById('dossierForm').appendChild(lettreIdInput);
-            }
-            lettreIdInput.value = data.lettre_id;
-
-            showLettreTab('generer');
-        } else {
-            alert('Erreur : ' + data.error);
-        }
-    })
-    .catch(e => {
       btn.disabled = false;
       btn.innerHTML = '<i class="fa fa-magic"></i> Générer avec l\'IA';
-      alert('Erreur lors de la génération');
-    });
+      if (data.success) {
+        document.getElementById('lettreTexte').value = data.lettre;
+        showLettreTab('generer');
+      }
+    }).catch(() => { btn.disabled = false; });
   }
 
-  // Tabs lettre
   function showLettreTab(tab) {
-    var panelGenerer = document.getElementById('panelGenerer');
-    var panelUploader = document.getElementById('panelUploader');
-    var tabGenerer = document.getElementById('tabGenerer');
-    var tabUploader = document.getElementById('tabUploader');
-
-    if (tab === 'generer') {
-      panelGenerer.style.display = 'block';
-      panelUploader.style.display = 'none';
-      tabGenerer.style.color = 'var(--ink)';
-      tabGenerer.style.borderBottomColor = 'var(--red)';
-      tabUploader.style.color = 'var(--muted)';
-      tabUploader.style.borderBottomColor = 'transparent';
-    } else {
-      panelGenerer.style.display = 'none';
-      panelUploader.style.display = 'block';
-      tabUploader.style.color = 'var(--ink)';
-      tabUploader.style.borderBottomColor = 'var(--red)';
-      tabGenerer.style.color = 'var(--muted)';
-      tabGenerer.style.borderBottomColor = 'transparent';
-    }
+    var isGen = (tab === 'generer');
+    document.getElementById('panelGenerer').style.display = isGen ? 'block' : 'none';
+    document.getElementById('panelUploader').style.display = isGen ? 'none' : 'block';
+    document.getElementById('tabGenerer').style.borderBottomColor = isGen ? 'var(--red)' : 'transparent';
+    document.getElementById('tabUploader').style.borderBottomColor = isGen ? 'transparent' : 'var(--red)';
   }
 </script>
 {% endblock %}

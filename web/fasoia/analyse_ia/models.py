@@ -492,3 +492,66 @@ class QuestionEntretien(models.Model):
 
     def __str__(self):
         return f"Q{self.ordre} - {self.session}"
+    
+class RecommandationCandidatRecruteur(models.Model):
+    """
+    Candidats recommandés à un recruteur pour une offre
+    """
+    EN_ATTENTE = 'EN_ATTENTE'
+    INVITE = 'INVITE'
+    ACCEPTE = 'ACCEPTE'
+    REFUSE = 'REFUSE'
+
+    STATUT_CHOICES = [
+        (EN_ATTENTE, 'En attente'),
+        (INVITE, 'Invité'),
+        (ACCEPTE, 'A postulé'),
+        (REFUSE, 'Refusé'),
+    ]
+
+    offre = models.ForeignKey(
+        'myAppli.OffreEmploi',
+        on_delete=models.CASCADE,
+        related_name='candidats_recommandes'
+    )
+
+    candidat = models.ForeignKey(
+        'myAppli.Candidat',
+        on_delete=models.CASCADE,
+        related_name='recommandations_recruteur'
+    )
+
+    # Scores
+    score_global = models.FloatField(default=0.0)
+    score_competences = models.FloatField(default=0.0)
+    score_experience = models.FloatField(default=0.0)
+    score_formation = models.FloatField(default=0.0)
+
+    # Analyse IA
+    explication = models.TextField(
+        blank=True,
+        help_text="Explication Ollama de la compatibilité"
+    )
+    points_forts = models.JSONField(default=list)
+    points_faibles = models.JSONField(default=list)
+
+    # Statut
+    statut = models.CharField(
+        max_length=20,
+        choices=STATUT_CHOICES,
+        default=EN_ATTENTE
+    )
+
+    # Métadonnées
+    date_recommandation = models.DateTimeField(auto_now_add=True)
+    date_invitation = models.DateTimeField(null=True, blank=True)
+    vue = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ['offre', 'candidat']
+        ordering = ['-score_global']
+        verbose_name = "Candidat recommandé"
+        verbose_name_plural = "Candidats recommandés"
+
+    def __str__(self):
+        return f"{self.candidat} → {self.offre.titre} ({self.score_global:.0%})"
