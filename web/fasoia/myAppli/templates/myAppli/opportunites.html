@@ -418,7 +418,7 @@
                                         data-toggle="modal" data-target="#modalEmploi{{ emploi.id }}">
                                     Détails
                                 </button>
-                                <a href="#" class="btn-fasoia-primary btn-action">
+                                <a href="{% url 'myAppli:soumettre_candidature' emploi.id %}" class="btn-fasoia-primary btn-action">
                                     Postuler
                                 </a>
                             </td>
@@ -457,6 +457,7 @@
 
 {% block extra_js %}
 <script>
+
 // Gestion des onglets
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -471,6 +472,11 @@ document.addEventListener('DOMContentLoaded', function() {
             filterResults();
         });
     });
+    if (window.location.hash) {
+        var onglet = window.location.hash.substring(1);
+        var bouton = document.querySelector('.tab-btn[data-tab="' + onglet + '"]');
+        if (bouton) bouton.click();
+    }
 });
 
 // Recherche avec debounce

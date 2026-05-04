@@ -1392,3 +1392,30 @@ class DossierCandidature(models.Model):
         elif self.cv_genere and self.cv_genere.fichier_pdf:
             return self.cv_genere.fichier_pdf
         return None
+
+
+class Convocation(models.Model):
+    TYPE_CHOICES = [
+        ('presentiel', 'Entretien présentiel'),
+        ('visio', 'Entretien en ligne (visio)'),
+        ('telephone', 'Entretien téléphonique'),
+        ('technique', 'Test technique'),
+    ]
+    STATUT_CHOICES = [
+        ('envoyee', 'Envoyée'),
+        ('confirmee', 'Confirmée par le candidat'),
+        ('annulee', 'Annulée'),
+    ]
+
+    dossier       = models.ForeignKey('DossierCandidature', on_delete=models.CASCADE, related_name='convocations')
+    recruteur     = models.ForeignKey('Recruteur', on_delete=models.CASCADE)
+    date_rdv      = models.DateField()
+    heure_rdv     = models.TimeField()
+    type_entretien = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    lieu_rdv      = models.CharField(max_length=255)
+    message       = models.TextField(blank=True)
+    statut        = models.CharField(max_length=20, choices=STATUT_CHOICES, default='envoyee')
+    cree_le       = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Convocation {self.dossier.candidat} — {self.date_rdv}"

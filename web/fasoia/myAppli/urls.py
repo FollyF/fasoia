@@ -137,7 +137,9 @@ urlpatterns = [
     path('lettre/apercu/style/<str:style>/', views.apercu_style_lettre, name='apercu_style_lettre'),
     path('recruteur/publier/offre/', views.publier_offre_emploi, name='publier_offre_emploi'),
 
-    # Entretien 
+    # Entretien
+    path('convocation/envoyer/', views.envoyer_convocation, name='envoyer_convocation'), 
+    path('candidat/repondre/convocation/<int:convocation_id>/', views.repondre_convocation, name='repondre_convocation'),
     path('entretien/', views.preparer_entretien, name='preparer_entretien'),
     path('entretien/demarrer/', views.demarrer_session, name='demarrer_session'),
     path('entretien/session/<int:session_id>/', views.session_entretien, name='session_entretien'),

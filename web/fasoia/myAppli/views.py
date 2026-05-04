@@ -13,12 +13,14 @@ from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import UploadedFile
 from django.http import FileResponse
 from datetime import datetime, timedelta
+from django.utils.dateparse import parse_date, parse_time
 
 from docx import Document as DocxDocument
 from io import BytesIO
 from weasyprint import HTML
 from html2docx import html2docx
 from django.core.mail import EmailMessage
+from django.core.mail import send_mail
 from .forms import *
 from .models import *
 from analyse_ia.models import *
@@ -455,6 +457,10 @@ def dashboard_candidat(request):
     
     candidat = particulier.candidat
     
+    convocations = Convocation.objects.filter(
+        dossier__candidat=candidat
+    )
+
     # Récupérer les offres recommandées
     offres_recommandees = OffreEmploi.objects.filter(
         statut='PUBLIEE',
@@ -633,6 +639,8 @@ def dashboard_candidat(request):
         'recommandations_count': len(offres_recommandees),
         'cvs_generes': cvs_generes,  
         'cv_actif': cv_actif,  
+        'convocations' : convocations,
+        'convocations_obtenues' : convocations.count(),
     }
     
     return render(request, 'myAppli/dashboard_candidat.html', context)
@@ -794,7 +802,6 @@ def completer_profil_candidat(request):
         date_naissance = request.POST.get('date_naissance')
         if date_naissance:
             try:
-                from datetime import datetime
                 particulier.date_naissance = datetime.strptime(date_naissance, '%Y-%m-%d').date()
             except ValueError:
                 particulier.date_naissance = None
@@ -3424,7 +3431,6 @@ def generer_lettre_pdf(request):
     story.append(Spacer(1, 30))
     
     # Date
-    from datetime import datetime
     date_obj = timezone.now()()
     story.append(Paragraph(f"Le {date_obj.strftime('%d/%m/%Y')}", styles['Normal']))
     story.append(Spacer(1, 20))
@@ -4086,3 +4092,270 @@ def detail_dossier_candidature(request, dossier_id):
         'offre': dossier.offre,
         'candidat': candidat,
     })
+
+@login_required
+def envoyer_convocation(request):
+    if request.method != 'POST':
+        return redirect('myAppli:dashboard_recruteur')
+
+    # Vérifier que l'utilisateur a un profil recruteur
+    if not hasattr(request.user, 'particulier'):
+        messages.error(request, "Profil particulier non trouvé")
+        return redirect('myAppli:dashboard_recruteur')
+    
+    if not hasattr(request.user.particulier, 'recruteur'):
+        messages.error(request, "Vous n'avez pas de profil recruteur")
+        return redirect('myAppli:dashboard_particulier')
+    
+    recruteur = request.user.particulier.recruteur
+    dossier_id = request.POST.get('dossier_id')
+    dossier = get_object_or_404(DossierCandidature, id=dossier_id)
+    
+    # Vérifier que le dossier appartient bien à une offre de ce recruteur
+    if dossier.offre.recruteur != recruteur:
+        messages.error(request, "Vous n'êtes pas autorisé à convoquer ce candidat")
+        return redirect('myAppli:dashboard_recruteur')
+
+    # ✅ Conversion des données du formulaire avec parse_date et parse_time
+    date_rdv_str = request.POST.get('date_rdv')
+    heure_rdv_str = request.POST.get('heure_rdv')
+    
+    date_rdv = parse_date(date_rdv_str)
+    heure_rdv = parse_time(heure_rdv_str)
+    
+    if not date_rdv:
+        messages.error(request, "Format de date invalide. Utilisez JJ/MM/AAAA")
+        return redirect('myAppli:dashboard_recruteur')
+    
+    if not heure_rdv:
+        messages.error(request, "Format d'heure invalide. Utilisez HH:MM")
+        return redirect('myAppli:dashboard_recruteur')
+
+    # ✅ Création de la convocation
+    conv = Convocation.objects.create(
+        dossier        = dossier,
+        recruteur      = recruteur,
+        date_rdv       = date_rdv,           # ✅ objet date
+        heure_rdv      = heure_rdv,          # ✅ objet time
+        type_entretien = request.POST.get('type_entretien'),
+        lieu_rdv       = request.POST.get('lieu_rdv'),
+        message        = request.POST.get('message_convocation', ''),
+    )
+
+    # ✅ Formatage pour l'email
+    date_formatee = conv.date_rdv.strftime('%d/%m/%Y')
+    heure_formatee = conv.heure_rdv.strftime('%H:%M')
+    
+    types_entretien = dict(Convocation.TYPE_CHOICES)
+
+    # Envoi email
+    try:
+        send_mail(
+            subject=f"Convocation à un entretien — {dossier.offre.titre}",
+            message=f"""
+Bonjour {dossier.candidat.particulier.prenom},
+
+Vous êtes convoqué(e) à un entretien pour le poste : {dossier.offre.titre}
+
+📅 Date    : {date_formatee}
+⏰ Heure   : {heure_formatee}
+📋 Type    : {types_entretien.get(request.POST.get('type_entretien'), request.POST.get('type_entretien'))}
+📍 Lieu    : {request.POST.get('lieu_rdv')}
+
+💬 Message :
+{request.POST.get('message_convocation', '')}
+
+Cordialement,
+{recruteur.organisation}
+            """,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[dossier.candidat.particulier.email],
+            fail_silently=False,
+        )
+    except Exception as e:
+        print(f"Erreur envoi email: {e}")
+        messages.warning(request, "Convocation enregistrée mais l'email n'a pas pu être envoyé.")
+
+    messages.success(request, f"Convocation envoyée à {dossier.candidat.particulier.prenom} {dossier.candidat.particulier.nom}.")
+    return redirect('myAppli:dashboard_recruteur')
+
+@login_required
+@require_http_methods(["POST"])
+def repondre_convocation(request, convocation_id):
+    try:
+        # DEBUG: Voir le type de request.user
+        logger.info(f"Type de request.user: {type(request.user)}")
+        logger.info(f"request.user: {request.user}")
+        
+        # Récupérer le Particulier associé à l'utilisateur
+        # Si request.user est déjà un Particulier, on l'utilise directement
+        # Sinon, on le récupère via la relation one-to-one
+        if isinstance(request.user, Particulier):
+            particulier = request.user
+        else:
+            # request.user est un Utilisateur, on récupère le Particulier associé
+            try:
+                particulier = Particulier.objects.get(email=request.user.email)
+            except Particulier.DoesNotExist:
+                logger.error(f"Aucun Particulier trouvé pour {request.user.email}")
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Profil particulier non trouvé'
+                }, status=400)
+        
+        logger.info(f"Particulier trouvé: {particulier.email}")
+        
+        # Récupérer le candidat associé à ce particulier
+        try:
+            candidat = Candidat.objects.get(particulier=particulier)
+            logger.info(f"Candidat trouvé: ID={candidat.particulier.id}")
+        except Candidat.DoesNotExist:
+            logger.error(f"Aucun candidat pour {particulier.email}")
+            return JsonResponse({
+                'success': False,
+                'message': 'Vous devez d\'abord compléter votre profil candidat'
+            }, status=400)
+        
+        # Lire les données POST
+        try:
+            data = json.loads(request.body)
+            action = data.get('action')
+            logger.info(f"Action reçue: {action}")
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'success': False,
+                'message': 'Données invalides'
+            }, status=400)
+        
+        # Vérifier l'action
+        if action not in ['confirmee', 'annulee']:
+            return JsonResponse({
+                'success': False,
+                'message': 'Action invalide'
+            }, status=400)
+        
+        # Récupérer la convocation
+        try:
+            convocation = Convocation.objects.select_related(
+                'dossier__candidat__particulier',
+                'dossier__offre',
+                'recruteur__particulier'
+            ).get(
+                id=convocation_id,
+                dossier__candidat=candidat
+            )
+            logger.info(f"Convocation trouvée: {convocation.id}")
+        except Convocation.DoesNotExist:
+            logger.error(f"Convocation {convocation_id} non trouvée")
+            return JsonResponse({
+                'success': False,
+                'message': 'Convocation non trouvée'
+            }, status=404)
+        
+        # Vérifier que la convocation est encore en attente
+        if convocation.statut != 'envoyee':
+            statut_text = dict(Convocation.STATUT_CHOICES).get(convocation.statut, convocation.statut)
+            return JsonResponse({
+                'success': False,
+                'message': f'Cette convocation a déjà été {statut_text.lower()}'
+            }, status=400)
+        
+        # Mettre à jour le statut
+        convocation.statut = action
+        convocation.save()
+        logger.info(f"Convocation mise à jour: {convocation.statut}")
+        
+        # Préparer les messages
+        if action == 'confirmee':
+            action_text = "confirmée"
+            action_title = "CONFIRMATION"
+            action_emoji = "✅"
+            message_candidat_action = "confirmé votre participation"
+        else:
+            action_text = "annulée"
+            action_title = "ANNULATION"
+            action_emoji = "❌"
+            message_candidat_action = "annulé votre participation"
+        
+        # Envoyer un email au recruteur
+        if convocation.recruteur and convocation.recruteur.particulier:
+            recruteur_email = convocation.recruteur.particulier.email
+            if recruteur_email:
+                sujet_recruteur = f"{action_emoji} Convocation {action_title} - {convocation.dossier.offre.titre}"
+                message_recruteur = f"""
+Bonjour {convocation.recruteur.particulier.prenom} {convocation.recruteur.particulier.nom},
+
+Le candidat {candidat.particulier.prenom} {candidat.particulier.nom} a {action_text} votre convocation.
+
+📋 Détails de la convocation :
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Poste : {convocation.dossier.offre.titre}
+• Date : {convocation.date_rdv.strftime('%d/%m/%Y')}
+• Heure : {convocation.heure_rdv.strftime('%H:%M')}
+• Lieu : {convocation.lieu_rdv}
+• Type : {convocation.get_type_entretien_display()}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+{"📞 Vous pouvez contacter le candidat pour confirmer les modalités de l'entretien." if action == 'confirmee' else "🔍 Nous vous invitons à rechercher d'autres candidats pour ce poste."}
+
+Cordialement,
+L'équipe FASOIA
+"""
+                try:
+                    send_mail(
+                        sujet_recruteur,
+                        message_recruteur,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [recruteur_email],
+                        fail_silently=True,
+                    )
+                    logger.info(f"Email envoyé au recruteur: {recruteur_email}")
+                except Exception as e:
+                    logger.error(f"Erreur envoi email recruteur: {e}")
+        
+        # Envoyer un email au candidat
+        sujet_candidat = f"{action_emoji} Convocation {action_title} - {convocation.dossier.offre.titre}"
+        message_candidat = f"""
+Bonjour {candidat.particulier.prenom},
+
+Vous avez {message_candidat_action} à l'entretien.
+
+📋 Récapitulatif :
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Poste : {convocation.dossier.offre.titre}
+• Date : {convocation.date_rdv.strftime('%d/%m/%Y')}
+• Heure : {convocation.heure_rdv.strftime('%H:%M')}
+• Lieu : {convocation.lieu_rdv}
+• Type : {convocation.get_type_entretien_display()}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+{"✅ Rendez-vous confirmé ! N'oubliez pas d'arriver à l'heure." if action == 'confirmee' else "ℹ️ Le recruteur a été informé de votre annulation."}
+
+Cordialement,
+L'équipe FASOIA
+"""
+        try:
+            send_mail(
+                sujet_candidat,
+                message_candidat,
+                settings.DEFAULT_FROM_EMAIL,
+                [candidat.particulier.email],
+                fail_silently=True,
+            )
+            logger.info(f"Email envoyé au candidat: {candidat.particulier.email}")
+        except Exception as e:
+            logger.error(f"Erreur envoi email candidat: {e}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Convocation {action_text} avec succès'
+        })
+        
+    except Exception as e:
+        logger.error(f"Erreur dans repondre_convocation: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return JsonResponse({
+            'success': False,
+            'message': f'Erreur technique: {str(e)}'
+        }, status=500)

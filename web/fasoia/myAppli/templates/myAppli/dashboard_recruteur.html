@@ -249,14 +249,30 @@
   /* ===== BOUTONS ACTIONS (CORRIGÉS) ===== */
   .actions-col { min-width: 140px; text-align: center; }
   .btn-action {
-      display: block; width: 100%; max-width: 130px;
-      margin: 4px auto; padding: 7px 12px;
-      font-size: 11px; font-weight: 700; text-transform: uppercase;
-      cursor: pointer; border: none; text-decoration: none; text-align: center;
+      display: block; 
+      width: 100%; 
+      max-width: 130px;
+      margin: 4px auto; 
+      padding: 7px 12px;
+      font-size: 11px; 
+      font-weight: 700; 
+      text-transform: uppercase;
+      cursor: pointer;
+      border: none; 
+      text-decoration: none; 
+      text-align: center;
   }
   .btn-fasoia-primary { background: var(--red); color: white; }
   .btn-fasoia-outline { background: transparent; border: 1px solid var(--ink); color: var(--ink); }
   .btn-fasoia-outline:hover { background: var(--ink); color: white; }
+  .btn-fasoia-primary.btn-action,
+  .btn-fasoia-outline.btn-action {
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     gap: 6px;
+  }
+
 
   /* MODALS COMPACTS */
   .modal {
@@ -733,23 +749,45 @@
 
         <!-- Actions -->
         <div class="offer-footer-actions">
-          <a href=""
-             class="btn-fasoia-primary btn-action">
-            <i class="fa fa-eye"></i> Consulter
-          </a>
-          {% if dossier.cv_final %}
-          <a href="{{ dossier.cv_final.url }}" target="_blank"
-             class="btn-fasoia-outline btn-action">
-            <i class="fa fa-file-pdf"></i> CV
-          </a>
-          {% else %}
-          <span class="btn-fasoia-outline btn-action"
-                style="opacity:0.4;cursor:default">
-            <i class="fa fa-file-pdf"></i> CV
-          </span>
-          {% endif %}
+            <a href="#" class="btn-fasoia-primary btn-action">
+                <i class="fa fa-eye"></i> Consulter
+            </a>
+            
+            {% with conv=dossier.convocations.last %}
+                {% if conv %}
+                    {% if conv.statut == 'confirmee' %}
+                        <button type="button" class="btn-action" disabled 
+                                style="background:#28a745; color:white; border:none; cursor:not-allowed;">
+                            <i class="fa fa-check-circle"></i> Convocation cceptée
+                        </button>
+                    {% elif conv.statut == 'annulee' %}
+                        <button type="button" class="btn-action" disabled 
+                                style="background:#dc3545; color:white; border:none; cursor:not-allowed;">
+                            <i class="fa fa-times-circle"></i> Convocation refusée
+                        </button>
+                    {% else %}
+                        <!-- statut 'envoyee' ou autre = en attente -->
+                        <button type="button" class="btn-action" disabled 
+                                style="background:#f59e0b; color:white; border:none; cursor:not-allowed;">
+                            <i class="fa fa-clock"></i> Convocation en attente...
+                        </button>
+                    {% endif %}
+                {% else %}
+                    <!-- Pas de convocation -->
+                    <button type="button"
+                            id="btn-conv-{{ dossier.id }}"
+                            class="btn-fasoia-outline btn-action"
+                            onclick="ouvrirConvocation(
+                                '{{ dossier.candidat.particulier.prenom }} {{ dossier.candidat.particulier.nom }}',
+                                '{{ dossier.offre.titre }}',
+                                '{{ dossier.score_compatibilite|floatformat:0 }}',
+                                {{ dossier.id }}
+                            )">
+                        <i class="fa fa-calendar-check"></i> Pré-sélectionner
+                    </button>
+                {% endif %}
+            {% endwith %}
         </div>
-
       </div>
       {% endfor %}
     </div>
@@ -910,6 +948,24 @@
                             </strong>
                         </div>
                     </div>
+
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-2 border rounded text-center bg-light">
+                            <small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">Candidats ayant postulés</small>
+                            <i class="fa fa-users"></i> 
+                            {% if offre.nb_candidats_reels > 0 %}
+                                <!-- Style si au moins 1 candidat : Rouge Fasoia, Gras et une petite animation -->
+                                <strong style="color: var(--red); font-weight: 800; font-size: 1.1em;">
+                                    {{ offre.nb_candidats_reels }}
+                                </strong> 
+                            {% else %}
+                                <!-- Style par défaut si 0 candidat -->
+                                <strong>Aucun</strong>
+                            {% endif %}
+                            
+                        </div>
+                    </div>
+
                 </div>
 
                 <hr>
@@ -987,7 +1043,102 @@
 </div>
 {% endfor %}
 
-{% endblock %}
+<!-- MODAL CONVOCATION -->
+<div class="modal fade" id="modalConvocation" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document" style="max-width:500px">
+    <div class="modal-content border-0 shadow-lg" style="border-radius:6px;overflow:hidden">
+
+      <div class="modal-header" style="background:#1e293b;padding:14px 20px;border:none">
+        <div>
+          <small style="font-size:10px;text-transform:uppercase;letter-spacing:1px;
+                        color:rgba(255,255,255,0.5)">Convoquer le candidat</small>
+          <h5 class="modal-title" id="conv-nom-candidat"
+              style="font-size:17px;font-weight:700;color:#fff;margin:0"></h5>
+        </div>
+        <button type="button" class="close text-white" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body p-4">
+        <!-- Carte récap candidat -->
+        <div id="conv-recap"
+             style="display:flex;align-items:center;gap:12px;
+                    background:var(--cream);padding:10px 14px;
+                    border:1px solid var(--border);margin-bottom:18px">
+          <div id="conv-avatar"
+               style="width:38px;height:38px;border-radius:50%;
+                      background:#e0f2f1;display:flex;align-items:center;
+                      justify-content:center;font-weight:700;font-size:13px;
+                      color:#2c7a7b;flex-shrink:0"></div>
+          <div>
+            <div id="conv-nom-detail" style="font-size:13px;font-weight:700;color:var(--ink)"></div>
+            <div id="conv-poste-detail" style="font-size:12px;color:var(--muted)"></div>
+          </div>
+          <span id="conv-score-badge"
+                style="margin-left:auto;background:#e6fffa;color:#2c7a7b;
+                       border:1px solid #b2f5ea;padding:3px 10px;
+                       font-size:11px;font-weight:700"></span>
+        </div>
+
+        <form method="POST" action="{% url 'myAppli:envoyer_convocation' %}" id="form-convocation">
+          {% csrf_token %}
+          <input type="hidden" name="dossier_id" id="conv-dossier-id">
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <div class="form-field">
+              <label class="required-star" style="font-size:11px">Date du rendez-vous</label>
+              <input type="date" name="date_rdv" required>
+            </div>
+            <div class="form-field">
+              <label class="required-star" style="font-size:11px">Heure</label>
+              <input type="time" name="heure_rdv" required>
+            </div>
+          </div>
+
+          <div class="form-field" style="margin-bottom:12px">
+            <label class="required-star" style="font-size:11px">Type d'entretien</label>
+            <select name="type_entretien" required>
+              <option value="">Sélectionnez...</option>
+              <option value="presentiel">Entretien présentiel</option>
+              <option value="visio">Entretien en ligne (visio)</option>
+              <option value="telephone">Entretien téléphonique</option>
+              <option value="technique">Test technique</option>
+            </select>
+          </div>
+
+          <div class="form-field" style="margin-bottom:12px">
+            <label class="required-star" style="font-size:11px">Lieu / Lien de réunion</label>
+            <input type="text" name="lieu_rdv"
+                   placeholder="Ex: Siège social, rue du Commerce — ou lien Zoom" required>
+          </div>
+
+          <div class="form-field" style="margin-bottom:18px">
+            <label style="font-size:11px">
+              Message personnalisé
+              <span style="color:var(--hint);font-size:10px">(optionnel)</span>
+            </label>
+            <textarea name="message_convocation" rows="3"
+                      placeholder="Merci de votre candidature. Nous avons le plaisir de vous convier..."
+                      style="width:100%;resize:vertical"></textarea>
+          </div>
+
+          <div style="display:flex;gap:10px">
+            <button type="button" class="btn-fasoia-outline btn-action"
+                    style="flex:1" data-dismiss="modal">Annuler</button>
+            <button type="submit" class="btn-fasoia-primary btn-action"
+                    style="flex:2" id="btn-envoyer-conv">
+              <i class="fa fa-paper-plane"></i> Envoyer la convocation
+            </button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
 
 {% block extra_js %}
 <script>
@@ -1046,5 +1197,30 @@ if (form) {
         btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Enregistrement...';
     });
 }
+
+function ouvrirConvocation(nomComplet, titreOffre, score, dossierId) {
+  document.getElementById('conv-nom-candidat').innerText = nomComplet;
+  document.getElementById('conv-nom-detail').innerText = nomComplet;
+  document.getElementById('conv-poste-detail').innerText = 'Poste : ' + titreOffre;
+  document.getElementById('conv-score-badge').innerText = score + '% match';
+  document.getElementById('conv-dossier-id').value = dossierId;
+
+  // Initiales pour l'avatar
+  const initiales = nomComplet.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  document.getElementById('conv-avatar').innerText = initiales;
+
+  $('#modalConvocation').modal('show');
+}
+
+// Loader sur envoi convocation
+const formConv = document.getElementById('form-convocation');
+if (formConv) {
+  formConv.addEventListener('submit', function() {
+    const btn = document.getElementById('btn-envoyer-conv');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Envoi...';
+  });
+}
+
 </script>
 {% endblock %}
