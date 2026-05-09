@@ -53,6 +53,8 @@ INSTALLED_APPS = [
     'myAppli', 
     'analyse_ia',
     'corsheaders',
+    'rest_framework',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -176,3 +178,15 @@ GROQ_API_KEY = config('GROQ_API_KEY')
 GROQ_MODEL = "llama-3.1-8b-instant"
 OLLAMA_URL = "http://localhost:11434"
 OLLAMA_MODEL = "gemma2:2b"
+
+# =============================================
+# CONFIGURATION DRF + JWT
+# =============================================
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}

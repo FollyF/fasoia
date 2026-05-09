@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import '../services/api_service.dart';
+import '../utils/constants.dart';
 
-class RegistrationScreen extends StatefulWidget {
-  const RegistrationScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<RegistrationScreen> createState() => _RegistrationScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegistrationScreenState extends State<RegistrationScreen>
+class _RegisterScreenState extends State<RegisterScreen>
     with SingleTickerProviderStateMixin {
   // ─── État ────────────────────────────────────────────────────────────────
   String _profileType = 'particulier';
@@ -29,13 +29,6 @@ class _RegistrationScreenState extends State<RegistrationScreen>
   late final AnimationController _animController;
   late final Animation<double> _fadeAnim;
   late final Animation<Offset> _slideAnim;
-
-  // ─── Couleurs ─────────────────────────────────────────────────────────────
-  static const _red = Color(0xFFD32F2F);
-  static const _cream = Color(0xFFF8F4ED);
-  static const _ink = Color(0xFF2C1810);
-  static const _muted = Color(0xFF8B7355);
-  static const _border = Color(0xFFE0D8CC);
 
   @override
   void initState() {
@@ -62,7 +55,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
     super.dispose();
   }
 
-  // ─── Inscription ──────────────────────────────────────────────────────────
+  // ─── Inscription avec ApiService ──────────────────────────────────────────
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -72,38 +65,29 @@ class _RegistrationScreenState extends State<RegistrationScreen>
     });
 
     try {
-      final url = Uri.parse('http://127.0.0.1:8000/api/register/');
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'profile_type': _profileType,
-          'email': _emailController.text.trim(),
-          'password': _passwordController.text,
-          'fullname': _profileType == 'particulier' ? _nameController.text.trim() : '',
-          'raison_sociale': _profileType == 'entreprise' ? _nameController.text.trim() : '',
-        }),
+      final result = await ApiService.register(
+        profileType: _profileType,
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        fullname: _profileType == 'particulier' ? _nameController.text.trim() : null,
+        raisonSociale: _profileType == 'entreprise' ? _nameController.text.trim() : null,
       );
-      final data = jsonDecode(response.body);
-      debugPrint('STATUS: ${response.statusCode}');
-      debugPrint('BODY: ${response.body}');
-      
-      if (response.statusCode == 201) {
-        if (mounted){
-          _showSuccessSnackbar();
 
-          // --- LOGIQUE DE REDIRECTION ---
-          String profileType = data['user']['profile_type'];
+      if (result['success']) {
+        _showSuccessSnackbar();
 
+        final userData = result['data']['user'];
+        final profileType = userData['profile_type'];
+
+        if (mounted) {
           if (profileType == 'entreprise') {
             Navigator.pushReplacementNamed(context, '/dashboard_entreprise');
-          }else {
+          } else {
             Navigator.pushReplacementNamed(context, '/dashboard_particulier');
           }
-        } 
-        
+        }
       } else {
-        setState(() => _errorMessage = data['email']?[0] ?? 'Une erreur est survenue.');
+        setState(() => _errorMessage = result['error']);
       }
     } catch (e) {
       setState(() => _errorMessage = 'Impossible de contacter le serveur.');
@@ -122,7 +106,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
             Text('Compte créé avec succès !'),
           ],
         ),
-        backgroundColor: Colors.green.shade700,
+        backgroundColor: AppColors.green,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         margin: const EdgeInsets.all(16),
@@ -130,19 +114,19 @@ class _RegistrationScreenState extends State<RegistrationScreen>
     );
   }
 
-// ─── UI ───────────────────────────────────────────────────────────────────
+  // ─── UI ───────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _cream,
+      backgroundColor: AppColors.cream,
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnim,
           child: SlideTransition(
             position: _slideAnim,
             child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(), // ← ajouté
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20), // ← 32→20
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -153,38 +137,38 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                       child: Column(
                         children: [
                           Container(
-                            width: 56,  // ← 64→56
-                            height: 56, // ← 64→56
+                            width: 56,
+                            height: 56,
                             decoration: BoxDecoration(
-                              color: _red,
+                              color: AppColors.red,
                               borderRadius: BorderRadius.circular(14),
                               boxShadow: [
                                 BoxShadow(
-                                  color: _red.withOpacity(0.3),
+                                  color: AppColors.red.withOpacity(0.3),
                                   blurRadius: 16,
                                   offset: const Offset(0, 6),
                                 ),
                               ],
                             ),
                             child: const Icon(Icons.business_center_outlined,
-                                color: Colors.white, size: 28), // ← 32→28
+                                color: Colors.white, size: 28),
                           ),
-                          const SizedBox(height: 12), // ← 16→12
+                          const SizedBox(height: 12),
                           const Text(
                             'FASOIA',
                             style: TextStyle(
-                              fontSize: 26,            // ← 28→26
+                              fontSize: 26,
                               fontWeight: FontWeight.w800,
-                              color: _ink,
+                              color: AppColors.ink,
                               letterSpacing: 4,
                             ),
                           ),
-                          const SizedBox(height: 4),  // ← 6→4
+                          const SizedBox(height: 4),
                           const Text(
                             'Créez votre compte',
                             style: TextStyle(
-                              fontSize: 14,            // ← 15→14
-                              color: _muted,
+                              fontSize: 14,
+                              color: AppColors.muted,
                               letterSpacing: 0.3,
                             ),
                           ),
@@ -192,25 +176,24 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                       ),
                     ),
 
-                    const SizedBox(height: 24), // ← 36→24
+                    const SizedBox(height: 24),
 
                     // ── Sélecteur de profil ─────────────────────────────────
-                    // (inchangé)
                     const Text(
                       'Type de compte',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: _muted,
+                        color: AppColors.muted,
                         letterSpacing: 0.8,
                       ),
                     ),
-                    const SizedBox(height: 8),  // ← 10→8
+                    const SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _border),
+                        border: Border.all(color: AppColors.border),
                       ),
                       padding: const EdgeInsets.all(4),
                       child: Row(
@@ -237,11 +220,11 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                       ),
                     ),
 
-                    const SizedBox(height: 18), // ← 24→18
+                    const SizedBox(height: 18),
 
                     // ── Champs ──────────────────────────────────────────────
                     _buildLabel(_profileType == 'particulier' ? 'Nom complet' : 'Raison sociale'),
-                    const SizedBox(height: 6), // ← 8→6
+                    const SizedBox(height: 6),
                     TextFormField(
                       controller: _nameController,
                       textCapitalization: TextCapitalization.words,
@@ -253,22 +236,22 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                           _profileType == 'particulier'
                               ? Icons.person_outline
                               : Icons.business_outlined,
-                          color: _muted,
+                          color: AppColors.muted,
                         ),
                       ),
                       validator: (v) =>
                           v == null || v.trim().isEmpty ? 'Ce champ est requis' : null,
                     ),
 
-                    const SizedBox(height: 14), // ← 18→14
+                    const SizedBox(height: 14),
                     _buildLabel('Adresse email'),
-                    const SizedBox(height: 6),  // ← 8→6
+                    const SizedBox(height: 6),
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: const InputDecoration(
                         hintText: 'exemple@email.com',
-                        prefixIcon: Icon(Icons.mail_outline, color: _muted),
+                        prefixIcon: Icon(Icons.mail_outline, color: AppColors.muted),
                       ),
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) return 'L\'email est requis';
@@ -277,21 +260,21 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                       },
                     ),
 
-                    const SizedBox(height: 14), // ← 18→14
+                    const SizedBox(height: 14),
                     _buildLabel('Mot de passe'),
-                    const SizedBox(height: 6),  // ← 8→6
+                    const SizedBox(height: 6),
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         hintText: 'Minimum 8 caractères',
-                        prefixIcon: const Icon(Icons.lock_outline, color: _muted),
+                        prefixIcon: const Icon(Icons.lock_outline, color: AppColors.muted),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword
                                 ? Icons.visibility_off_outlined
                                 : Icons.visibility_outlined,
-                            color: _muted,
+                            color: AppColors.muted,
                           ),
                           onPressed: () =>
                               setState(() => _obscurePassword = !_obscurePassword),
@@ -304,21 +287,21 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                       },
                     ),
 
-                    const SizedBox(height: 14), // ← 18→14
+                    const SizedBox(height: 14),
                     _buildLabel('Confirmer le mot de passe'),
-                    const SizedBox(height: 6),  // ← 8→6
+                    const SizedBox(height: 6),
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: _obscureConfirm,
                       decoration: InputDecoration(
                         hintText: 'Répétez votre mot de passe',
-                        prefixIcon: const Icon(Icons.lock_outline, color: _muted),
+                        prefixIcon: const Icon(Icons.lock_outline, color: AppColors.muted),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscureConfirm
                                 ? Icons.visibility_off_outlined
                                 : Icons.visibility_outlined,
-                            color: _muted,
+                            color: AppColors.muted,
                           ),
                           onPressed: () =>
                               setState(() => _obscureConfirm = !_obscureConfirm),
@@ -333,9 +316,9 @@ class _RegistrationScreenState extends State<RegistrationScreen>
 
                     // ── Message d'erreur ────────────────────────────────────
                     if (_errorMessage != null) ...[
-                      const SizedBox(height: 12), // ← 16→12
+                      const SizedBox(height: 12),
                       Container(
-                        padding: const EdgeInsets.all(10), // ← 12→10
+                        padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: Colors.red.shade50,
                           borderRadius: BorderRadius.circular(10),
@@ -358,7 +341,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                       ),
                     ],
 
-                    const SizedBox(height: 22), // ← 28→22
+                    const SizedBox(height: 22),
 
                     // ── Bouton ──────────────────────────────────────────────
                     AnimatedSwitcher(
@@ -366,10 +349,10 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                       child: _isLoading
                           ? Container(
                               key: const ValueKey('loading'),
-                              height: 50,  // ← 52→50
-                              width: double.infinity, // ← ajouté
+                              height: 50,
+                              width: double.infinity,
                               decoration: BoxDecoration(
-                                color: _red.withOpacity(0.8),
+                                color: AppColors.red.withOpacity(0.8),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Center(
@@ -384,7 +367,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                               ),
                             )
                           : SizedBox(
-                              width: double.infinity, // ← bouton pleine largeur garanti
+                              width: double.infinity,
                               child: ElevatedButton(
                                 key: const ValueKey('button'),
                                 onPressed: _register,
@@ -393,23 +376,23 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                             ),
                     ),
 
-                    const SizedBox(height: 16), // ← 20→16
+                    const SizedBox(height: 16),
 
                     // ── Connexion ───────────────────────────────────────────
                     Center(
                       child: TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, '/login');
+                          Navigator.pushReplacementNamed(context, '/login');
                         },
                         child: RichText(
                           text: const TextSpan(
                             text: 'Déjà un compte ? ',
-                            style: TextStyle(color: _muted, fontSize: 14),
+                            style: TextStyle(color: AppColors.muted, fontSize: 14),
                             children: [
                               TextSpan(
                                 text: 'Se connecter',
                                 style: TextStyle(
-                                  color: _red,
+                                  color: AppColors.red,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -419,7 +402,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                       ),
                     ),
 
-                    const SizedBox(height: 8), // ← espace bas de sécurité
+                    const SizedBox(height: 8),
                   ],
                 ),
               ),
@@ -436,7 +419,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
       style: const TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: _muted,
+        color: AppColors.muted,
         letterSpacing: 0.5,
       ),
     );
@@ -466,7 +449,7 @@ class _ProfileTab extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 11),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFFD32F2F) : Colors.transparent,
+            color: isSelected ? AppColors.red : Colors.transparent,
             borderRadius: BorderRadius.circular(9),
           ),
           child: Row(
@@ -474,14 +457,14 @@ class _ProfileTab extends StatelessWidget {
             children: [
               Icon(icon,
                   size: 16,
-                  color: isSelected ? Colors.white : const Color(0xFF8B7355)),
+                  color: isSelected ? Colors.white : AppColors.muted),
               const SizedBox(width: 6),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: isSelected ? Colors.white : const Color(0xFF8B7355),
+                  color: isSelected ? Colors.white : AppColors.muted,
                 ),
               ),
             ],

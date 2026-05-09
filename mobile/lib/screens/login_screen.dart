@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import '../services/api_service.dart';
+import '../utils/constants.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,13 +26,6 @@ class _LoginScreenState extends State<LoginScreen>
   late final Animation<double> _fadeAnim;
   late final Animation<Offset> _slideAnim;
 
-  // ─── Couleurs (Identiques à Registration) ────────────────────────────────
-  static const _red = Color(0xFFD32F2F);
-  static const _cream = Color(0xFFF8F4ED);
-  static const _ink = Color(0xFF2C1810);
-  static const _muted = Color(0xFF8B7355);
-  static const _border = Color(0xFFE0D8CC);
-
   @override
   void initState() {
     super.initState();
@@ -56,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
-  // ─── Logique de Connexion ────────────────────────────────────────────────
+  // ─── Logique de Connexion avec ApiService ────────────────────────────────
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -66,38 +59,24 @@ class _LoginScreenState extends State<LoginScreen>
     });
 
     try {
-      final url = Uri.parse('http://127.0.0.1:8000/api/login/');
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'username': _emailController.text.trim(),
-          'password': _passwordController.text,
-        }),
+      final result = await ApiService.login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
       );
 
-      final data = jsonDecode(response.body);
-      debugPrint('STATUS: ${response.statusCode}');
-      debugPrint('BODY: ${response.body}');
-      
-      if (response.statusCode == 200) {
-        // Succès : Redirection vers le Dashboard de FASOIA
-        if (mounted){
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Connexion réussie !'), backgroundColor: Colors.green),
-          );
-          // --- LOGIQUE DE REDIRECTION ---
-          String profileType = data['user']['profile_type'];
-
+      if (result['success']) {
+        final userData = result['data']['user'];
+        final profileType = userData['profile_type'];
+        
+        if (mounted) {
           if (profileType == 'entreprise') {
-            Navigator.pushReplacementNamed(context, '/dashboard/entreprise');
-          }else {
-            Navigator.pushReplacementNamed(context, '/dashboard/particulier');
+            Navigator.pushReplacementNamed(context, '/dashboard_entreprise');
+          } else {
+            Navigator.pushReplacementNamed(context, '/dashboard_particulier');
           }
-        } 
+        }
       } else {
-        setState(() => _errorMessage = data['message'] ?? 'Identifiants incorrects.');
+        setState(() => _errorMessage = result['error']);
       }
     } catch (e) {
       setState(() => _errorMessage = 'Impossible de contacter le serveur.');
@@ -109,13 +88,13 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _cream,
+      backgroundColor: AppColors.cream,
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnim,
           child: SlideTransition(
             position: _slideAnim,
-            child: Center( // On centre pour la connexion
+            child: Center(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -133,11 +112,11 @@ class _LoginScreenState extends State<LoginScreen>
                               width: 56,
                               height: 56,
                               decoration: BoxDecoration(
-                                color: _red,
+                                color: AppColors.red,
                                 borderRadius: BorderRadius.circular(14),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: _red.withOpacity(0.3),
+                                    color: AppColors.red.withOpacity(0.3),
                                     blurRadius: 16,
                                     offset: const Offset(0, 6),
                                   ),
@@ -152,14 +131,14 @@ class _LoginScreenState extends State<LoginScreen>
                               style: TextStyle(
                                 fontSize: 26,
                                 fontWeight: FontWeight.w800,
-                                color: _ink,
+                                color: AppColors.ink,
                                 letterSpacing: 4,
                               ),
                             ),
                             const SizedBox(height: 4),
                             const Text(
                               'Bon retour parmi nous',
-                              style: TextStyle(fontSize: 14, color: _muted),
+                              style: TextStyle(fontSize: 14, color: AppColors.muted),
                             ),
                           ],
                         ),
@@ -175,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen>
                         keyboardType: TextInputType.emailAddress,
                         decoration: const InputDecoration(
                           hintText: 'votre@email.com',
-                          prefixIcon: Icon(Icons.mail_outline, color: _muted),
+                          prefixIcon: Icon(Icons.mail_outline, color: AppColors.muted),
                         ),
                         validator: (v) => (v == null || v.isEmpty) ? 'Email requis' : null,
                       ),
@@ -189,13 +168,13 @@ class _LoginScreenState extends State<LoginScreen>
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
                           hintText: '••••••••',
-                          prefixIcon: const Icon(Icons.lock_outline, color: _muted),
+                          prefixIcon: const Icon(Icons.lock_outline, color: AppColors.muted),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword
                                   ? Icons.visibility_off_outlined
                                   : Icons.visibility_outlined,
-                              color: _muted,
+                              color: AppColors.muted,
                             ),
                             onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                           ),
@@ -207,10 +186,12 @@ class _LoginScreenState extends State<LoginScreen>
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            // TODO: Ajouter la page de réinitialisation
+                          },
                           child: const Text(
                             'Mot de passe oublié ?',
-                            style: TextStyle(color: _muted, fontSize: 13),
+                            style: TextStyle(color: AppColors.muted, fontSize: 13),
                           ),
                         ),
                       ),
@@ -243,17 +224,17 @@ class _LoginScreenState extends State<LoginScreen>
                       Center(
                         child: TextButton(
                           onPressed: () {
-                            Navigator.pushNamed(context, '/register');
+                            Navigator.pushReplacementNamed(context, '/register');
                           },
                           child: RichText(
                             text: const TextSpan(
                               text: "Pas encore de compte ? ",
-                              style: TextStyle(color: _muted, fontSize: 14),
+                              style: TextStyle(color: AppColors.muted, fontSize: 14),
                               children: [
                                 TextSpan(
                                   text: "S'inscrire",
                                   style: TextStyle(
-                                    color: _red,
+                                    color: AppColors.red,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -276,7 +257,14 @@ class _LoginScreenState extends State<LoginScreen>
   // ─── Helpers UI ────────────────────────────────────────────────────────────
 
   Widget _buildLabel(String text) {
-    return Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _muted));
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: AppColors.muted,
+      ),
+    );
   }
 
   Widget _buildErrorBox(String msg) {
@@ -291,7 +279,12 @@ class _LoginScreenState extends State<LoginScreen>
         children: [
           Icon(Icons.error_outline, color: Colors.red.shade700, size: 18),
           const SizedBox(width: 8),
-          Expanded(child: Text(msg, style: TextStyle(color: Colors.red.shade700, fontSize: 13))),
+          Expanded(
+            child: Text(
+              msg,
+              style: TextStyle(color: Colors.red.shade700, fontSize: 13),
+            ),
+          ),
         ],
       ),
     );
@@ -301,8 +294,20 @@ class _LoginScreenState extends State<LoginScreen>
     return Container(
       height: 50,
       width: double.infinity,
-      decoration: BoxDecoration(color: _red.withOpacity(0.8), borderRadius: BorderRadius.circular(12)),
-      child: const Center(child: SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))),
+      decoration: BoxDecoration(
+        color: AppColors.red.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Center(
+        child: SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(
+            color: Colors.white,
+            strokeWidth: 2.5,
+          ),
+        ),
+      ),
     );
   }
 }

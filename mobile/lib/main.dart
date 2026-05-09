@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'registration_screen.dart';
-import 'login_sreen.dart';
-import 'dashboard_entreprise.dart';
-import 'dashboard_particulier.dart';
-
+import 'screens/splash_screen.dart';
+import 'screens/login_screen.dart';
+import 'screens/register_screen.dart';
+import 'screens/dashboard_entreprise.dart';
+import 'screens/dashboard_particulier.dart';
+import 'utils/constants.dart';
 
 void main() {
   runApp(const FasoiaApp());
@@ -20,33 +21,33 @@ class FasoiaApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFD32F2F),
+          seedColor: AppColors.red,
           brightness: Brightness.light,
         ),
-        scaffoldBackgroundColor: const Color(0xFFF8F4ED),
-        fontFamily: 'Georgia',
+        scaffoldBackgroundColor: AppColors.cream,
+        fontFamily: 'Poppins',
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: Colors.white,
+          fillColor: AppColors.white,
           contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFE0D8CC)),
+            borderSide: const BorderSide(color: AppColors.border),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFE0D8CC)),
+            borderSide: const BorderSide(color: AppColors.border),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFD32F2F), width: 2),
+            borderSide: const BorderSide(color: AppColors.red, width: 2),
           ),
-          labelStyle: const TextStyle(color: Color(0xFF8B7355)),
+          labelStyle: const TextStyle(color: AppColors.muted),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFD32F2F),
-            foregroundColor: Colors.white,
+            backgroundColor: AppColors.red,
+            foregroundColor: AppColors.white,
             minimumSize: const Size(double.infinity, 52),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -59,15 +60,13 @@ class FasoiaApp extends StatelessWidget {
           ),
         ),
       ),
-      // On définit la page de démarrage (Connexion)
-      initialRoute: '/login',
-
-      // On liste les écrans disponibles
+      initialRoute: '/',
       routes: {
+        '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
-        '/register': (context) => const RegistrationScreen(),
-        '/dashboard/entreprise': (context) => const DashboardEntreprise(),
-        '/dashboard/particulier': (context) => const DashboardParticulier(),
+        '/register': (context) => const RegisterScreen(),
+        '/dashboard_entreprise': (context) => const DashboardEntreprise(),
+        '/dashboard_particulier': (context) => const DashboardParticulier(),
       },
     );
   }

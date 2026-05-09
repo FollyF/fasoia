@@ -209,7 +209,7 @@ def inscription(request):
 def connexion(request):
     """
     Vue de connexion
-    """
+    """   
     print("="*50)
     print("VUE CONNEXION APPELEE")
     print(f"Utilisateur authentifié: {request.user.is_authenticated}")

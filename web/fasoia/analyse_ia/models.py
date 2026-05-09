@@ -107,9 +107,6 @@ class ElementsExtraits(models.Model):
     def __str__(self):
         return f"Éléments de l'analyse #{self.analyse_id}"
     
-
-# analyse_ia/models.py (ajoutez ce modèle)
-
 class Recommandation(models.Model):
     """
     Stocke les recommandations faites aux entreprises

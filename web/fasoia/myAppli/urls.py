@@ -18,9 +18,8 @@ from django.urls import path
 from . import views
 
 # import API Flutter
-from .api_views import RegisterMobileView # Importe ta nouvelle vue API
-from .api_views import CustomTokenObtainPairView # Importe ta nouvelle vue API
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView
+from .api_views import RegisterView, LoginView, LogoutView, MeView, EntrepriseProfilView, EntrepriseRecommandationsView
 
 app_name = 'myAppli'
 
@@ -153,8 +152,13 @@ urlpatterns = [
     path('offre/<int:offre_id>/enregistrer/dossier/', views.enregistrer_dossier, name='enregistrer_dossier'),
     path('candidature/<int:dossier_id>/', views.detail_dossier_candidature, name='detail_dossier_candidature'),
     
-    # Routes pour l'API Mobile
-    path('api/register/', RegisterMobileView.as_view(), name='api_register'),
-    path('api/login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # API endpoints pour mobile
+    path('api/register/', RegisterView.as_view(), name='api_register'),
+    path('api/login/', LoginView.as_view(), name='api_login'),
+    path('api/logout/', LogoutView.as_view(), name='api_logout'),
+    path('api/me/', MeView.as_view(), name='api_me'),
+    path('api/token/refresh/', TokenRefreshView.as_view()), 
+    path('api/entreprise/profil/', EntrepriseProfilView.as_view()),
+    path('api/entreprise/recommandations/', EntrepriseRecommandationsView.as_view()),
+
 ]
