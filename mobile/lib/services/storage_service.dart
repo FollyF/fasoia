@@ -72,4 +72,17 @@ class StorageService {
     await prefs.clear();
     print('🗑️ Toutes les données effacées');
   }
+
+  static const String _dashboardRouteKey = 'dashboard_route';
+
+  static Future<void> saveDashboardRoute(String route) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_dashboardRouteKey, route);
+    print('📁 Dashboard route sauvegardée: $route');
+  }
+
+  static Future<String?> getDashboardRoute() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_dashboardRouteKey);
+  }
 }

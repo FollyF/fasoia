@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../utils/constants.dart';
+import '../widgets/fasoia_logo.dart';
 
 class DashboardParticulier extends StatelessWidget {
   const DashboardParticulier({
@@ -12,69 +15,103 @@ class DashboardParticulier extends StatelessWidget {
   final String nom;
   final bool aProfilCandidat;
 
-  static const _red    = Color(0xFFD32F2F);
-  static const _cream  = Color(0xFFF8F4ED);
-  static const _ink    = Color(0xFF2C1810);
-  static const _muted  = Color(0xFF8B7355);
-  static const _border = Color(0xFFE0D8CC);
-  static const _teal   = Color(0xFF0D7377);
-  static const _white  = Color(0xFFFFFFFF);
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _cream,
-      appBar: _buildAppBar(),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        backgroundColor: AppColors.cream,
+        body: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            // ── AppBar avec logo FASOIA ──────────────────────────────
+            SliverAppBar(
+              pinned: true,
+              backgroundColor: AppColors.ink,
+              automaticallyImplyLeading: false,
+              centerTitle: true,
+              title: const FasoiaLogo(fontSize: 18, showSubtitle: false),
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(3),
+                child: Container(height: 3, color: AppColors.red),
+              ),
+            ),
+
+            SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildRoleCard(
-                    context: context,
-                    title: 'Je cherche un emploi',
-                    description:
-                        'Accédez aux offres d\'emploi, postulez facilement et suivez vos candidatures.',
-                    icon: Icons.school_outlined,
-                    isRecommended: !aProfilCandidat,
-                    features: const [
-                      'Parcourir les offres d\'emploi',
-                      'Postuler en un clic',
-                      'Suivre vos candidatures',
-                      'Recommandations par IA',
-                      'Créer et gérer vos CV',
-                    ],
-                    onTap: () {
-                      // Navigator.pushNamed(context, '/activer_candidat');
-                    },
+                  // ── Bandeau de bienvenue ─────────────────────────
+                  _buildHeader(),
+
+                  // ── Cartes de rôle ───────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Label section
+                        const Text(
+                          'CHOISISSEZ VOTRE RÔLE',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.muted,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+
+                        _buildRoleCard(
+                          context: context,
+                          title: 'Je cherche un emploi',
+                          description:
+                              'Accédez aux offres d\'emploi, postulez facilement et suivez vos candidatures.',
+                          icon: Icons.search_rounded,
+                          accentIcon: Icons.school_outlined,
+                          isRecommended: !aProfilCandidat,
+                          features: const [
+                            'Parcourir les offres d\'emploi',
+                            'Postuler en un clic',
+                            'Suivre vos candidatures',
+                            'Recommandations par IA',
+                            'Créer et gérer vos CV',
+                          ],
+                          onTap: () {
+                            // Navigator.pushNamed(context, '/activer_candidat');
+                          },
+                        ),
+                        const SizedBox(height: 14),
+
+                        _buildRoleCard(
+                          context: context,
+                          title: 'Je recrute des talents',
+                          description:
+                              'Publiez vos offres, gérez les candidatures et trouvez les profils qui vous correspondent.',
+                          icon: Icons.business_center_rounded,
+                          accentIcon: Icons.business_outlined,
+                          isRecommended: false,
+                          features: const [
+                            'Publier des offres d\'emploi',
+                            'Gérer les candidatures',
+                            'Rechercher des talents',
+                            'Développer votre réseau',
+                            'Analyser les candidatures',
+                          ],
+                          onTap: () {
+                            // Navigator.pushNamed(context, '/activer_recruteur');
+                          },
+                        ),
+
+                        const SizedBox(height: 24),
+                        _buildSkipButton(context),
+                        const SizedBox(height: 40),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  _buildRoleCard(
-                    context: context,
-                    title: 'Je recrute des talents',
-                    description:
-                        'Publiez vos offres, gérez les candidatures et trouvez les profils qui vous correspondent.',
-                    icon: Icons.business_outlined,
-                    isRecommended: false,
-                    features: const [
-                      'Publier des offres d\'emploi',
-                      'Gérer les candidatures',
-                      'Rechercher des talents',
-                      'Développer votre réseau',
-                      'Analyser les candidatures',
-                    ],
-                    onTap: () {
-                      // Navigator.pushNamed(context, '/activer_recruteur');
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  _buildSkipButton(context),
-                  const SizedBox(height: 32),
                 ],
               ),
             ),
@@ -84,73 +121,101 @@ class DashboardParticulier extends StatelessWidget {
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: _white,
-      elevation: 0,
-      centerTitle: false,
-      title: RichText(
-        text: const TextSpan(
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.5,
-            color: _ink,
-          ),
-          children: [
-            TextSpan(text: 'FASO'),
-            TextSpan(text: 'IA', style: TextStyle(color: _red)),
-          ],
-        ),
-      ),
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1),
-        child: Container(color: _border, height: 1),
-      ),
-    );
-  }
-
+  // ── Bandeau de bienvenue ──────────────────────────────────────────────
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
-      color: _ink,
-      padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          RichText(
-            text: TextSpan(
-              style: const TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.w800,
-                color: _white,
-                height: 1.2,
-              ),
-              children: [
-                const TextSpan(text: 'Bienvenue, '),
-                TextSpan(
-                  text: prenom,
-                  style: const TextStyle(color: _red),
+      color: AppColors.ink,
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
+      child: Stack(children: [
+        // Cercles déco
+        Positioned(right: -20, top: -20, child: Container(
+          width: 120, height: 120,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.red.withOpacity(0.08),
+          ),
+        )),
+        Positioned(right: 10, bottom: 0, child: Container(
+          width: 55, height: 55,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.red.withOpacity(0.12),
+          ),
+        )),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Avatar + prénom
+            Row(children: [
+              Container(
+                width: 46, height: 46,
+                decoration: BoxDecoration(
+                  color: AppColors.red,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                if (nom.isNotEmpty) TextSpan(text: ' $nom'),
-              ],
+                child: Center(
+                  child: Text(
+                    prenom.isNotEmpty
+                        ? prenom.substring(0, 1).toUpperCase()
+                        : 'U',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Bienvenue,',
+                    style: TextStyle(color: Colors.white54, fontSize: 12)),
+                  RichText(
+                    text: TextSpan(
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        height: 1.2,
+                      ),
+                      children: [
+                        TextSpan(text: prenom),
+                        if (nom.isNotEmpty)
+                          TextSpan(
+                            text: ' $nom',
+                            style: const TextStyle(color: AppColors.red),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              )),
+            ]),
+            const SizedBox(height: 14),
+            const Text(
+              'Choisissez comment vous souhaitez utiliser FASOIA',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.white54,
+                height: 1.5,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Choisissez comment vous souhaitez utiliser FASOIA',
-            style: TextStyle(fontSize: 13, color: Color(0xFF8B7355), height: 1.4),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ]),
     );
   }
 
+  // ── Carte de rôle ─────────────────────────────────────────────────────
   Widget _buildRoleCard({
     required BuildContext context,
     required String title,
     required String description,
     required IconData icon,
+    required IconData accentIcon,
     required bool isRecommended,
     required List<String> features,
     required VoidCallback onTap,
@@ -159,103 +224,139 @@ class DashboardParticulier extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: _white,
-          border: Border(
-            left: BorderSide.none,
-            right: BorderSide.none,
-            bottom: const BorderSide(color: _border, width: 1),
-            top: BorderSide(color: isRecommended ? _red : _border, width: 3),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isRecommended ? AppColors.red : AppColors.border,
+            width: isRecommended ? 1.5 : 1,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header de la carte
+            Container(
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+              decoration: BoxDecoration(
+                color: isRecommended
+                    ? AppColors.red.withOpacity(0.06)
+                    : AppColors.cream,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+              ),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: 44, height: 44,
                     decoration: BoxDecoration(
-                      border: Border.all(color: _border),
+                      color: isRecommended
+                          ? AppColors.red.withOpacity(0.12)
+                          : AppColors.border.withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(icon, color: _muted, size: 22),
+                    child: Icon(accentIcon,
+                      color: isRecommended ? AppColors.red : AppColors.muted,
+                      size: 22,
+                    ),
                   ),
+                  const SizedBox(width: 12),
+                  Expanded(child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.ink,
+                          height: 1.2,
+                        )),
+                      const SizedBox(height: 3),
+                      Text(description,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.muted,
+                          height: 1.5,
+                        )),
+                    ],
+                  )),
                   if (isRecommended) ...[
-                    const Spacer(),
+                    const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      color: _ink,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.ink,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.star, color: _white, size: 10),
-                          SizedBox(width: 4),
-                          Text(
-                            'RECOMMANDÉ',
+                          Icon(Icons.star_rounded, color: Colors.white, size: 9),
+                          SizedBox(width: 3),
+                          Text('RECOMMANDÉ',
                             style: TextStyle(
-                              fontSize: 9,
+                              fontSize: 8,
                               fontWeight: FontWeight.w800,
-                              color: _white,
-                              letterSpacing: 0.8,
-                            ),
-                          ),
+                              color: Colors.white,
+                              letterSpacing: 0.6,
+                            )),
                         ],
                       ),
                     ),
                   ],
                 ],
               ),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: _ink,
-                  height: 1.2,
-                ),
+            ),
+
+            // Liste des fonctionnalités
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 14, 18, 4),
+              child: Column(
+                children: features.map((f) => _buildFeatureItem(f)).toList(),
               ),
-              const SizedBox(height: 8),
-              Text(
-                description,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: _muted,
-                  height: 1.6,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Divider(color: _border, height: 1, thickness: 1),
-              const SizedBox(height: 12),
-              ...features.map((f) => _buildFeatureItem(f)),
-              const SizedBox(height: 20),
-              SizedBox(
+            ),
+
+            // Bouton commencer
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 8, 18, 18),
+              child: SizedBox(
                 width: double.infinity,
-                child: ElevatedButton.icon(
+                child: ElevatedButton(
                   onPressed: onTap,
-                  icon: const Text(
-                    'COMMENCER',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1,
-                      color: _white,
-                    ),
-                  ),
-                  label: const Icon(Icons.arrow_forward, size: 14, color: _white),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _ink,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                    backgroundColor: isRecommended ? AppColors.red : AppColors.ink,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     elevation: 0,
                   ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(icon, size: 16, color: Colors.white),
+                      const SizedBox(width: 8),
+                      const Text('COMMENCER',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1,
+                        )),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.arrow_forward_rounded, size: 14, color: Colors.white),
+                    ],
+                  ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -263,19 +364,24 @@ class DashboardParticulier extends StatelessWidget {
 
   Widget _buildFeatureItem(String label) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 7),
-      child: Row(
-        children: [
-          const Icon(Icons.check_circle, color: _teal, size: 15),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(fontSize: 13, color: _ink, height: 1.3),
-            ),
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(children: [
+        Container(
+          width: 20, height: 20,
+          decoration: BoxDecoration(
+            color: AppColors.teal.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(5),
           ),
-        ],
-      ),
+          child: const Icon(Icons.check_rounded, color: AppColors.teal, size: 13),
+        ),
+        const SizedBox(width: 10),
+        Expanded(child: Text(label,
+          style: const TextStyle(
+            fontSize: 13,
+            color: AppColors.ink,
+            height: 1.3,
+          ))),
+      ]),
     );
   }
 
@@ -286,24 +392,23 @@ class DashboardParticulier extends StatelessWidget {
           // Navigator.pushNamedAndRemoveUntil(context, '/home', (r) => false);
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 11),
           decoration: BoxDecoration(
-            border: Border.all(color: _border),
+            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(8),
           ),
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.access_time, size: 14, color: _muted),
+              Icon(Icons.access_time_rounded, size: 14, color: AppColors.muted),
               SizedBox(width: 8),
-              Text(
-                'Je choisis plus tard',
+              Text('Je choisis plus tard',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: _muted,
+                  color: AppColors.muted,
                   letterSpacing: 0.3,
-                ),
-              ),
+                )),
             ],
           ),
         ),

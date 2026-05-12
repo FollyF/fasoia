@@ -798,14 +798,17 @@ def completer_profil_candidat(request):
         particulier.email = request.POST.get('email', particulier.email)
         particulier.telephone = request.POST.get('telephone', particulier.telephone)
         
-        # Date de naissance (optionnelle)
         date_naissance = request.POST.get('date_naissance')
-        if date_naissance:
+        if date_naissance and date_naissance.strip():
             try:
-                particulier.date_naissance = datetime.strptime(date_naissance, '%Y-%m-%d').date()
+                particulier.date_naissance = parse_date(date_naissance)
             except ValueError:
+                print(f"⚠️ Format de date invalide : {date_naissance}")
                 particulier.date_naissance = None
-                
+
+        else:
+            particulier.date_naissance = None
+
         particulier.adresse = request.POST.get('adresse', particulier.adresse)
         particulier.ville = request.POST.get('ville', particulier.ville)
         particulier.pays = request.POST.get('pays', particulier.pays)

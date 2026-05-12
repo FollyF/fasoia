@@ -137,10 +137,24 @@ class ApiService {
       }
       
       if (data.containsKey('user')) {
+        final profileType = data['user']['profile_type'];
         await StorageService.saveUserInfo(
-          userType: data['user']['profile_type'],
+          userType: profileType,
           email: data['user']['email'],
         );
+        String dashboardRoute;
+        switch (profileType) {
+          case 'entreprise':
+            dashboardRoute = '/dashboard_entreprise';
+            break;
+          case 'candidat':
+            dashboardRoute = '/dashboard_candidat';
+            break;
+          default:
+            dashboardRoute = '/dashboard_particulier';
+        }
+        await StorageService.saveDashboardRoute(dashboardRoute);
+
       }
       
       return {'success': true, 'data': data};
@@ -219,11 +233,15 @@ class ApiService {
   // ────────────────────────────────────────────────────────────
   
   static Future<Map<String, dynamic>> getCandidatProfil() async {
+    print('🌐 getCandidatProfil() - Appel API');
     final response = await http.get(
       Uri.parse('${AppConstants.baseUrl}/candidat/profil/'),
       headers: _headers,
     );
     
+    print('📡 getCandidatProfil() - Status: ${response.statusCode}');
+    print('📡 getCandidatProfil() - Body: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}...');
+
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else if (response.statusCode == 401) {
@@ -255,7 +273,7 @@ class ApiService {
   
   static Future<List<dynamic>> getCandidatOffresRecommandees() async {
     final response = await http.get(
-      Uri.parse('${AppConstants.baseUrl}/candidat/offres-recommandees/'),
+      Uri.parse('${AppConstants.baseUrl}/candidat/offres/recommandees/'),
       headers: _headers,
     );
     
@@ -296,4 +314,21 @@ class ApiService {
     }
     throw Exception('Erreur réponse convocation');
   }
+
+  static Future<bool> checkAndRestoreSession() async {
+    final token = await StorageService.getAccessToken();
+    if (token == null) return false;
+    
+    // Vérifier si le token est encore valide
+    try {
+      final response = await http.get(
+        Uri.parse('${AppConstants.baseUrl}/me/'),
+        headers: _headers,
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
 }
+

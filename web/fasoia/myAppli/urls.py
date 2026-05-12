@@ -19,7 +19,7 @@ from . import views
 
 # import API Flutter
 from rest_framework_simplejwt.views import TokenRefreshView
-from .api_views import RegisterView, LoginView, LogoutView, MeView, EntrepriseProfilView, EntrepriseRecommandationsView
+from .api_views import *
 
 app_name = 'myAppli'
 
@@ -160,5 +160,9 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view()), 
     path('api/entreprise/profil/', EntrepriseProfilView.as_view()),
     path('api/entreprise/recommandations/', EntrepriseRecommandationsView.as_view()),
+    path('api/candidat/profil/', CandidatProfilView.as_view(), name='api_candidat_profil'),
+    path('api/candidat/offres/recommandees/', CandidatOffresRecommandeesView.as_view(), name='api_candidat_offres'),
+    path('api/candidat/convocations/', CandidatConvocationsView.as_view(), name='api_candidat_convocations'),
+    path('api/candidat/convocations/<int:convId>/repondre/', RepondreConvocationView.as_view(), name='api_repondre_convocation'),
 
 ]

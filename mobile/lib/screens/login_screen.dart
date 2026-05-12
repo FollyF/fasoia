@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../utils/constants.dart';
+import '../widgets/fasoia_logo.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -69,10 +70,20 @@ class _LoginScreenState extends State<LoginScreen>
         final profileType = userData['profile_type'];
         
         if (mounted) {
-          if (profileType == 'entreprise') {
-            Navigator.pushReplacementNamed(context, '/dashboard_entreprise');
-          } else {
-            Navigator.pushReplacementNamed(context, '/dashboard_particulier');
+          switch (profileType) {
+            case 'entreprise':
+              Navigator.pushReplacementNamed(context, '/dashboard_entreprise');
+              break;
+            case 'candidat':
+              Navigator.pushReplacementNamed(context, '/dashboard_candidat');
+              break;
+            case 'recruteur':
+              Navigator.pushReplacementNamed(context, '/dashboard_recruteur');
+              break;
+            default:
+              // 'particulier' ou tout autre cas
+              Navigator.pushReplacementNamed(context, '/dashboard_particulier');
+              break;
           }
         }
       } else {
@@ -108,38 +119,13 @@ class _LoginScreenState extends State<LoginScreen>
                       Center(
                         child: Column(
                           children: [
-                            Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: AppColors.red,
-                                borderRadius: BorderRadius.circular(14),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.red.withOpacity(0.3),
-                                    blurRadius: 16,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(Icons.lock_person_outlined,
-                                  color: Colors.white, size: 28),
-                            ),
                             const SizedBox(height: 12),
-                            const Text(
-                              'FASOIA',
-                              style: TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.ink,
-                                letterSpacing: 4,
-                              ),
-                            ),
+                            const FasoiaLogo(mainColor: AppColors.ink, fontSize: 42),
                             const SizedBox(height: 4),
-                            const Text(
-                              'Bon retour parmi nous',
-                              style: TextStyle(fontSize: 14, color: AppColors.muted),
-                            ),
+                            //const Text(
+                            //  'Bon retour parmi nous',
+                            //  style: TextStyle(fontSize: 10, color: AppColors.muted),
+                            //),
                           ],
                         ),
                       ),
@@ -153,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen>
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         decoration: const InputDecoration(
-                          hintText: 'votre@email.com',
+                          hintText: 'exemple@email.com',
                           prefixIcon: Icon(Icons.mail_outline, color: AppColors.muted),
                         ),
                         validator: (v) => (v == null || v.isEmpty) ? 'Email requis' : null,

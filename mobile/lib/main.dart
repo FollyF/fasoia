@@ -4,20 +4,46 @@ import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/dashboard_entreprise.dart';
 import 'screens/dashboard_particulier.dart';
+import 'screens/dashboard_candidat.dart';
+import 'screens/dashboard_candidat_test.dart';
 import 'utils/constants.dart';
+import 'services/storage_service.dart';
+import 'services/api_service.dart';
 
-void main() {
-  runApp(const FasoiaApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await ApiService.init();
+  
+  String initialRoute = '/';
+  final isLoggedIn = await ApiService.isLoggedIn();
+  
+  if (isLoggedIn) {
+    final isValid = await ApiService.checkAndRestoreSession();
+    if (isValid) {
+      final dashboardRoute = await StorageService.getDashboardRoute();
+      initialRoute = dashboardRoute ?? '/dashboard_particulier';
+      print('🔐 Session restaurée, redirection vers: $initialRoute');
+    } else {
+      await ApiService.logout();
+      print('🔐 Token invalide, déconnexion');
+    }
+  }
+  
+  runApp(FasoiaApp(initialRoute: initialRoute));
 }
 
 class FasoiaApp extends StatelessWidget {
-  const FasoiaApp({super.key});
+  
+  final String initialRoute;
+
+  const FasoiaApp({super.key, required this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FASOIA',
       debugShowCheckedModeBanner: false,
+      initialRoute: initialRoute,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -60,13 +86,15 @@ class FasoiaApp extends StatelessWidget {
           ),
         ),
       ),
-      initialRoute: '/',
+      
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/dashboard_entreprise': (context) => const DashboardEntreprise(),
         '/dashboard_particulier': (context) => const DashboardParticulier(),
+        '/dashboard_candidat': (context) => const DashboardCandidat(),
+        '/dashboard_candidat_test': (context) => const DashboardCandidatTest(),
       },
     );
   }

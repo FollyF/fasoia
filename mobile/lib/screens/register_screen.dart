@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../utils/constants.dart';
+import '../widgets/fasoia_logo.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -136,33 +137,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                     Center(
                       child: Column(
                         children: [
-                          Container(
-                            width: 56,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              color: AppColors.red,
-                              borderRadius: BorderRadius.circular(14),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.red.withOpacity(0.3),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(Icons.business_center_outlined,
-                                color: Colors.white, size: 28),
-                          ),
                           const SizedBox(height: 12),
-                          const Text(
-                            'FASOIA',
-                            style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.ink,
-                              letterSpacing: 4,
-                            ),
-                          ),
+                          const FasoiaLogo(mainColor: AppColors.ink, fontSize: 42),
                           const SizedBox(height: 4),
                           const Text(
                             'Créez votre compte',

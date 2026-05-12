@@ -1,0 +1,34 @@
+<style>
+  .fasoia-auth-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    text-decoration: none;
+  }
+  .fasoia-auth-logo-name {
+    font-size: 42px;
+    font-weight: 900;
+    color: #0f0101;
+    letter-spacing: 4px;
+    line-height: 1;
+    font-family: var(--font-display, 'Georgia', serif);
+  }
+  .fasoia-auth-logo-name .ia {
+    color: var(--red, #C0392B);
+  }
+  .fasoia-auth-logo-tag {
+    font-size: 9px;
+    font-weight: 600;
+    color: rgba(49, 47, 47, 0.35);
+    letter-spacing: 3.5px;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+</style>
+
+<a href="{% url 'myAppli:home' %}" class="fasoia-auth-logo">
+  <div class="fasoia-auth-logo-name">FASO<span class="ia">IA</span></div>
+  <div class="fasoia-auth-logo-tag">Espace Carrière</div>
+</a>

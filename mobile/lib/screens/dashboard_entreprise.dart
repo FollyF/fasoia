@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/api_service.dart';
 import '../utils/constants.dart';
+import '../widgets/fasoia_logo.dart';   // ← import du logo
 
 class DashboardEntreprise extends StatefulWidget {
   const DashboardEntreprise({super.key});
@@ -20,27 +21,28 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
   late final AnimationController _fadeCtrl;
   late final Animation<double> _fadeAnim;
 
-  final _domaineCtrl = TextEditingController();
-  final _localisationCtrl = TextEditingController();
-  final _tailleCtrl = TextEditingController();
-  final _anneeCreationCtrl = TextEditingController();
-  final _siteWebCtrl = TextEditingController();
-  final _competencesClesCtrl = TextEditingController();
-  final _anneesExpCtrl = TextEditingController();
-  final _nbProjetsCtrl = TextEditingController();
-  final _descriptionCtrl = TextEditingController();
+  final _domaineCtrl          = TextEditingController();
+  final _localisationCtrl     = TextEditingController();
+  final _tailleCtrl           = TextEditingController();
+  final _anneeCreationCtrl    = TextEditingController();
+  final _siteWebCtrl          = TextEditingController();
+  final _competencesClesCtrl  = TextEditingController();
+  final _anneesExpCtrl        = TextEditingController();
+  final _nbProjetsCtrl        = TextEditingController();
+  final _descriptionCtrl      = TextEditingController();
   final _paysInterventionCtrl = TextEditingController();
-  final _rayonActionCtrl = TextEditingController();
-  final _chiffreAffairesCtrl = TextEditingController();
-  final _capitalSocialCtrl = TextEditingController();
-  final _montantMinCtrl = TextEditingController();
-  final _montantMaxCtrl = TextEditingController();
+  final _rayonActionCtrl      = TextEditingController();
+  final _chiffreAffairesCtrl  = TextEditingController();
+  final _capitalSocialCtrl    = TextEditingController();
+  final _montantMinCtrl       = TextEditingController();
+  final _montantMaxCtrl       = TextEditingController();
   List<String> _typesOpportunites = [];
 
   @override
   void initState() {
     super.initState();
-    _fadeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    _fadeCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 500));
     _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
     _loadData();
   }
@@ -48,20 +50,24 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
   @override
   void dispose() {
     _fadeCtrl.dispose();
-    for (final c in [_domaineCtrl, _localisationCtrl, _tailleCtrl, _anneeCreationCtrl,
+    for (final c in [
+      _domaineCtrl, _localisationCtrl, _tailleCtrl, _anneeCreationCtrl,
       _siteWebCtrl, _competencesClesCtrl, _anneesExpCtrl, _nbProjetsCtrl,
       _descriptionCtrl, _paysInterventionCtrl, _rayonActionCtrl,
-      _chiffreAffairesCtrl, _capitalSocialCtrl, _montantMinCtrl, _montantMaxCtrl]) {
-      c.dispose();
-    }
+      _chiffreAffairesCtrl, _capitalSocialCtrl, _montantMinCtrl, _montantMaxCtrl,
+    ]) { c.dispose(); }
     super.dispose();
   }
 
   Future<void> _loadData() async {
     try {
       final profil = await ApiService.getEntrepriseProfil();
-      final recos = await ApiService.getEntrepriseRecommandations();
-      setState(() { _profil = profil; _recommandations = recos; _isLoading = false; });
+      final recos  = await ApiService.getEntrepriseRecommandations();
+      setState(() {
+        _profil = profil;
+        _recommandations = recos;
+        _isLoading = false;
+      });
       _populateControllers();
       _fadeCtrl.forward();
     } catch (e) {
@@ -70,30 +76,32 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
   }
 
   void _populateControllers() {
-    _domaineCtrl.text = _profil['domaineActive'] ?? '';
-    _localisationCtrl.text = _profil['localisation'] ?? '';
-    _tailleCtrl.text = _profil['taille']?.toString() ?? '';
-    _anneeCreationCtrl.text = _profil['annee_creation']?.toString() ?? '';
-    _siteWebCtrl.text = _profil['site_web'] ?? '';
-    _competencesClesCtrl.text = _profil['competencesCles'] ?? '';
-    _anneesExpCtrl.text = _profil['annees_experience']?.toString() ?? '';
-    _nbProjetsCtrl.text = _profil['nb_projets_realises']?.toString() ?? '';
-    _descriptionCtrl.text = _profil['description'] ?? '';
+    _domaineCtrl.text          = _profil['domaineActive'] ?? '';
+    _localisationCtrl.text     = _profil['localisation'] ?? '';
+    _tailleCtrl.text           = _profil['taille']?.toString() ?? '';
+    _anneeCreationCtrl.text    = _profil['annee_creation']?.toString() ?? '';
+    _siteWebCtrl.text          = _profil['site_web'] ?? '';
+    _competencesClesCtrl.text  = _profil['competencesCles'] ?? '';
+    _anneesExpCtrl.text        = _profil['annees_experience']?.toString() ?? '';
+    _nbProjetsCtrl.text        = _profil['nb_projets_realises']?.toString() ?? '';
+    _descriptionCtrl.text      = _profil['description'] ?? '';
     final pays = _profil['pays_intervention'];
     _paysInterventionCtrl.text = pays is List ? pays.join(', ') : (pays ?? '');
-    _rayonActionCtrl.text = _profil['rayon_action']?.toString() ?? '';
-    _chiffreAffairesCtrl.text = _profil['chiffre_affaires']?.toString() ?? '';
-    _capitalSocialCtrl.text = _profil['capital_social']?.toString() ?? '';
-    _montantMinCtrl.text = _profil['montant_min']?.toString() ?? '';
-    _montantMaxCtrl.text = _profil['montant_max']?.toString() ?? '';
+    _rayonActionCtrl.text      = _profil['rayon_action']?.toString() ?? '';
+    _chiffreAffairesCtrl.text  = _profil['chiffre_affaires']?.toString() ?? '';
+    _capitalSocialCtrl.text    = _profil['capital_social']?.toString() ?? '';
+    _montantMinCtrl.text       = _profil['montant_min']?.toString() ?? '';
+    _montantMaxCtrl.text       = _profil['montant_max']?.toString() ?? '';
     final types = _profil['types_opportunites'];
     if (types is List) _typesOpportunites = List<String>.from(types);
   }
 
   int get _completion {
-    final fields = [_profil['domaineActive'], _profil['localisation'],
+    final fields = [
+      _profil['domaineActive'], _profil['localisation'],
       _profil['competencesCles'], _profil['pays_intervention'],
-      _profil['chiffre_affaires'], _profil['types_opportunites']];
+      _profil['chiffre_affaires'], _profil['types_opportunites'],
+    ];
     final filled = fields.where((f) {
       if (f == null) return false;
       if (f is String) return f.isNotEmpty;
@@ -113,7 +121,7 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
   Future<void> _saveProfile(Map<String, dynamic> data) async {
     try {
       final updated = await ApiService.updateEntrepriseProfil(data);
-      final recos = await ApiService.getEntrepriseRecommandations();
+      final recos   = await ApiService.getEntrepriseRecommandations();
       setState(() { _profil = updated; _recommandations = recos; });
       _populateControllers();
       if (mounted) {
@@ -164,11 +172,14 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
     );
   }
 
+  // ═══════════════════════════════════════════════════════════════════════
+  // BOTTOM NAV
+  // ═══════════════════════════════════════════════════════════════════════
   Widget _buildBottomNav() {
-    final items = [
-      {'icon': Icons.dashboard_outlined, 'active': Icons.dashboard_rounded, 'label': 'Accueil'},
-      {'icon': Icons.bolt_outlined, 'active': Icons.bolt_rounded, 'label': 'Opportunités'},
-      {'icon': Icons.person_outline_rounded, 'active': Icons.person_rounded, 'label': 'Profil'},
+    const items = [
+      _NavItem(icon: Icons.home_outlined,       activeIcon: Icons.home_rounded,        label: 'Accueil'),
+      _NavItem(icon: Icons.local_offer_outlined, activeIcon: Icons.local_offer_rounded, label: 'Opportunités'),
+      _NavItem(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded,   label: 'Profil'),
     ];
     return Container(
       decoration: const BoxDecoration(
@@ -178,7 +189,7 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 60,
+          height: 62,
           child: Row(
             children: List.generate(items.length, (i) {
               final active = _navIndex == i;
@@ -190,19 +201,16 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        active ? items[i]['active'] as IconData : items[i]['icon'] as IconData,
+                        active ? items[i].activeIcon : items[i].icon,
                         color: active ? AppColors.red : AppColors.muted,
-                        size: 22,
+                        size: 24,
                       ),
                       const SizedBox(height: 3),
-                      Text(
-                        items[i]['label'] as String,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                          color: active ? AppColors.red : AppColors.muted,
-                        ),
-                      ),
+                      Text(items[i].label, style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                        color: active ? AppColors.red : AppColors.muted,
+                      )),
                       const SizedBox(height: 2),
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
@@ -236,11 +244,13 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
       physics: const BouncingScrollPhysics(),
       slivers: [
         SliverAppBar(
-          expandedHeight: 175,
+          expandedHeight: 195,
           pinned: true,
           backgroundColor: AppColors.ink,
           elevation: 0,
           automaticallyImplyLeading: false,
+          centerTitle: true,
+          title: const FasoiaLogo(fontSize: 26, showSubtitle: true),
           actions: [
             IconButton(
               icon: const Icon(Icons.logout_rounded, color: Colors.white54, size: 20),
@@ -253,14 +263,30 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
               child: Stack(children: [
                 Positioned(right: -30, top: -30, child: Container(
                   width: 160, height: 160,
-                  decoration: BoxDecoration(shape: BoxShape.circle,
-                      color: AppColors.red.withOpacity(0.08)),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.red.withOpacity(0.08),
+                  ),
                 )),
                 Positioned(right: 20, bottom: 20, child: Container(
                   width: 60, height: 60,
-                  decoration: BoxDecoration(shape: BoxShape.circle,
-                      color: AppColors.red.withOpacity(0.12)),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.red.withOpacity(0.12),
+                  ),
                 )),
+                // Logo centré dans la zone expansible
+                Positioned(
+                  top: 12, left: 0, right: 0,
+                  child: SafeArea(
+                    bottom: false,
+                    child: Column(children: [
+                      const SizedBox(height: 6),
+                      //const FasoiaLogo(fontSize: 26, showSubtitle: true),
+                    ]),
+                  ),
+                ),
+                // Infos entreprise en bas
                 Positioned(
                   left: 20, bottom: 20, right: 70,
                   child: Column(
@@ -275,22 +301,29 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Center(child: Text(initiales,
-                            style: const TextStyle(color: Colors.white,
-                                fontWeight: FontWeight.w800, fontSize: 16))),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                            ))),
                         ),
                         const SizedBox(width: 12),
                         Expanded(child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Bonjour,', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                            const Text('Bonjour,',
+                              style: TextStyle(color: Colors.white54, fontSize: 12)),
                             Text(raisonSociale,
-                              style: const TextStyle(color: Colors.white,
-                                  fontSize: 17, fontWeight: FontWeight.w700),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w700,
+                              ),
                               maxLines: 1, overflow: TextOverflow.ellipsis),
                           ],
                         )),
                       ]),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
                       if (_profil['domaineActive'] != null)
                         _chip(Icons.business_outlined, _profil['domaineActive']),
                       if (_profil['localisation'] != null) ...[
@@ -318,20 +351,25 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
               Row(children: [
                 const Text('OPPORTUNITÉS RÉCENTES', style: TextStyle(
                   fontSize: 11, fontWeight: FontWeight.w800,
-                  color: AppColors.muted, letterSpacing: 1.2)),
+                  color: AppColors.muted, letterSpacing: 1.2,
+                )),
                 const Spacer(),
                 if (_recommandations.isNotEmpty)
                   GestureDetector(
                     onTap: () => setState(() => _navIndex = 1),
                     child: const Text('Voir tout →', style: TextStyle(
-                      fontSize: 12, color: AppColors.red, fontWeight: FontWeight.w600)),
+                      fontSize: 12, color: AppColors.red, fontWeight: FontWeight.w600,
+                    )),
                   ),
               ]),
               const SizedBox(height: 12),
               if (!_profilComplet)
-                _buildEmptyState(Icons.lock_outline_rounded, 'Profil incomplet',
+                _buildEmptyState(
+                  Icons.lock_outline_rounded, 'Profil incomplet',
                   'Complétez votre profil pour recevoir des recommandations.',
-                  actionLabel: 'Compléter', onAction: () => setState(() => _navIndex = 2))
+                  actionLabel: 'Compléter',
+                  onAction: () => setState(() => _navIndex = 2),
+                )
               else if (_recommandations.isEmpty)
                 _buildEmptyState(Icons.search_off_rounded, 'Aucune opportunité',
                   'Aucune recommandation disponible pour le moment.')
@@ -350,7 +388,18 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
     children: [
       Icon(icon, size: 11, color: Colors.white38),
       const SizedBox(width: 5),
-      Text(label, style: const TextStyle(fontSize: 11, color: Colors.white60, fontWeight: FontWeight.w500)),
+      Flexible(
+        child: Text(
+          label, 
+          style: const TextStyle(
+            fontSize: 11, 
+            color: Colors.white60, 
+            fontWeight: FontWeight.w500,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      )
     ],
   );
 
@@ -364,13 +413,15 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
           child: CustomPaint(
             painter: _CircleProgressPainter(pct / 100, AppColors.red),
             child: Center(child: Text('$pct%', style: const TextStyle(
-              color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800))),
+              color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800,
+            ))),
           ),
         ),
         const SizedBox(width: 14),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('Profil incomplet', style: TextStyle(
-            color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14)),
+            color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14,
+          )),
           const SizedBox(height: 2),
           const Text('Complétez votre profil pour recevoir des recommandations',
             style: TextStyle(color: Colors.white54, fontSize: 11)),
@@ -382,7 +433,8 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
             decoration: BoxDecoration(color: AppColors.red, borderRadius: BorderRadius.circular(6)),
             child: const Text('Compléter', style: TextStyle(
-              color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
+              color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700,
+            )),
           ),
         ),
       ]),
@@ -391,48 +443,61 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
 
   Widget _buildStatsGrid() {
     final stats = [
-      {'n': '${_recommandations.length}', 'l': 'Recommandations', 'icon': Icons.bolt_rounded, 'accent': true},
-      {'n': '${_profil['nb_candidatures_emises'] ?? 0}', 'l': 'Candidatures', 'icon': Icons.send_rounded, 'accent': false},
-      {'n': '${_profil['taux_succes'] ?? 0}%', 'l': 'Taux succès', 'icon': Icons.trending_up_rounded, 'accent': false},
-      {'n': '${_profil['nb_projets_realises'] ?? 0}', 'l': 'Projets', 'icon': Icons.check_circle_outline_rounded, 'accent': false},
+      _StatData('${_recommandations.length}', 'Recommandations', Icons.local_offer_rounded, true),
+      _StatData('${_profil['nb_candidatures_emises'] ?? 0}', 'Candidatures', Icons.send_rounded, false),
+      _StatData('${_profil['taux_succes'] ?? 0}%', 'Taux succès', Icons.trending_up_rounded, false),
+      _StatData('${_profil['nb_projets_realises'] ?? 0}', 'Projets', Icons.check_circle_outline_rounded, false),
     ];
+    
     return GridView.count(
-      crossAxisCount: 2, shrinkWrap: true,
+      crossAxisCount: 2, 
+      shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: 1.7,
-      children: stats.map((s) {
-        final accent = s['accent'] as bool;
-        return Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: accent ? AppColors.ink : Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: accent ? AppColors.ink : AppColors.border),
-          ),
-          child: Row(children: [
-            Container(
-              width: 36, height: 36,
-              decoration: BoxDecoration(
-                color: accent ? AppColors.red.withOpacity(0.2) : AppColors.cream,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(s['icon'] as IconData, size: 18,
-                color: accent ? AppColors.red : AppColors.muted),
+      crossAxisSpacing: 10, 
+      mainAxisSpacing: 10, 
+      childAspectRatio: 1.7,
+      children: stats.map((s) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14), // Padding horizontal réduit de 14 à 10
+        decoration: BoxDecoration(
+          color: s.accent ? AppColors.ink : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: s.accent ? AppColors.ink : AppColors.border),
+        ),
+        child: Row(children: [
+          Container(
+            width: 36, height: 36,
+            decoration: BoxDecoration(
+              color: s.accent ? AppColors.red.withOpacity(0.2) : AppColors.cream,
+              borderRadius: BorderRadius.circular(8),
             ),
-            const SizedBox(width: 10),
-            Column(crossAxisAlignment: CrossAxisAlignment.start,
+            child: Icon(s.icon, size: 18, color: s.accent ? AppColors.red : AppColors.muted),
+          ),
+          const SizedBox(width: 8), // Réduit de 10 à 8
+          Expanded( // <--- SOLUTION : Utilise tout l'espace restant proprement
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(s['n'] as String, style: TextStyle(
-                  fontSize: 20, fontWeight: FontWeight.w800,
-                  color: accent ? Colors.white : AppColors.ink)),
-                Text(s['l'] as String, style: TextStyle(
-                  fontSize: 10, fontWeight: FontWeight.w600,
-                  color: accent ? Colors.white54 : AppColors.muted)),
-              ]),
-          ]),
-        );
-      }).toList(),
+                Text(s.value, style: TextStyle(
+                  fontSize: 18, // Réduit de 20 à 18 pour plus de sécurité
+                  fontWeight: FontWeight.w800,
+                  color: s.accent ? Colors.white : AppColors.ink,
+                )),
+                Text(
+                  s.label, 
+                  style: TextStyle(
+                    fontSize: 9, // Réduit de 10 à 9
+                    fontWeight: FontWeight.w600,
+                    color: s.accent ? Colors.white54 : AppColors.muted,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis, // Coupe proprement avec "..." si besoin
+                ),
+              ],
+            ),
+          ),
+        ]),
+      )).toList(),
     );
   }
 
@@ -447,8 +512,8 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
           pinned: true,
           backgroundColor: AppColors.ink,
           automaticallyImplyLeading: false,
-          title: const Text('Opportunités', style: TextStyle(
-            color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18)),
+          centerTitle: true,
+          title: const FasoiaLogo(fontSize: 26, showSubtitle: true),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(3),
             child: Container(height: 3, color: AppColors.red),
@@ -476,11 +541,11 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
   }
 
   Widget _buildRecoCard(dynamic reco) {
-    final opp = reco['opportunite'] ?? {};
-    final isOffre = reco['opportunite_type'] == 'Offre_uemoa';
-    final score = (reco['score_global'] ?? 0).toDouble();
-    final desc = (opp['description'] ?? '').toString();
-    final ref = '${isOffre ? 'OFFRE' : 'AMI'}-${opp['id'] ?? '-'}';
+    final opp      = reco['opportunite'] ?? {};
+    final isOffre  = reco['opportunite_type'] == 'Offre_uemoa';
+    final score    = (reco['score_global'] ?? 0).toDouble();
+    final desc     = (opp['description'] ?? '').toString();
+    final ref      = '${isOffre ? 'OFFRE' : 'AMI'}-${opp['id'] ?? '-'}';
     final badgeColor = isOffre ? const Color(0xFF862323) : AppColors.teal;
 
     return GestureDetector(
@@ -493,10 +558,10 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
           border: Border.all(color: AppColors.border),
           boxShadow: [BoxShadow(
             color: Colors.black.withOpacity(0.04),
-            blurRadius: 10, offset: const Offset(0, 3))],
+            blurRadius: 10, offset: const Offset(0, 3),
+          )],
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          // Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
@@ -507,7 +572,7 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(color: badgeColor, borderRadius: BorderRadius.circular(4)),
-                child: Text(isOffre ? 'APPEL D\'OFFRE' : 'AMI',
+                child: Text(isOffre ? "APPEL D'OFFRE" : 'AMI',
                   style: const TextStyle(color: Colors.white, fontSize: 9,
                       fontWeight: FontWeight.w800, letterSpacing: 0.5)),
               ),
@@ -525,7 +590,6 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
               ),
             ]),
           ),
-          // Body
           Padding(
             padding: const EdgeInsets.all(14),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -537,15 +601,18 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
                   const Icon(Icons.schedule_rounded, size: 12, color: AppColors.muted),
                   const SizedBox(width: 4),
                   Text('Limite : ${opp['date_limite']}',
-                    style: const TextStyle(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w500)),
+                    style: const TextStyle(fontSize: 11, color: AppColors.muted,
+                        fontWeight: FontWeight.w500)),
                   const Spacer(),
                   GestureDetector(
                     onTap: () => _showRecoSheet(reco),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                      decoration: BoxDecoration(color: AppColors.red, borderRadius: BorderRadius.circular(6)),
+                      decoration: BoxDecoration(color: AppColors.red,
+                          borderRadius: BorderRadius.circular(6)),
                       child: const Text('Voir →', style: TextStyle(
-                        color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
+                        color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700,
+                      )),
                     ),
                   ),
                 ]),
@@ -558,9 +625,9 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
   }
 
   void _showRecoSheet(dynamic reco) {
-    final opp = reco['opportunite'] ?? {};
-    final isOffre = reco['opportunite_type'] == 'Offre_uemoa';
-    final score = (reco['score_global'] ?? 0).toDouble();
+    final opp      = reco['opportunite'] ?? {};
+    final isOffre  = reco['opportunite_type'] == 'Offre_uemoa';
+    final score    = (reco['score_global'] ?? 0).toDouble();
     final badgeColor = isOffre ? const Color(0xFF862323) : AppColors.teal;
 
     showModalBottomSheet(
@@ -583,15 +650,18 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(color: badgeColor, borderRadius: BorderRadius.circular(4)),
-                child: Text(isOffre ? 'APPEL D\'OFFRE' : 'AMI',
+                child: Text(isOffre ? "APPEL D'OFFRE" : 'AMI',
                   style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800)),
               ),
               const SizedBox(width: 10),
-              const Text('Détails', style: TextStyle(fontSize: 16,
-                fontWeight: FontWeight.w700, color: AppColors.ink)),
+              const Text('Détails', style: TextStyle(
+                fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.ink,
+              )),
               const Spacer(),
-              IconButton(icon: const Icon(Icons.close_rounded, color: AppColors.muted, size: 20),
-                onPressed: () => Navigator.pop(context)),
+              IconButton(
+                icon: const Icon(Icons.close_rounded, color: AppColors.muted, size: 20),
+                onPressed: () => Navigator.pop(context),
+              ),
             ]),
           ),
           Expanded(child: SingleChildScrollView(
@@ -612,9 +682,11 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
                   const SizedBox(width: 14),
                   const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text('Score de correspondance', style: TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                      fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink,
+                    )),
                     SizedBox(height: 2),
-                    Text('Basé sur votre profil', style: TextStyle(fontSize: 11, color: AppColors.muted)),
+                    Text('Basé sur votre profil',
+                      style: TextStyle(fontSize: 11, color: AppColors.muted)),
                   ]),
                 ]),
               ),
@@ -647,7 +719,8 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
     padding: const EdgeInsets.only(bottom: 16),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(label.toUpperCase(), style: const TextStyle(
-        fontSize: 10, letterSpacing: 1.2, color: AppColors.muted, fontWeight: FontWeight.w700)),
+        fontSize: 10, letterSpacing: 1.2, color: AppColors.muted, fontWeight: FontWeight.w700,
+      )),
       const SizedBox(height: 6),
       Text(value, style: const TextStyle(fontSize: 14, color: AppColors.ink, height: 1.5)),
       const Divider(color: AppColors.border, height: 24),
@@ -660,35 +733,31 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
   Widget _buildProfil() {
     final pct = _completion;
     final sections = [
-      {'title': 'Informations générales', 'icon': Icons.business_outlined,
-        'fields': ['domaineActive', 'localisation', 'taille', 'annee_creation', 'site_web'], 'tab': 0},
-      {'title': 'Compétences & Expérience', 'icon': Icons.code_outlined,
-        'fields': ['competencesCles', 'annees_experience', 'nb_projets_realises'], 'tab': 1},
-      {'title': 'Zones d\'intervention', 'icon': Icons.map_outlined,
-        'fields': ['pays_intervention', 'rayon_action'], 'tab': 2},
-      {'title': 'Capacité financière', 'icon': Icons.bar_chart_outlined,
-        'fields': ['chiffre_affaires', 'capital_social'], 'tab': 3},
-      {'title': 'Préférences', 'icon': Icons.tune_outlined,
-        'fields': ['types_opportunites', 'montant_min', 'montant_max'], 'tab': 4},
+      _SectionData('Informations générales',   Icons.business_outlined,  ['domaineActive','localisation','taille','annee_creation','site_web'], 0, true),
+      _SectionData('Compétences & Expérience', Icons.code_outlined,      ['competencesCles','annees_experience','nb_projets_realises'],          1, true),
+      _SectionData("Zones d'intervention",     Icons.map_outlined,       ['pays_intervention','rayon_action'],                                    2, true),
+      _SectionData('Capacité financière',      Icons.bar_chart_outlined, ['chiffre_affaires','capital_social'],                                   3, true),
+      _SectionData('Préférences',              Icons.tune_outlined,      ['types_opportunites','montant_min','montant_max'],                       4, false),
     ];
 
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
         SliverAppBar(
-          pinned: true, backgroundColor: AppColors.ink,
+          pinned: true,
+          backgroundColor: AppColors.ink,
           automaticallyImplyLeading: false,
-          title: const Text('Mon Profil', style: TextStyle(
-            color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18)),
+          centerTitle: true,
+          title: const FasoiaLogo(fontSize: 26, showSubtitle: true),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(3),
-            child: Container(height: 3, color: AppColors.red)),
+            child: Container(height: 3, color: AppColors.red),
+          ),
         ),
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              // Complétion
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(12)),
@@ -697,14 +766,16 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
                     child: CustomPaint(
                       painter: _CircleProgressPainter(pct / 100, AppColors.red),
                       child: Center(child: Text('$pct%', style: const TextStyle(
-                        color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800))),
+                        color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800,
+                      ))),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text(_profilComplet ? 'Profil complet ✓' : 'Profil incomplet',
-                      style: const TextStyle(color: Colors.white,
-                          fontWeight: FontWeight.w700, fontSize: 15)),
+                      style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15,
+                      )),
                     const SizedBox(height: 4),
                     Text(
                       _profilComplet
@@ -717,22 +788,18 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
               const SizedBox(height: 20),
               const Text('SECTIONS DU PROFIL', style: TextStyle(
                 fontSize: 11, fontWeight: FontWeight.w800,
-                color: AppColors.muted, letterSpacing: 1.2)),
+                color: AppColors.muted, letterSpacing: 1.2,
+              )),
               const SizedBox(height: 10),
-
               ...sections.map((s) {
-                final tab = s['tab'] as int;
-                final fields = s['fields'] as List<String>;
-                final filled = fields.where((f) {
+                final filled = s.fields.where((f) {
                   final v = _profil[f];
                   if (v == null) return false;
                   if (v is String) return v.isNotEmpty;
                   if (v is List) return v.isNotEmpty;
                   return true;
                 }).length;
-                final sectionPct = (filled / fields.length * 100).round();
-                final required = tab <= 3;
-
+                final sectionPct = (filled / s.fields.length * 100).round();
                 return Container(
                   margin: const EdgeInsets.only(bottom: 10),
                   decoration: BoxDecoration(
@@ -746,18 +813,22 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
                       width: 38, height: 38,
                       decoration: BoxDecoration(
                         color: sectionPct == 100
-                            ? AppColors.teal.withOpacity(0.1) : AppColors.cream,
+                            ? AppColors.teal.withOpacity(0.1)
+                            : AppColors.cream,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(s['icon'] as IconData, size: 18,
+                      child: Icon(s.icon, size: 18,
                         color: sectionPct == 100 ? AppColors.teal : AppColors.muted),
                     ),
                     title: Row(children: [
-                      Text(s['title'] as String, style: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink)),
-                      if (required) ...[
+                      Text(s.title, style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink,
+                      )),
+                      if (s.required) ...[
                         const SizedBox(width: 4),
-                        const Text('*', style: TextStyle(color: AppColors.red, fontWeight: FontWeight.w800)),
+                        const Text('*', style: TextStyle(
+                          color: AppColors.red, fontWeight: FontWeight.w800,
+                        )),
                       ],
                     ]),
                     subtitle: Padding(
@@ -774,21 +845,22 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
                         )),
                         const SizedBox(width: 8),
                         Text('$sectionPct%', style: const TextStyle(
-                          fontSize: 10, color: AppColors.muted, fontWeight: FontWeight.w600)),
+                          fontSize: 10, color: AppColors.muted, fontWeight: FontWeight.w600,
+                        )),
                       ]),
                     ),
                     trailing: const Icon(Icons.edit_outlined, size: 16, color: AppColors.muted),
-                    onTap: () => _openProfileSheet(tab),
+                    onTap: () => _openProfileSheet(s.tab),
                   ),
                 );
               }),
-
               const SizedBox(height: 12),
               SizedBox(width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: _logout,
                   icon: const Icon(Icons.logout_rounded, size: 16, color: AppColors.muted),
-                  label: const Text('Se déconnecter', style: TextStyle(color: AppColors.muted)),
+                  label: const Text('Se déconnecter',
+                      style: TextStyle(color: AppColors.muted)),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.border),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -805,8 +877,10 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
   }
 
   void _openProfileSheet(int tab) {
-    final titles = ['Informations générales', 'Compétences & Expérience',
-      'Zones d\'intervention', 'Capacité financière', 'Préférences'];
+    final titles = [
+      'Informations générales', 'Compétences & Expérience',
+      "Zones d'intervention",  'Capacité financière', 'Préférences',
+    ];
     final formKey = GlobalKey<FormState>();
     bool saving = false;
 
@@ -829,23 +903,28 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
               decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border))),
               child: Row(children: [
                 Text(titles[tab], style: const TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                  fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.ink,
+                )),
                 const Spacer(),
-                IconButton(icon: const Icon(Icons.close_rounded, color: AppColors.muted, size: 20),
-                  onPressed: () => Navigator.pop(ctx)),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, color: AppColors.muted, size: 20),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
               ]),
             ),
             Expanded(child: SingleChildScrollView(
               padding: EdgeInsets.only(
                 left: 20, right: 20, top: 20,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 20),
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              ),
               child: Form(key: formKey, child: _buildSectionForm(tab, setS)),
             )),
             Container(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
               decoration: const BoxDecoration(
                 border: Border(top: BorderSide(color: AppColors.border)),
-                color: Colors.white),
+                color: Colors.white,
+              ),
               child: SizedBox(width: double.infinity,
                 child: ElevatedButton(
                   onPressed: saving ? null : () async {
@@ -878,7 +957,7 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
     switch (tab) {
       case 0:
         return Column(children: [
-          _field('Domaine d\'activité *', _domaineCtrl, hint: 'BTP, Technologies...', required: true),
+          _field("Domaine d'activité *", _domaineCtrl, hint: 'BTP, Technologies...', required: true),
           _field('Localisation *', _localisationCtrl, hint: 'Ouagadougou, BF', required: true),
           Row(children: [
             Expanded(child: _field('Nb. employés', _tailleCtrl, hint: '50', numeric: true)),
@@ -890,33 +969,40 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
       case 1:
         return Column(children: [
           _field('Compétences clés *', _competencesClesCtrl,
-            hint: 'Génie civil, Dev web...', required: true, maxLines: 3,
-            note: 'Séparez par des virgules'),
+            hint: 'Génie civil, Dev web...', required: true,
+            maxLines: 3, note: 'Séparez par des virgules'),
           _field('Description', _descriptionCtrl,
             hint: 'Présentez votre entreprise...', maxLines: 4),
           Row(children: [
-            Expanded(child: _field('Années d\'exp.', _anneesExpCtrl, hint: '10', numeric: true)),
+            Expanded(child: _field("Années d'exp.", _anneesExpCtrl, hint: '10', numeric: true)),
             const SizedBox(width: 12),
             Expanded(child: _field('Nb. projets', _nbProjetsCtrl, hint: '25', numeric: true)),
           ]),
         ]);
       case 2:
         return Column(children: [
-          _field('Pays d\'intervention *', _paysInterventionCtrl,
-            hint: 'Burkina Faso, Côte d\'Ivoire...', required: true, note: 'Séparez par des virgules'),
-          _field('Rayon d\'action (km)', _rayonActionCtrl, hint: '500', numeric: true),
+          _field("Pays d'intervention *", _paysInterventionCtrl,
+            hint: "Burkina Faso, Côte d'Ivoire...", required: true,
+            note: 'Séparez par des virgules'),
+          _field("Rayon d'action (km)", _rayonActionCtrl, hint: '500', numeric: true),
         ]);
       case 3:
         return Column(children: [
-          _field('Chiffre d\'affaires (FCFA) *', _chiffreAffairesCtrl,
+          _field("Chiffre d'affaires (FCFA) *", _chiffreAffairesCtrl,
             hint: '100000000', required: true, numeric: true),
           _field('Capital social (FCFA)', _capitalSocialCtrl, hint: '5000000', numeric: true),
         ]);
       case 4:
-        final options = {'AMI': 'AMI', 'APPEL_OFFRE': 'Appel d\'offres', 'MARCHE_PUBLIC': 'Marché public'};
+        const options = {
+          'AMI': 'AMI',
+          'APPEL_OFFRE': "Appel d'offres",
+          'MARCHE_PUBLIC': 'Marché public',
+        };
         return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('TYPES D\'OPPORTUNITÉS *', style: TextStyle(
-            fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 0.8)),
+          const Text("TYPES D'OPPORTUNITÉS *", style: TextStyle(
+            fontSize: 10, fontWeight: FontWeight.w700,
+            color: AppColors.muted, letterSpacing: 0.8,
+          )),
           const SizedBox(height: 8),
           ...options.entries.map((e) => CheckboxListTile(
             dense: true, contentPadding: EdgeInsets.zero,
@@ -924,11 +1010,8 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
             value: _typesOpportunites.contains(e.key),
             activeColor: AppColors.red,
             onChanged: (v) => setS(() {
-              if (v == true) {
-                _typesOpportunites.add(e.key);
-              } else {
-                _typesOpportunites.remove(e.key);
-              }
+              if (v == true) { _typesOpportunites.add(e.key); }
+              else { _typesOpportunites.remove(e.key); }
             }),
           )),
           const SizedBox(height: 12),
@@ -947,16 +1030,16 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
     switch (tab) {
       case 0: return {
         'domaineActive': _domaineCtrl.text.trim(),
-        'localisation': _localisationCtrl.text.trim(),
-        if (_tailleCtrl.text.isNotEmpty) 'taille': int.tryParse(_tailleCtrl.text),
-        if (_anneeCreationCtrl.text.isNotEmpty) 'annee_creation': int.tryParse(_anneeCreationCtrl.text),
-        if (_siteWebCtrl.text.isNotEmpty) 'site_web': _siteWebCtrl.text.trim(),
+        'localisation':  _localisationCtrl.text.trim(),
+        if (_tailleCtrl.text.isNotEmpty)        'taille':          int.tryParse(_tailleCtrl.text),
+        if (_anneeCreationCtrl.text.isNotEmpty) 'annee_creation':  int.tryParse(_anneeCreationCtrl.text),
+        if (_siteWebCtrl.text.isNotEmpty)       'site_web':        _siteWebCtrl.text.trim(),
       };
       case 1: return {
         'competencesCles': _competencesClesCtrl.text.trim(),
-        if (_descriptionCtrl.text.isNotEmpty) 'description': _descriptionCtrl.text.trim(),
-        if (_anneesExpCtrl.text.isNotEmpty) 'annees_experience': int.tryParse(_anneesExpCtrl.text),
-        if (_nbProjetsCtrl.text.isNotEmpty) 'nb_projets_realises': int.tryParse(_nbProjetsCtrl.text),
+        if (_descriptionCtrl.text.isNotEmpty)  'description':        _descriptionCtrl.text.trim(),
+        if (_anneesExpCtrl.text.isNotEmpty)    'annees_experience':  int.tryParse(_anneesExpCtrl.text),
+        if (_nbProjetsCtrl.text.isNotEmpty)    'nb_projets_realises':int.tryParse(_nbProjetsCtrl.text),
       };
       case 2: return {
         'pays_intervention': _paysInterventionCtrl.text
@@ -965,7 +1048,7 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
       };
       case 3: return {
         if (_chiffreAffairesCtrl.text.isNotEmpty) 'chiffre_affaires': int.tryParse(_chiffreAffairesCtrl.text),
-        if (_capitalSocialCtrl.text.isNotEmpty) 'capital_social': int.tryParse(_capitalSocialCtrl.text),
+        if (_capitalSocialCtrl.text.isNotEmpty)   'capital_social':   int.tryParse(_capitalSocialCtrl.text),
       };
       case 4: return {
         'types_opportunites': _typesOpportunites,
@@ -981,22 +1064,28 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Container(width: 64, height: 64,
+        Container(
+          width: 64, height: 64,
           decoration: BoxDecoration(color: AppColors.cream, borderRadius: BorderRadius.circular(16)),
-          child: Icon(icon, size: 30, color: AppColors.muted)),
+          child: Icon(icon, size: 30, color: AppColors.muted),
+        ),
         const SizedBox(height: 14),
-        Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.ink)),
+        Text(title, style: const TextStyle(
+          fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.ink,
+        )),
         const SizedBox(height: 6),
         Text(subtitle, textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 12, color: AppColors.muted)),
         if (actionLabel != null && onAction != null) ...[
           const SizedBox(height: 16),
-          GestureDetector(onTap: onAction,
+          GestureDetector(
+            onTap: onAction,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(color: AppColors.red, borderRadius: BorderRadius.circular(8)),
               child: Text(actionLabel, style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
+                color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13,
+              )),
             ),
           ),
         ],
@@ -1012,7 +1101,8 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label.toUpperCase(), style: const TextStyle(
           fontSize: 10, fontWeight: FontWeight.w700,
-          color: AppColors.muted, letterSpacing: 0.6)),
+          color: AppColors.muted, letterSpacing: 0.6,
+        )),
         const SizedBox(height: 6),
         TextFormField(
           controller: ctrl,
@@ -1030,7 +1120,9 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: AppColors.red, width: 1.5)),
           ),
-          validator: required ? (v) => (v == null || v.isEmpty) ? 'Champ requis' : null : null,
+          validator: required
+              ? (v) => (v == null || v.isEmpty) ? 'Champ requis' : null
+              : null,
         ),
         if (note != null) ...[
           const SizedBox(height: 4),
@@ -1043,16 +1135,48 @@ class _DashboardEntrepriseState extends State<DashboardEntreprise>
   Widget _buildLoader() => Scaffold(
     backgroundColor: AppColors.cream,
     body: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-      Container(width: 56, height: 56,
+      Container(
+        width: 56, height: 56,
         decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(14)),
-        child: const Center(child: CircularProgressIndicator(color: AppColors.red, strokeWidth: 2.5))),
+        child: const Center(child: CircularProgressIndicator(
+            color: AppColors.red, strokeWidth: 2.5)),
+      ),
       const SizedBox(height: 16),
       const Text('Chargement...', style: TextStyle(color: AppColors.muted, fontSize: 13)),
     ])),
   );
 }
 
-// ─── Painter cercle progress ───────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════
+// MODÈLES INTERNES
+// ═══════════════════════════════════════════════════════════════════════
+class _NavItem {
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  const _NavItem({required this.icon, required this.activeIcon, required this.label});
+}
+
+class _StatData {
+  final String value;
+  final String label;
+  final IconData icon;
+  final bool accent;
+  const _StatData(this.value, this.label, this.icon, this.accent);
+}
+
+class _SectionData {
+  final String title;
+  final IconData icon;
+  final List<String> fields;
+  final int tab;
+  final bool required;
+  const _SectionData(this.title, this.icon, this.fields, this.tab, this.required);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PAINTER CERCLE PROGRESS
+// ═══════════════════════════════════════════════════════════════════════
 class _CircleProgressPainter extends CustomPainter {
   final double progress;
   final Color color;

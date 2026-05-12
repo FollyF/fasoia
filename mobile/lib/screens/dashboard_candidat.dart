@@ -1,6 +1,11 @@
-import 'dart:convert';
+// lib/screens/dashboard_candidat.dart
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter/services.dart';
+import '../services/api_service.dart';
+import '../services/storage_service.dart';
+import '../utils/constants.dart';
+import '../widgets/fasoia_logo.dart';
 
 class DashboardCandidat extends StatefulWidget {
   const DashboardCandidat({super.key});
@@ -10,587 +15,581 @@ class DashboardCandidat extends StatefulWidget {
 }
 
 class _DashboardCandidatState extends State<DashboardCandidat>
-    with SingleTickerProviderStateMixin {
-  // ── Palette ──────────────────────────────────
-  static const _red    = Color(0xFFD32F2F);
-  static const _cream  = Color(0xFFF8F4ED);
-  static const _ink    = Color(0xFF2C1810);
-  static const _muted  = Color(0xFF8B7355);
-  static const _border = Color(0xFFE0D8CC);
-  static const _teal   = Color(0xFF0D7377);
-  static const _white  = Colors.white;
-
-  // ── État API ─────────────────────────────────
-  bool _loading = true;
-  String? _error;
-
-  Map<String, dynamic> _candidat = {};
+    with TickerProviderStateMixin {
+  
+  bool _isLoading = true;
+  int _navIndex = 0;
+  
+  // Données du candidat
+  Map<String, dynamic> _profil = {};
+  List<dynamic> _offresRecommandees = [];
+  List<dynamic> _convocations = [];
+  
+  // Statistiques
   int _progression = 0;
-  List<Map<String, dynamic>> _offres = [];
-  List<Map<String, dynamic>> _convocations = [];
+  int _champsRemplis = 0;
+  int _totalChamps = 0;
+  int _candidaturesEnvoyees = 0;
+  int _entretiensObtenus = 0;
+  
+  late AnimationController _fadeCtrl;
+  late Animation<double> _fadeAnim;
 
-  // ── Formulaire ───────────────────────────────
-  late TabController _tabController;
-  final _formKey = GlobalKey<FormState>();
-
-  final _nomCtrl           = TextEditingController();
-  final _prenomCtrl        = TextEditingController();
-  final _emailCtrl         = TextEditingController();
-  final _telCtrl           = TextEditingController();
-  final _villeCtrl         = TextEditingController();
-  final _paysCtrl          = TextEditingController();
-  final _niveauEtudeCtrl   = TextEditingController();
-  final _anneesExpCtrl     = TextEditingController();
-  final _competencesCtrl   = TextEditingController();
-  final _languesCtrl       = TextEditingController();
-  final _secteurCtrl       = TextEditingController();
-  final _salaireCtrl       = TextEditingController();
-  final _localisationCtrl  = TextEditingController();
-  String _disponibilite    = '';
-  String _typeContrat      = '';
-  bool   _mobilite         = false;
-  bool   _profilExpanded   = false;
-
-  // ── Config API ───────────────────────────────
-  // Remplacez par votre URL de base
-  static const _baseUrl = 'https://votre-domaine.com/api';
-
-  // Remplacez par votre token auth (ex: récupéré depuis SharedPreferences)
-  static const _token = 'VOTRE_TOKEN_ICI';
-
-  Map<String, String> get _headers => {
-    'Content-Type': 'application/json',
-    'Authorization': 'Token $_token',
-  };
-
-  // ─────────────────────────────────────────────
-  // CYCLE DE VIE
-  // ─────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
-    _fetchData();
+    print('🟢 DashboardCandidat.initState() - Démarrage');
+    _fadeCtrl = AnimationController(
+      vsync: this, 
+      duration: const Duration(milliseconds: 500),
+    );
+    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
+    
+     _checkTokenAndLoad();
+    }
+
+    Future<void> _checkTokenAndLoad() async {
+      final token = await StorageService.getAccessToken();
+      print('🔑 Token présent: ${token != null}');
+      
+      if (token == null) {
+        // Pas de token, rediriger vers login
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/login');
+        }
+        return;
+      }
+    _loadData();
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
-    for (final c in [
-      _nomCtrl, _prenomCtrl, _emailCtrl, _telCtrl, _villeCtrl, _paysCtrl,
-      _niveauEtudeCtrl, _anneesExpCtrl, _competencesCtrl, _languesCtrl,
-      _secteurCtrl, _salaireCtrl, _localisationCtrl,
-    ]) { c.dispose(); }
+    _fadeCtrl.dispose();
     super.dispose();
   }
 
-  // ─────────────────────────────────────────────
-  // APPELS API
-  // ─────────────────────────────────────────────
-  Future<void> _fetchData() async {
-    setState(() { _loading = true; _error = null; });
+  Future<void> _loadData() async {
+  print('🟢 _loadData() - DÉBUT');
+  try {
+    print('🟢 _loadData() - Appel ApiService.getCandidatProfil()');
+    final profil = await ApiService.getCandidatProfil();
+    print('🟢 _loadData() - Profil reçu: ${profil.keys}');
+    print('📊 profil_complet reçu: ${profil['profil_complet']}');
+    print('📊 offres_recommandees length: ${profil['offres_recommandees']?.length ?? 0}');
+    print('📊 offres_recommandees: ${profil['offres_recommandees']}');
+
+    print('🟢 _loadData() - Appel ApiService.getCandidatOffresRecommandees()');
+    final offres = await ApiService.getCandidatOffresRecommandees();
+    print('🟢 _loadData() - Offres reçues: ${offres.length}');
+    
+    print('🟢 _loadData() - Appel ApiService.getCandidatConvocations()');
+    final convocations = await ApiService.getCandidatConvocations();
+    print('🟢 _loadData() - Convocations reçues: ${convocations.length}');
+    
+    if (!mounted) return;
+    
+    setState(() {
+      _profil = profil;
+      _offresRecommandees = offres;
+      _convocations = convocations;
+      _progression = profil['progression'] ?? 0;
+      _champsRemplis = profil['champs_remplis'] ?? 0;
+      _totalChamps = profil['total_champs'] ?? 22;
+      _candidaturesEnvoyees = profil['candidat']?['nb_candidatures_envoyees'] ?? 0;
+      _entretiensObtenus = profil['convocations_obtenues'] ?? 0;
+      _isLoading = false;
+    });
+    
+    print('🟢 _loadData() - FIN, _offresRecommandees.length = ${_offresRecommandees.length}');
+    _fadeCtrl.forward();
+  } catch (e) {
+    print('❌ _loadData() - ERREUR: $e');
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+  }
+}
+
+  String get _prenom => _profil['particulier']?['prenom'] ?? _profil['candidat']?['prenom'] ?? 'Candidat';
+  String get _nom => _profil['particulier']?['nom'] ?? _profil['candidat']?['nom'] ?? '';
+  String get _localisation => _profil['candidat']?['localisation_recherche'] ?? _profil['particulier']?['ville'] ?? 'Non définie';
+  String get _typeContrat => _profil['candidat']?['type_contrat_recherche'] ?? 'Tous contrats';
+  String get _disponibilite => _profil['candidat']?['disponibilite'] ?? '';
+  bool   get _profilComplet => _profil['profil_complet'] ?? false;
+
+  Future<void> _logout() async {
+    await ApiService.logout();
+    if (mounted) Navigator.pushReplacementNamed(context, '/login');
+  }
+
+  Future<void> _repondreConvocation(int convId, String action) async {
     try {
-      // Appels parallèles
-      final results = await Future.wait([
-        http.get(Uri.parse('$_baseUrl/candidat/profil/'), headers: _headers),
-        http.get(Uri.parse('$_baseUrl/candidat/offres-recommandees/'), headers: _headers),
-        http.get(Uri.parse('$_baseUrl/candidat/convocations/'), headers: _headers),
-      ]);
-
-      if (results[0].statusCode == 200) {
-        final data = jsonDecode(utf8.decode(results[0].bodyBytes));
-        setState(() {
-          _candidat    = Map<String, dynamic>.from(data['candidat'] ?? {});
-          _progression = data['progression'] ?? 0;
-        });
-        _remplirFormulaire();
-      }
-
-      if (results[1].statusCode == 200) {
-        final data = jsonDecode(utf8.decode(results[1].bodyBytes));
-        setState(() {
-          _offres = List<Map<String, dynamic>>.from(data['offres'] ?? []);
-        });
-      }
-
-      if (results[2].statusCode == 200) {
-        final data = jsonDecode(utf8.decode(results[2].bodyBytes));
-        setState(() {
-          _convocations = List<Map<String, dynamic>>.from(data['convocations'] ?? []);
-        });
+      final result = await ApiService.repondreConvocation(convId, action);
+      if (result['success'] && mounted) {
+        _loadData();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(action == 'confirmee' ? 'Convocation confirmée' : 'Convocation refusée'),
+            backgroundColor: action == 'confirmee' ? AppColors.teal : Colors.orange,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     } catch (e) {
-      setState(() => _error = 'Erreur de connexion au serveur');
-    } finally {
-      setState(() => _loading = false);
-    }
-  }
-
-  void _remplirFormulaire() {
-    _nomCtrl.text          = _candidat['nom']                   ?? '';
-    _prenomCtrl.text       = _candidat['prenom']                ?? '';
-    _emailCtrl.text        = _candidat['email']                 ?? '';
-    _telCtrl.text          = _candidat['telephone']             ?? '';
-    _villeCtrl.text        = _candidat['ville']                 ?? '';
-    _paysCtrl.text         = _candidat['pays']                  ?? '';
-    _niveauEtudeCtrl.text  = _candidat['niveauEtude']           ?? '';
-    _anneesExpCtrl.text    = (_candidat['anneesExperiences'] ?? '').toString();
-    _competencesCtrl.text  = _candidat['competences']           ?? '';
-    _languesCtrl.text      = _candidat['niveauLangues']         ?? '';
-    _secteurCtrl.text      = _candidat['secteur_recherche']     ?? '';
-    _salaireCtrl.text      = (_candidat['salaire_souhaite'] ?? '').toString();
-    _localisationCtrl.text = _candidat['localisation_recherche'] ?? '';
-    _disponibilite         = _candidat['disponibilite']         ?? '';
-    _typeContrat           = _candidat['type_contrat_recherche'] ?? '';
-    _mobilite              = _candidat['mobilite']              ?? false;
-  }
-
-  Future<void> _submitProfil() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    final body = jsonEncode({
-      'nom':                    _nomCtrl.text,
-      'prenom':                 _prenomCtrl.text,
-      'email':                  _emailCtrl.text,
-      'telephone':              _telCtrl.text,
-      'ville':                  _villeCtrl.text,
-      'pays':                   _paysCtrl.text,
-      'niveauEtude':            _niveauEtudeCtrl.text,
-      'anneesExperiences':      int.tryParse(_anneesExpCtrl.text) ?? 0,
-      'competences':            _competencesCtrl.text,
-      'niveauLangues':          _languesCtrl.text,
-      'secteur_recherche':      _secteurCtrl.text,
-      'salaire_souhaite':       int.tryParse(_salaireCtrl.text) ?? 0,
-      'localisation_recherche': _localisationCtrl.text,
-      'disponibilite':          _disponibilite,
-      'type_contrat_recherche': _typeContrat,
-      'mobilite':               _mobilite,
-    });
-
-    try {
-      final res = await http.patch(
-        Uri.parse('$_baseUrl/candidat/profil/'),
-        headers: _headers,
-        body: body,
-      );
-      if (res.statusCode == 200) {
-        _showSnack('Profil enregistré avec succès', success: true);
-        _fetchData();
-      } else {
-        _showSnack('Erreur lors de l\'enregistrement');
-      }
-    } catch (_) {
-      _showSnack('Erreur de connexion');
-    }
-  }
-
-  Future<void> _repondreConvocation(int id, String statut) async {
-    try {
-      final res = await http.post(
-        Uri.parse('$_baseUrl/candidat/convocations/$id/repondre/'),
-        headers: _headers,
-        body: jsonEncode({'action': statut}),
-      );
-      if (res.statusCode == 200) {
-        _showSnack(
-          statut == 'confirmee' ? 'Convocation confirmée' : 'Convocation refusée',
-          success: statut == 'confirmee',
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur lors de la réponse'),
+            backgroundColor: AppColors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
-        _fetchData();
       }
-    } catch (_) {
-      _showSnack('Erreur de connexion');
     }
   }
 
-  void _showSnack(String msg, {bool success = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: success ? _teal : _red,
-    ));
-  }
-
-  // ─────────────────────────────────────────────
-  // BUILD
-  // ─────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const Scaffold(
-        backgroundColor: Color(0xFFF8F4ED),
-        body: Center(child: CircularProgressIndicator(color: Color(0xFFD32F2F))),
-      );
-    }
-    if (_error != null) {
-      return Scaffold(
-        backgroundColor: _cream,
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+    print('🟢 DashboardCandidat.build() - isLoading: $_isLoading');
+    if (_isLoading) return _buildLoader();
+    print('🟢 DashboardCandidat.build() - offres length: ${_offresRecommandees.length}');
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        backgroundColor: AppColors.cream,
+        body: FadeTransition(
+          opacity: _fadeAnim,
+          child: IndexedStack(
+            index: _navIndex,
             children: [
-              const Icon(Icons.wifi_off, size: 48, color: _muted),
-              const SizedBox(height: 12),
-              Text(_error!, style: const TextStyle(color: _muted)),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _fetchData,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _ink,
-                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                ),
-                child: const Text('Réessayer', style: TextStyle(color: _white)),
-              ),
+              _buildAccueil(),
+              _buildOffresPage(),
+              _buildProfilPage(),
             ],
           ),
         ),
-      );
-    }
-
-    final bool profilComplet = _progression >= 100;
-
-    return Scaffold(
-      backgroundColor: _cream,
-      appBar: _buildAppBar(),
-      body: RefreshIndicator(
-        color: _red,
-        onRefresh: _fetchData,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              _buildStatsRow(),
-              if (profilComplet) _buildSuccessBanner(),
-              if (!profilComplet || _profilExpanded) _buildProfilForm(),
-              if (_convocations.isNotEmpty) _buildConvocationsSection(),
-              _buildOffresSection(),
-              const SizedBox(height: 32),
-            ],
-          ),
-        ),
+        bottomNavigationBar: _buildBottomNav(),
       ),
     );
   }
 
-  // ─────────────────────────────────────────────
-  // APPBAR
-  // ─────────────────────────────────────────────
-  PreferredSizeWidget _buildAppBar() {
-    final prenom = _candidat['prenom'] ?? '';
-    return AppBar(
-      backgroundColor: _white,
-      elevation: 0,
-      centerTitle: false,
-      title: RichText(
-        text: const TextSpan(
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
-              letterSpacing: 1.5, color: _ink),
-          children: [
-            TextSpan(text: 'FASO'),
-            TextSpan(text: 'IA', style: TextStyle(color: _red)),
-          ],
-        ),
-      ),
-      actions: [
-        IconButton(onPressed: () {},
-            icon: const Icon(Icons.notifications_none, color: _ink)),
-        Padding(
-          padding: const EdgeInsets.only(right: 16),
-          child: CircleAvatar(
-            backgroundColor: _red,
-            radius: 16,
-            child: Text(
-              prenom.isNotEmpty ? prenom[0].toUpperCase() : 'C',
-              style: const TextStyle(color: _white,
-                  fontWeight: FontWeight.w800, fontSize: 14),
-            ),
-          ),
-        ),
-      ],
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1),
-        child: Container(color: _border, height: 1),
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────
-  // HEADER
-  // ─────────────────────────────────────────────
-  Widget _buildHeader() {
-    final prenom      = _candidat['prenom']                  ?? '';
-    final nom         = _candidat['nom']                     ?? '';
-    final localisation= _candidat['localisation_recherche']  ?? '';
-    final contrat     = _candidat['type_contrat_recherche']  ?? '';
-    final dispo       = _candidat['disponibilite']           ?? '';
-
+  Widget _buildBottomNav() {
+    const items = [
+      _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: 'Accueil'),
+      _NavItem(icon: Icons.work_outline, activeIcon: Icons.work, label: 'Offres'),
+      _NavItem(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Profil'),
+    ];
+    
     return Container(
-      color: _ink,
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                RichText(
-                  text: TextSpan(
-                    style: const TextStyle(fontSize: 22,
-                        fontWeight: FontWeight.w800, color: _white, height: 1.2),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: AppColors.border)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 62,
+          child: Row(
+            children: List.generate(items.length, (i) {
+              final active = _navIndex == i;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _navIndex = i),
+                  behavior: HitTestBehavior.opaque,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const TextSpan(text: 'Bonjour, '),
-                      TextSpan(text: prenom,
-                          style: const TextStyle(color: _red)),
-                      TextSpan(text: ' $nom'),
+                      Icon(
+                        active ? items[i].activeIcon : items[i].icon,
+                        color: active ? AppColors.red : AppColors.muted,
+                        size: 24,
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        items[i].label,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                          color: active ? AppColors.red : AppColors.muted,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        height: 2,
+                        width: active ? 20 : 0,
+                        decoration: BoxDecoration(
+                          color: AppColors.red,
+                          borderRadius: BorderRadius.circular(1),
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8, runSpacing: 6,
-                  children: [
-                    if (localisation.isNotEmpty)
-                      _buildTag(Icons.location_on_outlined, localisation),
-                    if (contrat.isNotEmpty)
-                      _buildTag(Icons.work_outline, contrat),
-                    if (dispo.isNotEmpty)
-                      _buildTag(Icons.access_time, 'Dispo : $dispo'),
-                  ],
-                ),
-              ],
-            ),
+              );
+            }),
           ),
-          const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              RichText(
-                text: TextSpan(
-                  style: const TextStyle(fontSize: 40,
-                      fontWeight: FontWeight.w800, color: _white, height: 1),
-                  children: [
-                    TextSpan(text: '$_progression'),
-                    const TextSpan(text: '%',
-                        style: TextStyle(color: _red, fontSize: 26)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 4),
-              const Text('PROFIL COMPLÉTÉ',
-                  style: TextStyle(fontSize: 9, color: _red,
-                      letterSpacing: 1, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: 100,
-                child: LinearProgressIndicator(
-                  value: _progression / 100,
-                  backgroundColor: Colors.white12,
-                  valueColor: const AlwaysStoppedAnimation<Color>(_red),
-                  minHeight: 3,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTag(IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(border: Border.all(color: Colors.white24)),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 10, color: Colors.white38),
-          const SizedBox(width: 5),
-          Text(label, style: const TextStyle(fontSize: 11,
-              color: Colors.white70, fontWeight: FontWeight.w600)),
-        ],
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────
-  // STATS
-  // ─────────────────────────────────────────────
-  Widget _buildStatsRow() {
-    final nbCandidatures = _candidat['nb_candidatures_envoyees'] ?? 0;
-    final nbEntretiens   = _candidat['convocations_obtenues']    ?? 0;
-    final champsRemplis  = _candidat['champs_remplis']           ?? 0;
-    final totalChamps    = _candidat['total_champs']             ?? 12;
-
-    return Container(
-      color: _white,
-      child: Row(
-        children: [
-          _buildStatCell('$nbCandidatures',        'Candidatures',   false),
-          _buildStatDivider(),
-          _buildStatCell('$nbEntretiens',           'Entretiens',     true),
-          _buildStatDivider(),
-          _buildStatCell('${_offres.length}',       'Recommandées',   true),
-          _buildStatDivider(),
-          _buildStatCell('$champsRemplis/$totalChamps', 'Champs profil', false),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCell(String value, String label, bool accent) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: _border))),
-        child: Column(
-          children: [
-            Text(value, style: TextStyle(fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: accent ? _red : _ink)),
-            const SizedBox(height: 3),
-            Text(label, textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 9, color: _muted),
-                maxLines: 2),
-          ],
         ),
       ),
     );
   }
 
-  Widget _buildStatDivider() =>
-      Container(width: 1, height: 54, color: _border);
+  Widget _buildAccueil() {
+    print('🔍 _buildAccueil() - _profilComplet: $_profilComplet');
+    print('🔍 _buildAccueil() - _offresRecommandees.length: ${_offresRecommandees.length}');
+    final initiales = _prenom.isNotEmpty ? _prenom.substring(0, 1).toUpperCase() : 'C';
+    final nomComplet = '$_prenom $_nom'.trim();
+    
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        SliverAppBar(
+          expandedHeight: 195,
+          pinned: true,
+          backgroundColor: AppColors.ink,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          centerTitle: true,
+          title: const FasoiaLogo(fontSize: 22, showSubtitle: true),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout_rounded, color: Colors.white54, size: 20),
+              onPressed: _logout,
+            ),
+          ],
+          flexibleSpace: FlexibleSpaceBar(
+            background: Container(
+              color: AppColors.ink,
+              child: Stack(children: [
+                Positioned(right: -30, top: -30, child: Container(
+                  width: 160, height: 160,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.red.withOpacity(0.08),
+                  ),
+                )),
+                Positioned(right: 20, bottom: 20, child: Container(
+                  width: 60, height: 60,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.red.withOpacity(0.12),
+                  ),
+                )),
+                Positioned(
+                  top: 12,
+                  left: 0,
+                  right: 0,
+                  child: SafeArea(
+                    bottom: false,
+                    child: const Column(children: [
+                      SizedBox(height: 6),
+                      //FasoiaLogo(fontSize: 22, showSubtitle: true),
+                    ]),
+                  ),
+                ),
+                Positioned(
+                  left: 20,
+                  bottom: 20,
+                  right: 70,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(children: [
+                        Container(
+                          width: 44, height: 44,
+                          decoration: BoxDecoration(
+                            color: AppColors.red,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(child: Text(
+                            initiales,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                            ),
+                          )),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Bonjour,',
+                              style: TextStyle(color: Colors.white54, fontSize: 12)),
+                            Text(
+                              nomComplet.isNotEmpty ? nomComplet : 'Candidat',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        )),
+                      ]),
+                      const SizedBox(height: 10),
+                      if (_localisation.isNotEmpty)
+                        _chip(Icons.location_on_outlined, _localisation),
+                      if (_typeContrat.isNotEmpty && _typeContrat != 'Tous contrats') ...[
+                        const SizedBox(height: 4),
+                        _chip(Icons.work_outline, _typeContrat),
+                      ],
+                      if (_disponibilite.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        _chip(Icons.access_time_rounded, 'Dispo : $_disponibilite'),
+                      ],
+                    ],
+                  ),
+                ),
+              ]),
+            ),
+          ),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(0),
+            child: Container(height: 3, color: AppColors.red),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              _buildStatsGrid(),
+              
+              const SizedBox(height: 12),
+              if (_convocations.isNotEmpty) ...[
+                _buildConvocationsSection(),
+                const SizedBox(height: 16),
+              ],
+              if (!_profilComplet)
+                _buildEmptyState(
+                  Icons.lock_outline_rounded,
+                  'Profil incomplet',
+                  'Complétez votre profil pour recevoir des recommandations.',
+                  actionLabel: 'Compléter',
+                  onAction: () => setState(() => _navIndex = 2),
+                )
+              else if (_offresRecommandees.isEmpty)
+                _buildEmptyState(
+                  Icons.search_off_rounded,
+                  'Aucune recommandation',
+                  'Aucune offre disponible pour le moment.',
+                )
+              else
+                ...(_offresRecommandees.take(3).map((o) => _buildOffreCard(o))),
+              
+              const SizedBox(height: 20),
+              Row(children: [
+                const Text('OFFRES RECOMMANDÉES', style: TextStyle(
+                  fontSize: 11, fontWeight: FontWeight.w800,
+                  color: AppColors.muted, letterSpacing: 1.2,
+                )),
+                const Spacer(),
+                if (_offresRecommandees.isNotEmpty)
+                  GestureDetector(
+                    onTap: () => setState(() => _navIndex = 1),
+                    child: const Text('Voir tout →', style: TextStyle(
+                      fontSize: 12, color: AppColors.red, fontWeight: FontWeight.w600,
+                    )),
+                  ),
+              ]),
+              
+              const SizedBox(height: 24),
+            ]),
+          ),
+        ),
+      ],
+    );
+  }
 
-  // ─────────────────────────────────────────────
-  // BANNIÈRE SUCCÈS
-  // ─────────────────────────────────────────────
-  Widget _buildSuccessBanner() {
+  Widget _chip(IconData icon, String label) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 11, color: Colors.white38),
+      const SizedBox(width: 5),
+      Text(label, style: const TextStyle(
+        fontSize: 11, color: Colors.white60, fontWeight: FontWeight.w500,
+      )),
+    ],
+  );
+
+  Widget _buildStatsGrid() {
+    final stats = [
+      _StatData('$_candidaturesEnvoyees', 'Candidatures', Icons.send_rounded, false),
+      _StatData('$_entretiensObtenus', 'Entretiens', Icons.calendar_today_rounded, true),
+      _StatData('${_offresRecommandees.length}', 'Recommandées', Icons.local_offer_rounded, true),
+      _StatData('$_champsRemplis/$_totalChamps', 'Champs profil', Icons.edit_note_rounded, false),
+    ];
+    
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisSpacing: 10,
+      mainAxisSpacing: 10,
+      childAspectRatio: 1.7,
+      children: stats.map((s) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+        decoration: BoxDecoration(
+          color: s.accent ? AppColors.ink : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: s.accent ? AppColors.ink : AppColors.border),
+        ),
+        child: 
+          Row(
+            children: [
+              Container(
+                width: 36, height: 36,
+                decoration: BoxDecoration(
+                  color: s.accent ? AppColors.red.withOpacity(0.2) : AppColors.cream,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(s.icon, size: 18, color: s.accent ? AppColors.red : AppColors.muted),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(s.value, style: TextStyle(
+                      fontSize: 18, 
+                      fontWeight: FontWeight.w800,
+                      color: s.accent ? Colors.white : AppColors.ink,
+                    )),
+                    Text(
+                      s.label, 
+                      style: TextStyle(
+                        fontSize: 9, 
+                        fontWeight: FontWeight.w600,
+                        color: s.accent ? Colors.white54 : AppColors.muted,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ]
+          ),
+      )).toList(),
+    );
+  }
+
+  Widget _buildConvocationsSection() {
+    if (_convocations.isEmpty) return const SizedBox();
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(children: [
+          const Icon(Icons.calendar_today_rounded, size: 14, color: AppColors.teal),
+          const SizedBox(width: 6),
+          const Text('MES CONVOCATIONS', style: TextStyle(
+            fontSize: 11, fontWeight: FontWeight.w800,
+            color: AppColors.muted, letterSpacing: 1.2,
+          )),
+        ]),
+        const SizedBox(height: 10),
+        ...(_convocations.take(2).map((c) => _buildConvocationCardCompact(c))),
+        if (_convocations.length > 2)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: GestureDetector(
+              onTap: () => setState(() => _navIndex = 2),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Voir toutes mes convocations →', style: TextStyle(
+                    fontSize: 11, color: AppColors.red, fontWeight: FontWeight.w600,
+                  )),
+                ],
+              ),
+            ),
+          ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _buildConvocationCardCompact(dynamic conv) {
+    final date = conv['date_rdv'] ?? '';
+    final heure = conv['heure_rdv'] ?? '';
+    final poste = conv['poste'] ?? conv['dossier']?['offre']?['titre'] ?? 'Entretien';
+    final organisation = conv['organisation'] ?? conv['recruteur']?['organisation'] ?? '';
+    final statut = conv['statut'] ?? 'en_attente';
+    final statusColor = statut == 'confirmee' ? AppColors.teal 
+        : statut == 'annulee' ? Colors.red 
+        : Colors.orange;
+    
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        color: _white,
-        border: Border(left: BorderSide(color: _teal, width: 3)),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [BoxShadow(
+          color: Colors.black.withOpacity(0.04),
+          blurRadius: 6,
+          offset: const Offset(0, 2),
+        )],
       ),
       child: Row(
         children: [
-          const Icon(Icons.check_circle, color: _teal, size: 20),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.teal.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(Icons.calendar_today_rounded, size: 20, color: AppColors.teal),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Profil complété à $_progression%',
-                    style: const TextStyle(fontWeight: FontWeight.w700,
-                        fontSize: 13, color: _ink)),
-                const SizedBox(height: 2),
-                const Text('Votre profil est visible par les recruteurs.',
-                    style: TextStyle(fontSize: 12, color: _muted)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: () => setState(() => _profilExpanded = !_profilExpanded),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-              decoration: BoxDecoration(border: Border.all(color: _ink)),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.edit, size: 12, color: _ink),
-                  SizedBox(width: 5),
-                  Text('Modifier', style: TextStyle(fontSize: 10,
-                      fontWeight: FontWeight.w800, color: _ink)),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────
-  // FORMULAIRE PROFIL
-  // ─────────────────────────────────────────────
-  Widget _buildProfilForm() {
-    final profilComplet = _progression >= 100;
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      decoration: BoxDecoration(
-          color: _white, border: Border.all(color: _border)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-            decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: _border))),
-            child: Row(
-              children: [
-                Text(profilComplet ? 'Modifier votre profil' : 'Compléter votre profil',
-                    style: const TextStyle(fontSize: 16,
-                        fontWeight: FontWeight.w800, color: _ink)),
-                const Spacer(),
-                const Text('* Requis',
-                    style: TextStyle(fontSize: 10, color: _muted)),
-              ],
-            ),
-          ),
-          TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            labelColor: _ink,
-            unselectedLabelColor: _muted,
-            indicatorColor: _red,
-            indicatorWeight: 2,
-            labelStyle: const TextStyle(fontSize: 10,
-                fontWeight: FontWeight.w800, letterSpacing: 0.5),
-            tabs: const [
-              Tab(text: 'PERSONNEL'),
-              Tab(text: 'PROFIL PRO'),
-              Tab(text: 'RECHERCHE'),
-              Tab(text: 'DOCUMENTS'),
-            ],
-          ),
-          SizedBox(
-            height: 440,
-            child: Form(
-              key: _formKey,
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _tabPersonnel(),
-                  _tabProfessionnel(),
-                  _tabRecherche(),
-                  _tabDocuments(),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: _border))),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _submitProfil,
-                icon: const Icon(Icons.save_outlined, size: 16, color: _white),
-                label: const Text('ENREGISTRER',
-                    style: TextStyle(fontSize: 11,
-                        fontWeight: FontWeight.w800, color: _white)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _ink,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.zero),
-                  elevation: 0,
+                Text(
+                  poste,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
+                Text(
+                  organisation,
+                  style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_today, size: 10, color: AppColors.muted),
+                    const SizedBox(width: 4),
+                    Text(date, style: const TextStyle(fontSize: 10, color: AppColors.muted)),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.access_time, size: 10, color: AppColors.muted),
+                    const SizedBox(width: 4),
+                    Text(heure, style: const TextStyle(fontSize: 10, color: AppColors.muted)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: statusColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: statusColor.withOpacity(0.3)),
+            ),
+            child: Text(
+              statut == 'confirmee' ? 'Confirmée' : statut == 'annulee' ? 'Annulée' : 'En attente',
+              style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: statusColor),
             ),
           ),
         ],
@@ -598,608 +597,899 @@ class _DashboardCandidatState extends State<DashboardCandidat>
     );
   }
 
-  Widget _tabPersonnel() => SingleChildScrollView(
-    padding: const EdgeInsets.all(16),
-    child: Column(children: [
-      _row([_field('Nom *', _nomCtrl, required: true),
-            _field('Prénom *', _prenomCtrl, required: true)]),
-      _row([_field('Email *', _emailCtrl,
-                type: TextInputType.emailAddress, required: true),
-            _field('Téléphone *', _telCtrl,
-                type: TextInputType.phone, required: true)]),
-      _row([_field('Ville', _villeCtrl, hint: 'Ex : Ouagadougou'),
-            _field('Pays', _paysCtrl, hint: 'Ex : Burkina Faso')]),
-    ]),
-  );
+  Widget _buildOffresPage() {
+    print('🔍 _buildOffresPage() - _offresRecommandees length: ${_offresRecommandees.length}');
+    
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        SliverAppBar(
+          pinned: true,
+          backgroundColor: AppColors.ink,
+          automaticallyImplyLeading: false,
+          centerTitle: true,
+          title: const FasoiaLogo(fontSize: 18, showSubtitle: false),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(3),
+            child: Container(height: 3, color: AppColors.red),
+          ),
+        ),
+        // ⚠️ VÉRIFIE CETTE PARTIE - La condition doit être sur _offresRecommandees
+        if (_offresRecommandees.isEmpty)
+          SliverFillRemaining(
+            child: Center(
+              child: _buildEmptyState(
+                Icons.search_off_rounded,
+                'Aucune offre',
+                _profilComplet
+                    ? 'Aucune recommandation disponible pour le moment.'
+                    : 'Complétez votre profil pour recevoir des recommandations.',
+                actionLabel: _profilComplet ? null : 'Compléter le profil',
+                onAction: _profilComplet ? null : () => setState(() => _navIndex = 2),
+              ),
+            ),
+          )
+        else
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, i) {
+                  print('🔍 Construction de la carte $i');
+                  return _buildOffreCard(_offresRecommandees[i]);
+                },
+                childCount: _offresRecommandees.length,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 
-  Widget _tabProfessionnel() => SingleChildScrollView(
-    padding: const EdgeInsets.all(16),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _row([_field("Niveau d'étude *", _niveauEtudeCtrl,
-                hint: 'Ex : Bac+5', required: true),
-            _field("Années d'expérience *", _anneesExpCtrl,
-                type: TextInputType.number, required: true)]),
-      _label('Compétences *'),
-      _textarea(_competencesCtrl, 'Python, Django, Gestion de projet…'),
-      const SizedBox(height: 4),
-      const Text('Séparez par des virgules',
-          style: TextStyle(fontSize: 10, color: _muted)),
-      const SizedBox(height: 14),
-      _row([_field('Langues *', _languesCtrl,
-                hint: 'Français (courant)', required: true),
-            _dropdown('Disponibilité *', _disponibilite,
-                ['immédiate', '1 semaine', '2 semaines', '1 mois'],
-                (v) => setState(() => _disponibilite = v!))]),
-    ]),
-  );
-
-  Widget _tabRecherche() => SingleChildScrollView(
-    padding: const EdgeInsets.all(16),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _row([_field('Secteur recherché *', _secteurCtrl,
-                hint: 'Informatique, Finance…', required: true),
-            _dropdown('Type de contrat', _typeContrat,
-                ['CDI', 'CDD', 'Stage', 'Alternance'],
-                (v) => setState(() => _typeContrat = v!))]),
-      _row([_field('Localisation *', _localisationCtrl,
-                hint: 'Ex : Ouagadougou', required: true),
-            _field('Salaire souhaité (FCFA)', _salaireCtrl,
-                type: TextInputType.number)]),
-      const SizedBox(height: 8),
-      GestureDetector(
-        onTap: () => setState(() => _mobilite = !_mobilite),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(border: Border.all(color: _border)),
-          child: Row(
-            children: [
-              Checkbox(
-                value: _mobilite,
-                onChanged: (v) => setState(() => _mobilite = v!),
-                activeColor: _ink,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+  Widget _buildOffreCard(dynamic offre) {
+    print('🔍 _buildOffreCard() - titre: ${offre['titre']}');
+    
+    final titre = offre['titre'] ?? 'Offre';
+    final entreprise = offre['entreprise'] ?? offre['recruteur']?['organisation'] ?? 'Entreprise';
+    final lieu = offre['ville'] ?? offre['localisation'] ?? 'Non spécifié';
+    final typeContrat = offre['type_contrat'] ?? offre['get_type_contrat_display'] ?? 'Emploi';
+    final score = (offre['score'] ?? 0).toDouble();
+    final dateLimite = offre['date_limite'] ?? '';
+    
+    return GestureDetector(
+      onTap: () => _showOffreDetails(offre),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          )],
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.red.withOpacity(0.06),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            ),
+            child: Row(children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.red,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  typeContrat.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                  ),
+                ),
               ),
               const SizedBox(width: 8),
-              const Expanded(
-                child: Text('Disponible pour mobilité géographique',
-                    style: TextStyle(fontSize: 13, color: _ink)),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ]),
-  );
-
-  Widget _tabDocuments() => SingleChildScrollView(
-    padding: const EdgeInsets.all(16),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _label('CV *'),
-      _uploadZone('PDF, DOC, DOCX'),
-      const SizedBox(height: 16),
-      _label('Lettre de motivation (optionnel)'),
-      _uploadZone('PDF, DOC, DOCX'),
-    ]),
-  );
-
-  // ─────────────────────────────────────────────
-  // HELPERS FORMULAIRE
-  // ─────────────────────────────────────────────
-  Widget _row(List<Widget> children) => Padding(
-    padding: const EdgeInsets.only(bottom: 14),
-    child: Row(
-      children: children.map((w) => Expanded(
-        child: Padding(padding: const EdgeInsets.only(right: 8), child: w),
-      )).toList(),
-    ),
-  );
-
-  Widget _label(String text) => Padding(
-    padding: const EdgeInsets.only(bottom: 5),
-    child: Text(text, style: const TextStyle(fontSize: 10,
-        fontWeight: FontWeight.w700, color: _muted, letterSpacing: 0.8)),
-  );
-
-  InputDecoration get _inputDeco => const InputDecoration(
-    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-    filled: true, fillColor: _white,
-    border: OutlineInputBorder(borderRadius: BorderRadius.zero,
-        borderSide: BorderSide(color: _border)),
-    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.zero,
-        borderSide: BorderSide(color: _border)),
-    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.zero,
-        borderSide: BorderSide(color: _ink)),
-    errorBorder: OutlineInputBorder(borderRadius: BorderRadius.zero,
-        borderSide: BorderSide(color: _red)),
-  );
-
-  Widget _field(String label, TextEditingController ctrl,
-      {TextInputType type = TextInputType.text,
-       String? hint,
-       bool required = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _label(label),
-        TextFormField(
-          controller: ctrl,
-          keyboardType: type,
-          style: const TextStyle(fontSize: 13, color: _ink),
-          decoration: _inputDeco.copyWith(hintText: hint,
-              hintStyle: const TextStyle(fontSize: 12, color: _muted)),
-          validator: required
-              ? (v) => (v == null || v.trim().isEmpty) ? 'Requis' : null
-              : null,
-        ),
-      ],
-    );
-  }
-
-  Widget _textarea(TextEditingController ctrl, String hint) =>
-      TextFormField(
-        controller: ctrl, maxLines: 3,
-        style: const TextStyle(fontSize: 13, color: _ink),
-        decoration: _inputDeco.copyWith(hintText: hint,
-            hintStyle: const TextStyle(fontSize: 12, color: _muted),
-            contentPadding: const EdgeInsets.all(12)),
-      );
-
-  Widget _dropdown(String label, String value, List<String> items,
-      ValueChanged<String?> onChanged) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _label(label),
-        DropdownButtonFormField<String>(
-          initialValue: value.isEmpty ? null : value,
-          hint: const Text('Sélectionnez…',
-              style: TextStyle(fontSize: 12, color: _muted)),
-          items: items.map((i) => DropdownMenuItem(
-            value: i,
-            child: Text(i, style: const TextStyle(fontSize: 13, color: _ink)),
-          )).toList(),
-          onChanged: onChanged,
-          decoration: _inputDeco,
-        ),
-      ],
-    );
-  }
-
-  Widget _uploadZone(String hint) => GestureDetector(
-    onTap: () {},
-    child: Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 24),
-      decoration: BoxDecoration(
-        border: Border.all(color: _border),
-        color: _cream,
-      ),
-      child: Column(
-        children: [
-          const Icon(Icons.upload_file_outlined, color: _muted, size: 28),
-          const SizedBox(height: 8),
-          const Text('Appuyer pour uploader',
-              style: TextStyle(fontSize: 13, color: _muted)),
-          const SizedBox(height: 4),
-          Text(hint, style: const TextStyle(fontSize: 11, color: _muted)),
-        ],
-      ),
-    ),
-  );
-
-  // ─────────────────────────────────────────────
-  // CONVOCATIONS
-  // ─────────────────────────────────────────────
-  Widget _buildConvocationsSection() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      decoration: BoxDecoration(
-          color: _white, border: Border.all(color: _border)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionHead(Icons.calendar_today, 'Mes convocations', color: _teal),
-          ..._convocations.map((c) => _buildConvocationCard(c)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildConvocationCard(Map<String, dynamic> conv) {
-    final String statut = conv['statut'] ?? 'en_attente';
-    final bool isUrl    = (conv['lieu_rdv'] ?? '').toString().startsWith('http');
-
-    String statusLabel;
-    if (statut == 'confirmee') {
-      statusLabel = '✓ Confirmée';
-    } else if (statut == 'annulee') statusLabel = '✗ Annulée';
-    else                          statusLabel = '⏳ En attente';
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-      decoration: BoxDecoration(border: Border.all(color: _teal, width: 1.5)),
-      child: Column(
-        children: [
-          // Bande teal
-          Container(
-            color: _teal,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
-              children: [
-                const Icon(Icons.calendar_today, color: _white, size: 12),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    (conv['type_entretien'] ?? '').toString().toUpperCase(),
-                    style: const TextStyle(fontSize: 10,
-                        fontWeight: FontWeight.w800, color: _white),
+              Expanded(
+                child: Text(
+                  titre,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.ink,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(color: Colors.white20,
-                      borderRadius: BorderRadius.circular(20)),
-                  child: Text(statusLabel,
-                      style: const TextStyle(fontSize: 9, color: _white)),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Date
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.only(bottom: 10),
-                  decoration: const BoxDecoration(
-                      border: Border(bottom: BorderSide(color: _border))),
-                  child: Column(children: [
-                    Text(conv['date_rdv'] ?? '',
-                        style: const TextStyle(fontSize: 22,
-                            fontWeight: FontWeight.w800, color: _ink)),
-                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      const Icon(Icons.access_time, size: 14, color: _teal),
-                      const SizedBox(width: 4),
-                      Text(conv['heure_rdv'] ?? '',
-                          style: const TextStyle(fontSize: 16,
-                              fontWeight: FontWeight.w700, color: _teal)),
-                    ]),
-                  ]),
-                ),
-                const SizedBox(height: 10),
-                Text(conv['poste'] ?? '',
-                    style: const TextStyle(fontSize: 14,
-                        fontWeight: FontWeight.w800, color: _ink)),
-                const SizedBox(height: 4),
-                Row(children: [
-                  const Icon(Icons.business, size: 12, color: _muted),
-                  const SizedBox(width: 5),
-                  Text(conv['organisation'] ?? '',
-                      style: const TextStyle(fontSize: 12, color: _muted)),
-                ]),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: _cream,
-                      border: Border.all(color: _border),
-                      borderRadius: BorderRadius.circular(4)),
-                  child: Row(children: [
-                    const Icon(Icons.location_on, size: 14, color: _teal),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        isUrl ? 'Lien de réunion' : (conv['lieu_rdv'] ?? ''),
-                        style: TextStyle(fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: isUrl ? _teal : _ink),
+              ),
+              SizedBox(
+                width: 38,
+                height: 38,
+                child: CustomPaint(
+                  painter: _CircleProgressPainter(score / 100, AppColors.teal),
+                  child: Center(
+                    child: Text(
+                      '${score.round()}%',
+                      style: const TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.ink,
                       ),
                     ),
-                  ]),
-                ),
-                if ((conv['message'] ?? '').isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(color: _cream,
-                        border: Border(left: BorderSide(color: _teal, width: 3))),
-                    child: Text('"${conv['message']}"',
-                        style: const TextStyle(fontSize: 11, color: _muted,
-                            fontStyle: FontStyle.italic)),
-                  ),
-                ],
-                const SizedBox(height: 10),
-                const Divider(color: _border, height: 1),
-                const SizedBox(height: 10),
-                // Actions
-                if (isUrl)
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.videocam, size: 14, color: _white),
-                      label: const Text("Rejoindre l'entretien",
-                          style: TextStyle(fontSize: 11,
-                              fontWeight: FontWeight.w800, color: _white)),
-                      style: ElevatedButton.styleFrom(backgroundColor: _red,
-                          shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.zero), elevation: 0),
-                    ),
-                  )
-                else if (statut == 'en_attente')
-                  Row(children: [
-                    Expanded(child: ElevatedButton(
-                      onPressed: () => _repondreConvocation(conv['id'], 'confirmee'),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green,
-                          shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.zero), elevation: 0),
-                      child: const Text('✓ Accepter',
-                          style: TextStyle(fontSize: 11,
-                              fontWeight: FontWeight.w800, color: _white)),
-                    )),
-                    const SizedBox(width: 8),
-                    Expanded(child: ElevatedButton(
-                      onPressed: () => _repondreConvocation(conv['id'], 'annulee'),
-                      style: ElevatedButton.styleFrom(backgroundColor: _red,
-                          shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.zero), elevation: 0),
-                      child: const Text('✗ Refuser',
-                          style: TextStyle(fontSize: 11,
-                              fontWeight: FontWeight.w800, color: _white)),
-                    )),
-                  ])
-                else
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: statut == 'confirmee'
-                          ? const Color(0xFFD4EDDA)
-                          : const Color(0xFFF8D7DA),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      statut == 'confirmee'
-                          ? '✓ Convocation confirmée'
-                          : '✗ Convocation annulée',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 12,
-                          color: statut == 'confirmee'
-                              ? const Color(0xFF155724)
-                              : const Color(0xFF721C24)),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────
-  // OFFRES RECOMMANDÉES
-  // ─────────────────────────────────────────────
-  Widget _buildOffresSection() {
-    final bool profilComplet = _progression >= 100;
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      decoration: BoxDecoration(
-          color: _white, border: Border.all(color: _border)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-            decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: _border))),
-            child: Row(
-              children: [
-                const Text('Offres recommandées',
-                    style: TextStyle(fontSize: 16,
-                        fontWeight: FontWeight.w800, color: _ink)),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () {},
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(border: Border.all(color: _ink)),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('Toutes', style: TextStyle(fontSize: 10,
-                            fontWeight: FontWeight.w800, color: _ink)),
-                        SizedBox(width: 4),
-                        Icon(Icons.arrow_forward, size: 12, color: _ink),
-                      ],
-                    ),
                   ),
                 ),
-              ],
-            ),
-          ),
-          if (!profilComplet)
-            const Padding(
-              padding: EdgeInsets.all(32),
-              child: Center(
-                child: Text(
-                    'Complétez votre profil pour recevoir des recommandations.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 13, color: _muted,
-                        fontStyle: FontStyle.italic)),
               ),
-            )
-          else if (_offres.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(32),
-              child: Center(child: Text('Aucune recommandation disponible.',
-                  style: TextStyle(fontSize: 13, color: _muted))),
-            )
-          else
-            ..._offres.map((o) => _buildOffreCard(o)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOffreCard(Map<String, dynamic> offre) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: _border))),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            Expanded(
-              child: Text(offre['titre'] ?? '',
-                  style: const TextStyle(fontSize: 14,
-                      fontWeight: FontWeight.w800, color: _ink)),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              color: _ink,
-              child: Text(offre['type_contrat'] ?? '',
-                  style: const TextStyle(fontSize: 9,
-                      fontWeight: FontWeight.w800, color: _white)),
-            ),
-          ]),
-          const SizedBox(height: 6),
-          Row(children: [
-            const Icon(Icons.business, size: 12, color: _muted),
-            const SizedBox(width: 4),
-            Text(offre['entreprise'] ?? '',
-                style: const TextStyle(fontSize: 12, color: _muted)),
-            const SizedBox(width: 12),
-            const Icon(Icons.location_on, size: 12, color: _muted),
-            const SizedBox(width: 4),
-            Text(offre['ville'] ?? offre['localisation'] ?? '',
-                style: const TextStyle(fontSize: 12, color: _muted)),
-          ]),
-          const SizedBox(height: 8),
-          Row(children: [
-            Text('${offre['score'] ?? 0}%',
-                style: const TextStyle(fontSize: 18,
-                    fontWeight: FontWeight.w800, color: _teal)),
-            const SizedBox(width: 6),
-            const Text('compatibilité',
-                style: TextStyle(fontSize: 11, color: _muted)),
-            const Spacer(),
-            const Icon(Icons.calendar_today, size: 11, color: _muted),
-            const SizedBox(width: 4),
-            Text(offre['date_limite'] ?? '',
-                style: const TextStyle(fontSize: 11,
-                    color: Color(0xFF862323), fontWeight: FontWeight.w600)),
-          ]),
-          const SizedBox(height: 10),
-          Row(children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: () => _showOffreDetails(offre),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 9),
-                  decoration: BoxDecoration(border: Border.all(color: _ink)),
-                  child: const Center(child: Text('DÉTAILS',
-                      style: TextStyle(fontSize: 10,
-                          fontWeight: FontWeight.w800, color: _ink))),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: GestureDetector(
-                onTap: () {},
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 9),
-                  color: _red,
-                  child: const Center(child: Text('POSTULER',
-                      style: TextStyle(fontSize: 10,
-                          fontWeight: FontWeight.w800, color: _white))),
-                ),
-              ),
-            ),
-          ]),
-        ],
-      ),
-    );
-  }
-
-  void _showOffreDetails(Map<String, dynamic> offre) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-      builder: (_) => DraggableScrollableSheet(
-        expand: false, initialChildSize: 0.75,
-        builder: (_, ctrl) => Column(children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: _ink,
-            child: Row(children: [
-              Expanded(child: Text(offre['titre'] ?? '',
-                  style: const TextStyle(fontSize: 15,
-                      fontWeight: FontWeight.w800, color: _white))),
-              GestureDetector(onTap: () => Navigator.pop(context),
-                  child: const Icon(Icons.close, color: _white)),
             ]),
           ),
-          Expanded(child: ListView(
-            controller: ctrl, padding: const EdgeInsets.all(16),
-            children: [
-              _modalRow('Entreprise', offre['entreprise'] ?? ''),
-              _modalRow('Lieu', offre['ville'] ?? offre['localisation'] ?? ''),
-              _modalRow('Contrat', offre['type_contrat'] ?? ''),
-              _modalRow('Score', '${offre['score'] ?? 0}%'),
-              _modalRow('Date limite', offre['date_limite'] ?? ''),
-              _modalRow('Description', offre['description'] ?? ''),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.send, size: 14, color: _white),
-                label: const Text('POSTULER', style: TextStyle(fontSize: 11,
-                    fontWeight: FontWeight.w800, color: _white)),
-                style: ElevatedButton.styleFrom(backgroundColor: _red,
-                    shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.zero), elevation: 0),
-              ),
-            ],
-          )),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                const Icon(Icons.business_outlined, size: 12, color: AppColors.muted),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    entreprise,
+                    style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ]),
+              const SizedBox(height: 6),
+              Row(children: [
+                const Icon(Icons.location_on_outlined, size: 12, color: AppColors.muted),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    lieu,
+                    style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ]),
+              if (dateLimite.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Row(children: [
+                  const Icon(Icons.schedule_rounded, size: 12, color: AppColors.muted),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Limite : $dateLimite',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF862323),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () => _showOffreDetails(offre),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: AppColors.red,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'Voir →',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ]),
+              ],
+            ]),
+          ),
         ]),
       ),
     );
   }
 
-  Widget _modalRow(String label, String value) {
+  void _showOffreDetails(dynamic offre) {
+    final titre = offre['titre'] ?? 'Offre';
+    final entreprise = offre['entreprise'] ?? offre['recruteur']?['organisation'] ?? 'Non précisée';
+    final lieu = offre['ville'] ?? offre['localisation'] ?? 'Non précisé';
+    final typeContrat = offre['type_contrat'] ?? offre['get_type_contrat_display'] ?? 'Emploi';
+    final description = offre['description'] ?? 'Aucune description';
+    final dateLimite = offre['date_limite'] ?? 'Non spécifiée';
+    final score = (offre['score'] ?? 0).toDouble();
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        height: MediaQuery.of(context).size.height * 0.75,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(children: [
+          Container(
+            margin: const EdgeInsets.only(top: 10),
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.border,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.fromLTRB(20, 14, 12, 14),
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: AppColors.border)),
+            ),
+            child: Row(children: [
+              Expanded(
+                child: Text(
+                  titre,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.ink,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close_rounded, color: AppColors.muted, size: 20),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ]),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.cream,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(children: [
+                    SizedBox(
+                      width: 60,
+                      height: 60,
+                      child: CustomPaint(
+                        painter: _CircleProgressPainter(score / 100, AppColors.teal),
+                        child: Center(
+                          child: Text(
+                            '${score.round()}%',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.ink,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Score de correspondance',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.ink,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Basé sur votre profil',
+                          style: TextStyle(fontSize: 11, color: AppColors.muted),
+                        ),
+                      ],
+                    ),
+                  ]),
+                ),
+                const SizedBox(height: 20),
+                _sheetField('Entreprise', entreprise),
+                _sheetField('Lieu', lieu),
+                _sheetField('Type de contrat', typeContrat),
+                _sheetField('Date limite', dateLimite),
+                _sheetField('Description', description),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.send_rounded, size: 16),
+                    label: const Text('Postuler à cette offre'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.red,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ]),
+            ),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  Widget _sheetField(String label, String value) => Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(
+        label.toUpperCase(),
+        style: const TextStyle(
+          fontSize: 10,
+          letterSpacing: 1.2,
+          color: AppColors.muted,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      const SizedBox(height: 6),
+      Text(
+        value,
+        style: const TextStyle(fontSize: 14, color: AppColors.ink, height: 1.5),
+      ),
+      const Divider(color: AppColors.border, height: 24),
+    ]),
+  );
+
+    Widget _buildProfilPage() {
+    final particulier = _profil['particulier'] ?? {};
+    final candidat = _profil['candidat'] ?? {};
+    
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        SliverAppBar(
+          pinned: true,
+          backgroundColor: AppColors.ink,
+          automaticallyImplyLeading: false,
+          centerTitle: true,
+          title: const FasoiaLogo(fontSize: 18, showSubtitle: true),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(3),
+            child: Container(height: 3, color: AppColors.red),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              // Carte de progression
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: AppColors.ink,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(children: [
+                  SizedBox(
+                    width: 64,
+                    height: 64,
+                    child: CustomPaint(
+                      painter: _CircleProgressPainter(_progression / 100, AppColors.red),
+                      child: Center(
+                        child: Text(
+                          '$_progression%',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _profilComplet ? 'Profil complet ✓' : 'Profil incomplet',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _profilComplet
+                              ? 'Votre profil est visible par les recruteurs'
+                              : 'Complétez votre profil pour recevoir des recommandations',
+                          style: const TextStyle(color: Colors.white54, fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  ),
+                ]),
+              ),
+              const SizedBox(height: 20),
+
+              // Informations personnelles
+              const Text(
+                'INFORMATIONS PERSONNELLES',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.muted,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildInfoTile('Nom complet', '${particulier['prenom'] ?? ''} ${particulier['nom'] ?? ''}'.trim()),
+              _buildInfoTile('Email', particulier['email'] ?? 'Non renseigné'),
+              _buildInfoTile('Téléphone', particulier['telephone'] ?? 'Non renseigné'),
+              _buildInfoTile('Ville', particulier['ville'] ?? 'Non renseignée'),
+              _buildInfoTile('Pays', particulier['pays'] ?? 'Non renseigné'),
+              const SizedBox(height: 16),
+
+              // Profil professionnel
+              const Text(
+                'PROFIL PROFESSIONNEL',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.muted,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildInfoTile("Niveau d'étude", candidat['niveauEtude'] ?? 'Non renseigné'),
+              _buildInfoTile("Années d'expérience", (candidat['anneesExperiences'] ?? 0).toString()),
+              _buildInfoTile('Compétences', candidat['competences'] ?? 'Non renseignées'),
+              _buildInfoTile('Langues', candidat['niveauLangues'] ?? 'Non renseignées'),
+              _buildInfoTile('Disponibilité', candidat['disponibilite'] ?? 'Non renseignée'),
+              const SizedBox(height: 16),
+
+              // Recherche d'emploi
+              const Text(
+                'RECHERCHE D\'EMPLOI',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.muted,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildInfoTile('Secteur recherché', candidat['secteur_recherche'] ?? 'Non renseigné'),
+              _buildInfoTile('Type de contrat', candidat['type_contrat_recherche'] ?? 'Non renseigné'),
+              _buildInfoTile('Localisation souhaitée', candidat['localisation_recherche'] ?? 'Non renseignée'),
+              _buildInfoTile('Salaire souhaité', candidat['salaire_souhaite'] != null ? '${candidat['salaire_souhaite']} FCFA' : 'Non renseigné'),
+              _buildInfoTile('Mobilité', candidat['mobilite'] == true ? 'Oui' : 'Non'),
+              const SizedBox(height: 16),
+
+              // Convocations détaillées
+              if (_convocations.isNotEmpty) ...[
+                const Text(
+                  'MES CONVOCATIONS',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.muted,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ..._convocations.map((c) => _buildConvocationCardFull(c)),
+              ],
+              const SizedBox(height: 20),
+
+              // Bouton déconnexion
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _logout,
+                  icon: const Icon(Icons.logout_rounded, size: 16, color: AppColors.muted),
+                  label: const Text(
+                    'Se déconnecter',
+                    style: TextStyle(color: AppColors.muted),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.border),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ]),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoTile(String label, String value) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.muted,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.ink,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConvocationCardFull(dynamic conv) {
+    final date = conv['date_rdv'] ?? '';
+    final heure = conv['heure_rdv'] ?? '';
+    final poste = conv['poste'] ?? 'Entretien';
+    final organisation = conv['organisation'] ?? '';
+    final lieu = conv['lieu_rdv'] ?? '';
+    final message = conv['message'] ?? '';
+    final typeEntretien = conv['type_entretien'] ?? 'entretien';
+    final statut = conv['statut'] ?? 'en_attente';
+    final isOnline = lieu.toString().startsWith('http');
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.teal, width: 1.5),
+        boxShadow: [BoxShadow(
+          color: Colors.black.withOpacity(0.04),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        )],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.teal,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_today_rounded, size: 12, color: Colors.white),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    typeEntretien.toString().toUpperCase(),
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    statut == 'confirmee' ? 'Confirmée' : statut == 'annulee' ? 'Annulée' : 'En attente',
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Column(
+                    children: [
+                      Text(
+                        date,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.access_time_rounded, size: 14, color: AppColors.teal),
+                          const SizedBox(width: 4),
+                          Text(heure, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.teal)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Text(poste, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 4),
+                Text(organisation, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.cream,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.location_on_outlined, size: 14, color: AppColors.teal),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          isOnline ? 'Lien de réunion' : lieu,
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isOnline ? AppColors.teal : AppColors.ink),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (message.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.cream,
+                      borderRadius: BorderRadius.circular(6),
+                      border: const Border(left: BorderSide(color: AppColors.teal, width: 3)),
+                    ),
+                    child: Text('"$message"', style: const TextStyle(fontSize: 11, color: AppColors.muted, fontStyle: FontStyle.italic)),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                const Divider(),
+                const SizedBox(height: 12),
+                if (isOnline)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.videocam_rounded, size: 14, color: Colors.white),
+                      label: const Text("Rejoindre l'entretien", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.red,
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                  )
+                else if (statut == 'en_attente')
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => _repondreConvocation(conv['id'], 'confirmee'),
+                          icon: const Icon(Icons.check_rounded, size: 14, color: Colors.white),
+                          label: const Text('Accepter', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.teal,
+                            padding: const EdgeInsets.symmetric(vertical: 11),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => _repondreConvocation(conv['id'], 'annulee'),
+                          icon: const Icon(Icons.close_rounded, size: 14, color: Colors.white),
+                          label: const Text('Refuser', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.red,
+                            padding: const EdgeInsets.symmetric(vertical: 11),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 11),
+                    decoration: BoxDecoration(
+                      color: statut == 'confirmee' ? AppColors.teal.withOpacity(0.08) : Colors.red.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: statut == 'confirmee' ? AppColors.teal.withOpacity(0.3) : Colors.red.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          statut == 'confirmee' ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                          size: 14,
+                          color: statut == 'confirmee' ? AppColors.teal : Colors.red,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          statut == 'confirmee' ? 'Convocation confirmée' : 'Convocation annulée',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: statut == 'confirmee' ? AppColors.teal : Colors.red),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(IconData icon, String title, String subtitle,
+      {String? actionLabel, VoidCallback? onAction}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label.toUpperCase(), style: const TextStyle(fontSize: 9,
-            fontWeight: FontWeight.w700, color: _muted, letterSpacing: 1)),
-        const SizedBox(height: 3),
-        Text(value, style: const TextStyle(fontSize: 13, color: _ink, height: 1.5)),
-        const Divider(color: _border, height: 16),
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            color: AppColors.cream,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Icon(icon, size: 30, color: AppColors.muted),
+        ),
+        const SizedBox(height: 14),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: AppColors.ink,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          subtitle,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 12, color: AppColors.muted),
+        ),
+        if (actionLabel != null && onAction != null) ...[
+          const SizedBox(height: 16),
+          GestureDetector(
+            onTap: onAction,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.red,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                actionLabel,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ),
+        ],
       ]),
     );
   }
 
-  // ─────────────────────────────────────────────
-  // HELPER SECTION HEAD
-  // ─────────────────────────────────────────────
-  Widget _sectionHead(IconData icon, String title, {Color color = _ink}) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: _border))),
-      child: Row(children: [
-        Icon(icon, size: 16, color: color),
-        const SizedBox(width: 8),
-        Text(title, style: const TextStyle(fontSize: 16,
-            fontWeight: FontWeight.w800, color: _ink)),
+  Widget _buildLoader() => Scaffold(
+    backgroundColor: AppColors.cream,
+    body: Center(
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: AppColors.ink,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: const Center(
+            child: CircularProgressIndicator(
+              color: AppColors.red,
+              strokeWidth: 2.5,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Chargement...',
+          style: TextStyle(color: AppColors.muted, fontSize: 13),
+        ),
       ]),
+    ),
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MODÈLES INTERNES
+// ═══════════════════════════════════════════════════════════════════════
+class _NavItem {
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  const _NavItem({required this.icon, required this.activeIcon, required this.label});
+}
+
+class _StatData {
+  final String value;
+  final String label;
+  final IconData icon;
+  final bool accent;
+  const _StatData(this.value, this.label, this.icon, this.accent);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PAINTER CERCLE PROGRESS
+// ═══════════════════════════════════════════════════════════════════════
+class _CircleProgressPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  const _CircleProgressPainter(this.progress, this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 3;
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = color.withOpacity(0.12)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.5,
+    );
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -math.pi / 2,
+      2 * math.pi * progress,
+      false,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.5
+        ..strokeCap = StrokeCap.round,
     );
   }
+
+  @override
+  bool shouldRepaint(_CircleProgressPainter old) =>
+      old.progress != progress || old.color != color;
 }
