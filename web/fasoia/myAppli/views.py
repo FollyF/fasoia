@@ -50,14 +50,20 @@ def home(request):
     Page d'accueil avec les dernières opportunités
     """
     # Récupérer les 5 dernières offres et AMI
+    offres = Offre_uemoa.objects.all().order_by('-date_scraping')
     dernieres_offres = Offre_uemoa.objects.all().order_by('-date_scraping')[:5]
+    amis = Ami_uemoa.objects.all().order_by('-date_scraping')
     derniers_amis = Ami_uemoa.objects.all().order_by('-date_scraping')[:5]
+    emplois = OffreEmploi.objects.all().order_by('-date_scraping')
     derniers_emplois = OffreEmploi.objects.all().order_by('-date_scraping')[:5]
     
     # Compter le total
     total_opportunites = Offre_uemoa.objects.count() + Ami_uemoa.objects.count() + OffreEmploi.objects.count()
     
     context = {
+        'offres' : offres,
+        'amis' : amis,
+        'emplois' : emplois,
         'dernieres_offres': dernieres_offres,
         'derniers_amis': derniers_amis,
         'derniers_emplois': derniers_emplois,
@@ -69,9 +75,9 @@ def opportunites(request):
     """
     Page publique - Affiche TOUTES les opportunités sans filtre
     """
-    offres_uemoa = Offre_uemoa.objects.all().order_by('-date_scraping')
-    amis_uemoa = Ami_uemoa.objects.all().order_by('-date_scraping')
-    offres_emploi = OffreEmploi.objects.filter(statut='PUBLIEE', est_active=True).order_by('-date_publication')
+    offres_uemoa = Offre_uemoa.objects.all()
+    amis_uemoa = Ami_uemoa.objects.all()
+    offres_emploi = OffreEmploi.objects.all()
     
     context = {
         'offres': offres_uemoa,
@@ -382,16 +388,35 @@ def dashboard_entreprise(request):
     
     if profil_complet:
         try:
-            from analyse_ia.models import Recommandation  # ← Correction ici !
+            from analyse_ia.models import Recommandation
+            from myAppli.models import OffreEmploi, Offre_uemoa, Ami_uemoa  # À ajouter
             
-            recommandations = Recommandation.objects.filter(
+            # Récupérer toutes les recommandations
+            toutes_recos = Recommandation.objects.filter(
                 entreprise=entreprise
-            ).order_by('-score_global')[:10]
-
-            for reco in recommandations:
-                reco.score_global = round(reco.score_global * 100, 1)
+            ).order_by('-score_global')
             
-            recommandations_count = recommandations.count()
+            # Filtrer pour garder seulement les offres qui existent encore
+            recommandations_valides = []
+            for reco in toutes_recos:
+                offre_existe = False
+                
+                # Vérifier si l'offre existe selon son type
+                if reco.opportunite_type == 'OffreEmploi':
+                    offre_existe = OffreEmploi.objects.filter(id=reco.opportunite_id).exists()
+                elif reco.opportunite_type == 'Offre_uemoa':
+                    offre_existe = Offre_uemoa.objects.filter(id=reco.opportunite_id).exists()
+                elif reco.opportunite_type == 'Ami_uemoa':
+                    offre_existe = Ami_uemoa.objects.filter(id=reco.opportunite_id).exists()
+                
+                # Si l'offre existe, on garde la recommandation
+                if offre_existe:
+                    reco.score_global = round(reco.score_global * 100, 1)
+                    recommandations_valides.append(reco)
+            
+            # Prendre les 10 premières
+            recommandations = recommandations_valides[:10]
+            recommandations_count = len(recommandations)
             opportunites_correspondantes = recommandations_count
             
         except Exception as e:

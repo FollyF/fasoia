@@ -18,7 +18,6 @@
   .search-field {
     display: flex;
     flex: 1;
-    max-width: 580px;
     border: 1.5px solid var(--ink);
   }
   .search-field input {
@@ -38,7 +37,7 @@
     border: none;
     padding: 11px 26px;
     font-weight: 700;
-    font-size: 11px;
+    font-size: 12px;
     cursor: pointer;
     font-family: var(--font-body);
     letter-spacing: 1px;
@@ -89,7 +88,7 @@
   }
 
   .col-main {
-    padding: 30px 30px 30px 0;
+    padding: 0px 30px 30px 0;
     border-right: 1px solid var(--border);
   }
 
@@ -179,30 +178,30 @@
     flex-wrap: wrap;
   }
   .opp-ref {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--hint);
     font-family: 'Courier New', monospace;
   }
   .opp-company {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
     font-weight: 600;
   }
   .opp-loc {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
   }
   .opp-loc::before { content: '·'; margin-right: 6px; color: var(--border); }
 
   .opp-date {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
     text-align: right;
     white-space: nowrap;
     padding-top: 3px;
   }
   .opp-date .date-lbl {
-    font-size: 9px;
+    font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: var(--hint);
@@ -240,7 +239,7 @@
   .widget { margin-bottom: 28px; }
 
   .widget-head {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1.5px;
@@ -253,7 +252,7 @@
     justify-content: space-between;
   }
   .widget-head a {
-    font-size: 10px;
+    font-size: 12px;
     color: var(--teal);
     text-decoration: none;
     font-weight: 700;
@@ -285,7 +284,7 @@
     line-height: 1;
   }
   .stat-cell .l {
-    font-size: 9px;
+    font-size: 12px;
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -338,7 +337,7 @@
     color: #fff;
     border: none;
     padding: 9px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     cursor: pointer;
     font-family: var(--font-body);
@@ -356,7 +355,7 @@
     text-align: center;
   }
   .cd-lbl {
-    font-size: 9px;
+    font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 1.5px;
     color: rgba(255,255,255,0.35);
@@ -381,14 +380,14 @@
     line-height: 1;
   }
   .cd-unit .u {
-    font-size: 9px;
+    font-size: 12px;
     color: rgba(255,255,255,0.3);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-top: 4px;
   }
   .cd-ref {
-    font-size: 10px;
+    font-size: 12px;
     color: rgba(255,255,255,0.25);
     margin-top: 12px;
     font-family: 'Courier New', monospace;
@@ -400,7 +399,7 @@
   .prog-labels {
     display: flex;
     justify-content: space-between;
-    font-size: 11px;
+    font-size: 12px;
     margin-bottom: 5px;
   }
   .prog-labels span:first-child { color: var(--muted); }
@@ -431,7 +430,7 @@
   }
   .quick-list a:hover { color: var(--red); }
   .quick-list .arrow {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--border);
     transition: color 0.15s;
   }
@@ -498,7 +497,7 @@
     color: #fff;
     border: none;
     padding: 11px 32px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     font-family: var(--font-body);
     text-transform: uppercase;
@@ -545,20 +544,6 @@
       autocomplete="off"
     >
     <button type="button">Rechercher</button>
-  </div>
-  <div class="kpi-strip">
-    <div class="kpi-item">
-      <div class="n">{{ dernieres_offres|length }}</div>
-      <div class="l">Appels d'offres</div>
-    </div>
-    <div class="kpi-item">
-      <div class="n">{{ derniers_amis|length }}</div>
-      <div class="l">Manifestations</div>
-    </div>
-    <div class="kpi-item">
-      <div class="n">{{ derniers_emplois|length }}</div>
-      <div class="l">Emplois</div>
-    </div>
   </div>
 </div>
 
@@ -686,15 +671,15 @@
         <div class="l">Opportunités disponibles</div>
       </div>
       <div class="stat-cell">
-        <div class="n">{{ dernieres_offres|length }}</div>
+        <div class="n">{{ offres|length }}</div>
         <div class="l">Appels d'offres</div>
       </div>
       <div class="stat-cell">
-        <div class="n">{{ derniers_emplois|length }}</div>
+        <div class="n">{{ emplois|length }}</div>
         <div class="l">Emplois</div>
       </div>
       <div class="stat-cell">
-        <div class="n">{{ derniers_amis|length }}</div>
+        <div class="n">{{ amis|length }}</div>
         <div class="l">Manifestations</div>
       </div>
       <div class="stat-cell highlight">
@@ -712,40 +697,6 @@
           <input type="email" placeholder="votre@email.com">
           <button type="button">S'abonner aux alertes</button>
         </div>
-      </div>
-    </div>
-
-    <!-- Prochaine échéance -->
-    <div class="widget">
-      <div class="widget-head">Prochaine échéance</div>
-      <div class="countdown-widget">
-        <div class="cd-lbl">Temps restant avant clôture</div>
-        <div class="cd-units">
-          <div class="cd-unit"><div class="n" id="cd-days">05</div><div class="u">Jours</div></div>
-          <div class="cd-unit"><div class="n" id="cd-hours">14</div><div class="u">Heures</div></div>
-          <div class="cd-unit"><div class="n" id="cd-mins">32</div><div class="u">Min</div></div>
-        </div>
-        <div class="cd-ref">AO-2026-042 &mdash; Clôture le 31/03/2026</div>
-      </div>
-    </div>
-
-    <!-- Progression -->
-    <div class="widget">
-      <div class="widget-head">
-        Votre progression
-        <a href="{% url 'myAppli:profil' %}">Compléter</a>
-      </div>
-      <div class="prog-item">
-        <div class="prog-labels"><span>Complétion du profil</span><span>45%</span></div>
-        <div class="prog-track"><div class="prog-fill" style="width:45%;background:var(--ink)"></div></div>
-      </div>
-      <div class="prog-item">
-        <div class="prog-labels"><span>CV complété</span><span>60%</span></div>
-        <div class="prog-track"><div class="prog-fill" style="width:60%;background:var(--teal)"></div></div>
-      </div>
-      <div class="prog-item">
-        <div class="prog-labels"><span>Candidatures envoyées</span><span>3 / 10</span></div>
-        <div class="prog-track"><div class="prog-fill" style="width:30%;background:var(--amber)"></div></div>
       </div>
     </div>
 

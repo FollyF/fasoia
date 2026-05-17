@@ -283,7 +283,7 @@
                     {% for i in offres %}
                         <tr>
                             <td><span class="ref-code">AO-{{ i.reference|default:forloop.counter }}</span></td>
-                            <td>{{ i.description|truncatechars:85 }}</td>
+                            <td>{{ i.description|truncatechars:400 }}</td>
                             <td>{{ i.date_limite|date:"d/m/Y" }}</td>
                             <td class="actions-col">
                                 <button type="button" class="btn-fasoia-outline btn-action"
@@ -346,7 +346,7 @@
                     {% for i in amis %}
                         <tr>
                             <td><span class="ref-code">AMI-{{ forloop.counter }}</span></td>
-                            <td>{{ i.description|truncatechars:85 }}</td>
+                            <td>{{ i.description|truncatechars:400 }}</td>
                             <td>{{ i.date_limite|date:"d/m/Y" }}</td>
                             <td class="actions-col">
                                 <button type="button" class="btn-fasoia-outline btn-action"
@@ -409,7 +409,7 @@
                     <tbody>
                     {% for emploi in offres_emploi %}
                         <tr>
-                            <td><strong>{{ emploi.titre|truncatechars:55 }}</strong></td>
+                            <td><strong>{{ emploi.titre|truncatechars:400 }}</strong></td>
                             <td>{{ emploi.recruteur.organisation|default:emploi.entreprise_nom|default:"—" }}</td>
                             <td>{{ emploi.ville|default:"—" }}</td>
                             <td>{{ emploi.date_limite|date:"d/m/Y"|default:"—" }}</td>

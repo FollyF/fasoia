@@ -354,6 +354,14 @@ class Opportunite(models.Model):
     def __str__(self):
         return self.titre
 
+class OffreNonExpireeManager(models.Manager):
+    def get_queryset(self):
+        maintenant = timezone.now().date()
+        return super().get_queryset().filter(
+            models.Q(date_limite__isnull=True) |
+            models.Q(date_limite__gte=maintenant)
+        )
+
 class Offre_uemoa(models.Model):
     description = models.TextField()
     date_limite = models.DateTimeField(null=True, blank=True)
@@ -366,6 +374,9 @@ class Offre_uemoa(models.Model):
     )
     date_scraping = models.DateTimeField(auto_now_add=True)
     traite_par_ia = models.BooleanField(default=False)
+
+    objects = OffreNonExpireeManager()
+    all_objects = models.Manager()
 
     def __str__(self):
         return self.description[:50] + "..."
@@ -382,6 +393,9 @@ class Ami_uemoa(models.Model):
     )
     date_scraping = models.DateTimeField(auto_now_add=True)
     traite_par_ia = models.BooleanField(default=False)
+
+    objects = OffreNonExpireeManager()
+    all_objects = models.Manager()
 
     def __str__(self):
         return self.description[:50] + "..."
@@ -795,6 +809,9 @@ class OffreEmploi(models.Model):
     nb_partages = models.PositiveIntegerField(default=0, verbose_name="Nombre de partages")
     nb_clics = models.PositiveIntegerField(default=0, verbose_name="Nombre de clics")
     
+    objects = OffreNonExpireeManager()
+    all_objects = models.Manager()
+
     # ===== MÉTADONNÉES =====
     class Meta:
         verbose_name = "Offre d'emploi"
