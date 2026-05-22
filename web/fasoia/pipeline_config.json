@@ -1,20 +1,32 @@
 {
-    "nom_pipeline": "Pipeline UEMOA",
-    "version": "1.0.0",
+    "nom_pipeline": "Pipeline UEMOA + DGCMEF",
+    "version": "2.0.0",
     
     "etapes": {
-        "scraping": {
+        "scraping_uemoa": {
             "description": "Scraping des AMI et offres UEMOA",
             "commandes": [
                 {
                     "type": "django",
                     "commande": "uemoa_ami_to_db",
-                    "description": "Import des AMI"
+                    "description": "Import des AMI UEMOA"
                 },
                 {
                     "type": "django",
                     "commande": "uemoa_offre_to_db",
-                    "description": "Import des offres"
+                    "description": "Import des offres UEMOA"
+                }
+            ]
+        },
+        
+        "scraping_dgcmef": {
+            "description": "Scraping des offres DGCMEF (Burkina Faso)",
+            "commandes": [
+                {
+                    "type": "python",
+                    "chemin": "myAppli/utils/web_scraper/dgcmef_scraper.py",
+                    "args": [],
+                    "description": "Téléchargement des PDFs DGCMEF"
                 }
             ]
         },
@@ -31,14 +43,37 @@
             ]
         },
         
-        "extraction": {
-            "description": "Extraction des éléments des PDFs",
+        "extraction_uemoa": {
+            "description": "Extraction des éléments des PDFs UEMOA",
             "commandes": [
                 {
                     "type": "python",
                     "chemin": "analyse_ia/extraire_elements.py",
                     "args": [],
-                    "description": "Extraction des données structurées"
+                    "description": "Extraction des données structurées UEMOA"
+                }
+            ]
+        },
+        
+        "extraction_dgcmef": {
+            "description": "Extraction des offres des PDFs DGCMEF",
+            "commandes": [
+                {
+                    "type": "python",
+                    "chemin": "analyse_ia/extraireQuotidien.py",
+                    "args": [],
+                    "description": "Extraction des offres DGCMEF"
+                }
+            ]
+        },
+        
+        "injection_dgcmef": {
+            "description": "Injection des offres DGCMEF en base",
+            "commandes": [
+                {
+                    "type": "django",
+                    "commande": "dgcmef_to_db",
+                    "description": "Injection dans les tables UEMOA"
                 }
             ]
         },
@@ -57,8 +92,20 @@
     
     "pipelines": {
         "all": {
-            "description": "Exécute tout le pipeline",
-            "etapes": ["scraping", "analyse", "extraction"]
+            "description": "Exécute tout le pipeline (UEMOA + DGCMEF)",
+            "etapes": ["scraping_uemoa", "scraping_dgcmef", "analyse", "extraction_uemoa", "extraction_dgcmef", "injection_dgcmef"]
+        },
+        "uemoa": {
+            "description": "Exécute uniquement le pipeline UEMOA",
+            "etapes": ["scraping_uemoa", "analyse", "extraction_uemoa"]
+        },
+        "dgcmef": {
+            "description": "Exécute uniquement le pipeline DGCMEF",
+            "etapes": ["scraping_dgcmef", "extraction_dgcmef", "injection_dgcmef"]
+        },
+        "recommandation_only": {
+            "description": "Exécute uniquement la recommandation",
+            "etapes": ["recommandation"]
         }
     },
     

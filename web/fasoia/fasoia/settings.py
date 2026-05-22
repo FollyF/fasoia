@@ -175,7 +175,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 # IA Configuration
 GROQ_API_KEY = config('GROQ_API_KEY')
-GROQ_MODEL = "llama-3.1-8b-instant"
+GROQ_MODEL = config('GROQ_DEFAULT_MODEL', default='llama-3.3-70b-versatile')
 OLLAMA_URL = "http://localhost:11434"
 OLLAMA_MODEL = "gemma2:2b"
 

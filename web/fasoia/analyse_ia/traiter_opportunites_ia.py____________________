@@ -1,0 +1,83 @@
+import os
+import sys
+import re
+import django
+import spacy
+from pathlib import Path
+from django.utils import timezone
+from datetime import datetime
+
+# 1. AUTO-INITIALISATION DE DJANGO
+def setup_django():
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    sys.path.append(str(BASE_DIR))
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'fasoia.settings')
+    django.setup()
+
+setup_django()
+
+from myAppli.models import Offre_uemoa, Dp_uemoa, Ami_uemoa, Addendum_uemoa
+
+class MoteurEnrichissementLocal:
+    def __init__(self):
+        # Charger le modèle NLP pour le français
+        try:
+            self.nlp = spacy.load("fr_core_news_md")
+        except:
+            self.nlp = spacy.load("fr_core_news_sm")
+        
+    def extraire_donnees(self, texte):
+        doc = self.nlp(texte[:5000])
+        
+        # Extraction par Regex pour les données normalisées
+        email = re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', texte)
+        tel = re.search(r'(?:\+226|0)[1-9](?:[\s.-]?\d{2}){4}', texte)
+        montant = re.search(r'(\d[\d\s]+)\s*(?:fcfa|cfa|xof)', texte, re.IGNORECASE)
+        
+        # Extraction Date (simple format YYYY-MM-DD ou DD/MM/YYYY)
+        date_match = re.search(r'(\d{4}-\d{2}-\d{2})', texte)
+        
+        # Extraction entité (Autorité contractante via spaCy)
+        autorite = ""
+        for ent in doc.ents:
+            if ent.label_ == "ORG":
+                autorite = ent.text
+                break
+                
+        return {
+            "autorite_contractante": autorite,
+            "date_limite": date_match.group(1) if date_match else None,
+            "email": email.group(0) if email else "",
+            "telephone": tel.group(0) if tel else "",
+            "montant_dossier": montant.group(1) if montant else ""
+        }
+
+    def traiter_lot(self):
+        tables = [Offre_uemoa, Dp_uemoa, Ami_uemoa, Addendum_uemoa]
+        
+        for modele in tables:
+            elements = modele.all_objects.filter(traite_par_ia=False)[:50]
+            print(f"--- Traitement de {modele.__name__} ---")
+            
+            for item in elements:
+                data = self.extraire_donnees(item.description or "")
+                
+                # Mise à jour
+                item.autorite_contractante = data["autorite_contractante"][:100]
+                item.email = data["email"][:100]
+                item.telephone = data["telephone"][:100]
+                item.montant_dossier = data["montant_dossier"][:100]
+                
+                if data["date_limite"]:
+                    try:
+                        dt = datetime.strptime(data["date_limite"], '%Y-%m-%d')
+                        item.date_limite = timezone.make_aware(dt)
+                    except: pass
+                
+                item.traite_par_ia = True
+                item.save()
+                print(f"✅ ID {item.id} traité localement.")
+
+if __name__ == "__main__":
+    moteur = MoteurEnrichissementLocal()
+    moteur.traiter_lot()

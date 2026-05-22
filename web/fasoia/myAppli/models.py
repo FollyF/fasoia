@@ -364,6 +364,15 @@ class OffreNonExpireeManager(models.Manager):
 
 class Offre_uemoa(models.Model):
     description = models.TextField()
+    autorite_contractante = models.CharField(max_length=255, null=True, blank=True)
+    email = models.CharField(max_length=255, null=True, blank=True)
+    telephone = models.CharField(max_length=100, null=True, blank=True)
+    montant_dossier = models.CharField(max_length=100, null=True, blank=True)
+    reference = models.CharField(max_length=255, null=True, blank=True)
+    montant_previsionnel = models.CharField(max_length=255, null=True, blank=True)
+    garantie_soumission = models.CharField(max_length=255, null=True, blank=True)
+    delai_execution = models.CharField(max_length=100, null=True, blank=True)
+    lieu_depot = models.TextField(null=True, blank=True)
     date_limite = models.DateTimeField(null=True, blank=True)
     download_url = models.URLField(max_length=500)
     fichier_local = models.FileField(
@@ -383,6 +392,15 @@ class Offre_uemoa(models.Model):
     
 class Ami_uemoa(models.Model):
     description = models.TextField()
+    autorite_contractante = models.CharField(max_length=255, null=True, blank=True)
+    email = models.CharField(max_length=255, null=True, blank=True)
+    telephone = models.CharField(max_length=100, null=True, blank=True)
+    montant_dossier = models.CharField(max_length=100, null=True, blank=True)
+    reference = models.CharField(max_length=255, null=True, blank=True)
+    montant_previsionnel = models.CharField(max_length=255, null=True, blank=True)
+    garantie_soumission = models.CharField(max_length=255, null=True, blank=True)
+    delai_execution = models.CharField(max_length=100, null=True, blank=True)
+    lieu_depot = models.TextField(null=True, blank=True)
     date_limite = models.DateTimeField(null=True, blank=True)
     download_url = models.URLField(max_length=500)
     fichier_local = models.FileField(
@@ -399,6 +417,65 @@ class Ami_uemoa(models.Model):
 
     def __str__(self):
         return self.description[:50] + "..."
+
+class Dp_uemoa(models.Model):
+    """ Modèle dédié aux Demandes de Prix (DP) """
+    description = models.TextField()
+    autorite_contractante = models.CharField(max_length=255, null=True, blank=True)
+    email = models.CharField(max_length=255, null=True, blank=True)
+    telephone = models.CharField(max_length=100, null=True, blank=True)
+    montant_dossier = models.CharField(max_length=100, null=True, blank=True)
+    reference = models.CharField(max_length=255, null=True, blank=True)
+    montant_previsionnel = models.CharField(max_length=255, null=True, blank=True)
+    garantie_soumission = models.CharField(max_length=255, null=True, blank=True)
+    delai_execution = models.CharField(max_length=100, null=True, blank=True)
+    lieu_depot = models.TextField(null=True, blank=True)
+    date_limite = models.DateTimeField(null=True, blank=True)
+    download_url = models.URLField(max_length=500)
+    fichier_local = models.FileField(
+        upload_to='pdfs/',
+        null=True,
+        blank=True,
+        help_text="Fichier PDF stocké en local"
+    )
+    date_scraping = models.DateTimeField(auto_now_add=True)
+    traite_par_ia = models.BooleanField(default=False)
+
+    objects = OffreNonExpireeManager()
+    all_objects = models.Manager()
+
+    def __str__(self):
+        return f"DP: {self.description[:50]}..."
+
+
+class Addendum_uemoa(models.Model):
+    """ Modèle dédié aux Addenda, Rectificatifs et Prorogations de délais """
+    description = models.TextField()
+    autorite_contractante = models.CharField(max_length=255, null=True, blank=True)
+    email = models.CharField(max_length=255, null=True, blank=True)
+    telephone = models.CharField(max_length=100, null=True, blank=True)
+    montant_dossier = models.CharField(max_length=100, null=True, blank=True)
+    reference = models.CharField(max_length=255, null=True, blank=True)
+    montant_previsionnel = models.CharField(max_length=255, null=True, blank=True)
+    garantie_soumission = models.CharField(max_length=255, null=True, blank=True)
+    delai_execution = models.CharField(max_length=100, null=True, blank=True)
+    lieu_depot = models.TextField(null=True, blank=True)
+    date_limite = models.DateTimeField(null=True, blank=True) # Souvent la nouvelle date prorogée
+    download_url = models.URLField(max_length=500)
+    fichier_local = models.FileField(
+        upload_to='pdfs/',
+        null=True,
+        blank=True,
+        help_text="Fichier PDF stocké en local"
+    )
+    date_scraping = models.DateTimeField(auto_now_add=True)
+    traite_par_ia = models.BooleanField(default=False)
+
+    objects = OffreNonExpireeManager()
+    all_objects = models.Manager()
+
+    def __str__(self):
+        return f"Addendum: {self.description[:50]}..."
 
 class OffreEmploi(models.Model):
     """

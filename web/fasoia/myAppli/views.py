@@ -50,15 +50,19 @@ def home(request):
     Page d'accueil avec les dernières opportunités
     """
     # Récupérer les 5 dernières offres et AMI
-    offres = Offre_uemoa.objects.all().order_by('-date_scraping')
+    #offres = Offre_uemoa.objects.all().order_by('-date_scraping')
+    offres = Offre_uemoa.all_objects.all().order_by('-date_scraping')
     dernieres_offres = Offre_uemoa.objects.all().order_by('-date_scraping')[:5]
-    amis = Ami_uemoa.objects.all().order_by('-date_scraping')
+    #amis = Ami_uemoa.objects.all().order_by('-date_scraping')
+    amis = Ami_uemoa.all_objects.all().order_by('-date_scraping')
     derniers_amis = Ami_uemoa.objects.all().order_by('-date_scraping')[:5]
-    emplois = OffreEmploi.objects.all().order_by('-date_scraping')
+    #emplois = OffreEmploi.objects.all().order_by('-date_scraping')
+    emplois = OffreEmploi.all_objects.all().order_by('-date_scraping')
     derniers_emplois = OffreEmploi.objects.all().order_by('-date_scraping')[:5]
     
     # Compter le total
-    total_opportunites = Offre_uemoa.objects.count() + Ami_uemoa.objects.count() + OffreEmploi.objects.count()
+    #total_opportunites = Offre_uemoa.objects.count() + Ami_uemoa.objects.count() + OffreEmploi.objects.count()
+    total_opportunites = Offre_uemoa.all_objects.count() + Ami_uemoa.all_objects.count() + OffreEmploi.all_objects.count()
     
     context = {
         'offres' : offres,

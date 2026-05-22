@@ -476,7 +476,7 @@
           {% elif user.entreprise %}
             <a href="{% url 'myAppli:dashboard_entreprise' %}"
                class="nav-item {% if request.resolver_match.url_name == 'dashboard_entreprise' %}active{% endif %}">
-              <i class="fa fa-building"></i><span>Tableau se bord</span>
+              <i class="fa fa-building"></i><span>Tableau de bord</span>
             </a>
             <a href="{% url 'myAppli:mes_soumissions' %}"
                class="nav-item {% if request.resolver_match.url_name == 'mes_soumissions' %}active{% endif %}">

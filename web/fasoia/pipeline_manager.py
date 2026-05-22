@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """
-Pipeline Manager - Version Complète (FasoIA)
+Pipeline Manager - Version DGCMEF + UEMOA
+
 Utilisation:
-    python pipeline_manager.py --all             # Tout le cycle (Scraping -> Reco)
-    python pipeline_manager.py --scraping        # Scraping seulement
-    python pipeline_manager.py --analyse         # Analyse seulement
-    python pipeline_manager.py --extraction      # Extraction seulement
+    python pipeline_manager.py --all             # Tout le cycle
+    python pipeline_manager.py --uemoa           # Pipeline UEMOA seulement
+    python pipeline_manager.py --dgcmef          # Pipeline DGCMEF seulement
     python pipeline_manager.py --recommandation  # Matching seulement
 """
 
@@ -85,49 +85,51 @@ class PipelineManager:
         print(f"\n✅ Étape {nom_etape} terminée")
         return True
     
-    def executer_all(self):
-        print(f"\n🚀 PIPELINE COMPLET FASOIA")
-        print(f"   Étapes: scraping → analyse → extraction → recommandation") # <-- Ajouté
+    def executer_pipeline(self, pipeline_name):
+        if pipeline_name not in self.config['pipelines']:
+            print(f"❌ Pipeline inconnu: {pipeline_name}")
+            print(f"   Disponibles: {list(self.config['pipelines'].keys())}")
+            return False
+        
+        pipeline = self.config['pipelines'][pipeline_name]
+        print(f"\n🚀 PIPELINE: {pipeline_name.upper()}")
+        print(f"   {pipeline['description']}")
         print(f"{'='*50}")
         
-        # Liste mise à jour avec la 4ème étape
-        etapes = ["scraping", "analyse", "extraction", "recommandation"] 
+        etapes = pipeline['etapes']
         for i, etape in enumerate(etapes, 1):
-            print(f"\n📋 Étape {i}/4") # <-- Changé 3 en 4
+            print(f"\n📋 Étape {i}/{len(etapes)}")
             if not self.executer_etape(etape):
                 print(f"\n❌ Pipeline arrêté à l'étape {i}")
                 return False
         
-        print(f"\n🎉 Pipeline terminé avec succès! Les offres sont prêtes.")
+        print(f"\n🎉 Pipeline {pipeline_name} terminé avec succès!")
         return True
 
 def main():
     manager = PipelineManager()
     
     parser = argparse.ArgumentParser(
-        description='Pipeline Manager FasoIA',
-        usage='python pipeline_manager.py [--all | --scraping | --analyse | --extraction | --recommandation]'
+        description='Pipeline Manager - UEMOA + DGCMEF',
+        usage='python pipeline_manager.py [--all | --uemoa | --dgcmef | --recommandation]'
     )
     
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--all', action='store_true', help='Exécute tout le pipeline')
-    group.add_argument('--scraping', action='store_true', help='Exécute seulement le scraping')
-    group.add_argument('--analyse', action='store_true', help='Exécute seulement l\'analyse')
-    group.add_argument('--extraction', action='store_true', help='Exécute seulement l\'extraction')
-    group.add_argument('--recommandation', action='store_true', help='Exécute seulement le matching') # <-- Ajouté
+    group.add_argument('--uemoa', action='store_true', help='Exécute pipeline UEMOA seulement')
+    group.add_argument('--dgcmef', action='store_true', help='Exécute pipeline DGCMEF seulement')
+    group.add_argument('--recommandation', action='store_true', help='Exécute la recommandation seulement')
     
     args = parser.parse_args()
     
     if args.all:
-        manager.executer_all()
-    elif args.scraping:
-        manager.executer_etape('scraping')
-    elif args.analyse:
-        manager.executer_etape('analyse')
-    elif args.extraction:
-        manager.executer_etape('extraction')
-    elif args.recommandation: # <-- Ajouté
-        manager.executer_etape('recommandation')
+        manager.executer_pipeline('all')
+    elif args.uemoa:
+        manager.executer_pipeline('uemoa')
+    elif args.dgcmef:
+        manager.executer_pipeline('dgcmef')
+    elif args.recommandation:
+        manager.executer_pipeline('recommandation_only')
 
 if __name__ == '__main__':
     main()
