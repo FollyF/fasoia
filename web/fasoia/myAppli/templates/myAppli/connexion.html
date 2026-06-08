@@ -5,12 +5,12 @@
 {% block extra_css %}
 <style>
   .connexion-page {
-    background: linear-gradient(145deg, #F8F4ED 0%, #EDE4D4 45%, #D9C9B0 100%);
-    min-height: calc(100vh - 180px);
+   flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px 20px;
+    padding: 20px;
+    width: 100%;
   }
 
   .login-card {
@@ -20,6 +20,7 @@
     border: 1px solid var(--border);
     padding: 32px 32px 24px;
     box-shadow: 0 20px 60px rgba(28,25,23,0.10);
+    border-radius: 3px;
   }
 
   /* Logo zone */
@@ -59,6 +60,7 @@
     color: var(--ink);
     transition: border-color 0.2s;
     outline: none;
+    border-radius: 3px;
   }
   .fasoia-input:focus {
     border-color: var(--red);
@@ -127,6 +129,7 @@
     gap: 8px;
     transition: all 0.2s;
     cursor: pointer;
+    border-radius: 3px;
   }
   .btn-social:hover {
     background: var(--cream);
@@ -158,11 +161,6 @@
     color: var(--muted);
     text-decoration: underline;
   }
-
-  body { background: linear-gradient(145deg, #F8F4ED 0%, #EDE4D4 45%, #D9C9B0 100%); }
-  main.content { display: flex; align-items: center; justify-content: center; }
-  .connexion-page { flex: 1; background: none; }
-
   @media (max-width: 480px) {
     .login-card { padding: 28px 20px 20px; }
     .social-container { flex-direction: column; }

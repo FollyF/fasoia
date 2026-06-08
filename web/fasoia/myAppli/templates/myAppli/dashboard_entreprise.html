@@ -5,180 +5,6 @@
 
 {% block app_extra_css %}
 <style>
-    .dash-header {
-        background: var(--ink);
-        padding: 28px 32px;
-        margin-bottom: 24px;
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 20px;
-        flex-wrap: wrap;
-        border-bottom: 3px solid var(--red);
-    }
-    .dash-header-left h1 {
-        font-family: var(--font-display);
-        font-size: 30px;
-        font-weight: 700;
-        color: #862323;
-        line-height: 1.1;
-        margin-bottom: 10px;
-    }
-    .dash-header-left h1 span { color: var(--red); }
-    .dash-tags { display: flex; gap: 8px; flex-wrap: wrap; }
-    .dash-tag {
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 4px 12px;
-        border: 1px solid rgba(255,255,255,0.15);
-        color: var(--ink); font-size: 11px; font-weight: 600; letter-spacing: 0.3px;
-    }
-    .dash-tag i { font-size: 10px; color: rgba(255,255,255,0.3); }
-    .dash-header-right { text-align: right; flex-shrink: 0; }
-    .dash-completion-num {
-        font-family: var(--font-display); font-size: 48px;
-        font-weight: 700; color: var(--ink); line-height: 1;
-    }
-    .dash-completion-num span { color: var(--red); }
-    .dash-completion-lbl {
-        font-size: 10px; text-transform: uppercase;
-        letter-spacing: 1px; color: var(--red); margin-top: 4px;
-    }
-    .dash-prog-track {
-        height: 3px; background: rgba(255,255,255,0.1);
-        margin-top: 10px; width: 140px; margin-left: auto; overflow: hidden;
-    }
-    .dash-prog-fill { height: 100%; background: var(--red); width: {{ pourcentage_completion }}%; }
-
-    .success-banner {
-        background: var(--surface); border: 1px solid var(--border);
-        border-left: 3px solid var(--teal);
-        padding: 16px 20px; margin-bottom: 24px;
-        display: flex; align-items: center; gap: 14px;
-    }
-    .success-banner i { color: var(--teal); font-size: 18px; flex-shrink: 0; }
-    .success-banner strong { font-size: 13px; color: var(--ink); }
-    .success-banner p { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .success-banner .btn-app { margin-left: auto; flex-shrink: 0; }
-
-    .tabs-nav {
-        display: flex; gap: 0; margin-bottom: 0;
-        border-bottom: 2px solid var(--ink); overflow-x: auto;
-    }
-    .tab-btn {
-        background: transparent; border: none;
-        border-bottom: 2px solid transparent; margin-bottom: -2px;
-        color: var(--muted); padding: 10px 20px;
-        font-family: var(--font-body); font-size: 11px; font-weight: 700;
-        letter-spacing: 0.8px; text-transform: uppercase;
-        cursor: pointer; transition: all 0.15s; white-space: nowrap;
-        display: flex; align-items: center; gap: 7px;
-    }
-    .tab-btn i { font-size: 11px; }
-    .tab-btn:hover { color: var(--ink); }
-    .tab-btn.active { color: var(--ink); border-bottom-color: var(--red); }
-    .tab-content { display: none; padding-top: 24px; }
-    .tab-content.active { display: block; }
-
-    .form-grid-2 {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 18px;
-    }
-    .form-grid-2 .full { grid-column: 1 / -1; }
-    .field-note { font-size: 11px; color: var(--hint); margin-top: 4px; }
-    .required-star::after { content: " *"; color: var(--red); }
-    .form-footer {
-        display: flex; align-items: center; justify-content: space-between;
-        margin-top: 28px; padding-top: 18px;
-        border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;
-    }
-    .nav-btns { display: flex; gap: 8px; }
-
-    .recommandations-wrapper { margin-top: 20px; }
-    .recommandations-table { width: 100%; border-collapse: collapse; background: var(--surface); }
-    .recommandations-table th {
-        background: var(--ink); color: white; padding: 14px 12px;
-        text-align: left; font-size: 11px; font-weight: 700;
-        letter-spacing: 0.5px; text-transform: uppercase;
-    }
-    .recommandations-table td {
-        padding: 14px 12px; border-bottom: 1px solid var(--border);
-        font-size: 13px; color: var(--ink);
-    }
-    .recommandations-table tr:hover { background: var(--cream); }
-    .type-badge { padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 700; letter-spacing: 0.3px; }
-    .type-offre { background: #862323; color: white; }
-    .type-ami   { background: var(--teal); color: white; }
-    .score-badge { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--teal); }
-    .ref-id { font-family: monospace; color: var(--red); font-weight: 600; }
-    .date-limite { color: #862323; font-weight: 500; }
-
-    .actions-col { min-width: 140px; text-align: center; }
-    .btn-action {
-        display: block; width: 100%; max-width: 130px;
-        margin: 4px auto; padding: 7px 12px;
-        font-size: 11px; font-weight: 700; text-transform: uppercase;
-        cursor: pointer; border: none; text-decoration: none; text-align: center;
-    }
-    .btn-fasoia-primary { background: var(--red); color: white; }
-    .btn-fasoia-outline { background: transparent; border: 1px solid var(--ink); color: var(--ink); }
-    .btn-fasoia-outline:hover { background: var(--ink); color: white; }
-
-    .modal { text-align: center; padding: 0 !important; }
-    .modal:before { content: ''; display: inline-block; height: 100%; vertical-align: middle; margin-right: -4px; }
-    .modal-dialog { display: inline-block; text-align: left; vertical-align: middle; width: 90%; max-width: 600px; margin: 20px auto; }
-    .modal-content { border-radius: 4px; border: 1px solid var(--ink); box-shadow: 0 15px 40px rgba(0,0,0,0.2); }
-    .modal-header { background: var(--ink); color: white; padding: 15px 20px; border: none; }
-    .modal-title { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin: 0; }
-    .modal-body { padding: 30px; line-height: 1.6; color: var(--ink-mid); }
-    .modal-body p { margin-bottom: 18px; border-bottom: 1px solid var(--bg); padding-bottom: 10px; }
-    .modal-body strong { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin-bottom: 4px; }
-
-    /* ===== TOAST ===== */
-    .toast-container {
-        position: fixed; top: 20px; right: 20px;
-        z-index: 9999; display: flex; flex-direction: column;
-        gap: 8px; max-width: 360px;
-    }
-    .toast {
-        display: flex; align-items: flex-start; gap: 12px;
-        padding: 14px 16px; background: var(--surface);
-        border: 1px solid var(--border);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        animation: slideIn 0.3s ease; min-width: 280px; border-radius: 8px;
-    }
-    .toast.toast-success { border-left: 4px solid var(--teal); }
-    .toast.toast-error   { border-left: 4px solid var(--red); }
-    .toast.toast-warning { border-left: 4px solid #f59e0b; }
-    .toast-icon { font-size: 16px; flex-shrink: 0; }
-    .toast-message { flex: 1; font-size: 13px; color: var(--ink); line-height: 1.4; }
-    .toast-close { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 16px; padding: 0; flex-shrink: 0; line-height: 1; }
-    @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
-
-    /* ===== CHAMPS ERREUR ===== */
-    .field-error {
-        border-color: var(--red) !important;
-        border-left: 3px solid var(--red) !important;
-        background-color: rgba(231,76,60,0.05) !important;
-        animation: shake 0.3s ease-in-out;
-    }
-    @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
-    .error-message { color: var(--red); font-size: 11px; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
-
-    .fa-spin { animation: fa-spin 0.8s linear infinite; }
-    @keyframes fa-spin { to { transform: rotate(360deg); } }
-
-    @media (max-width: 768px) {
-        .modal-dialog { width: 95%; }
-        .tab-btn { padding: 12px 8px; font-size: 11px; }
-        .dash-header { padding: 20px; }
-        .dash-header-left h1 { font-size: 26px; }
-        .dash-completion-num { font-size: 38px; }
-        .form-grid-2 { grid-template-columns: 1fr; }
-        .tabs-nav { flex-wrap: wrap; }
-        .recommandations-table th, .recommandations-table td { padding: 10px 8px; font-size: 12px; }
-    }
 </style>
 {% endblock %}
 
@@ -384,20 +210,41 @@
                             <td class="date-limite">{{ reco.opportunite.date_limite|date:"d/m/Y"|default:"Non spécifiée" }}</td>
                             <td class="actions-col">
                                 <button type="button" class="btn-fasoia-outline btn-action"
-                                        data-toggle="modal" data-target="#modalReco{{ reco.opportunite.id }}">Détails</button>
+                                        data-toggle="modal" data-target="#modalReco{{ reco.opportunite.id }}">
+                                        Détails
+                                </button>
                                 <a href="{% url 'myAppli:nouvelle_soumission' reco.opportunite_type reco.opportunite.id %}"
-                                   class="btn-fasoia-primary btn-action">Postuler</a>
+                                   class="btn-fasoia-primary btn-action">
+                                   Postuler
+                                </a>
                                 <div class="modal fade" id="modalReco{{ reco.opportunite.id }}" tabindex="-1" role="dialog" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered" role="document">
                                         <div class="modal-content">
                                             <div class="modal-header">
-                                                <h5 class="modal-title">Détails de l'opportunité</h5>
-                                                <button type="button" class="close" data-dismiss="modal" style="color:white">&times;</button>
+                                                <div>
+                                                    <p class="modal-subtitle">Recommandation</p>
+                                                    <h5 class="modal-title">Référence AO-{{ reco.opportunite.id }}</h5>
+                                                </div>
                                             </div>
                                             <div class="modal-body">
-                                                <p><strong>Référence</strong>{{ reco.opportunite.id }}</p>
-                                                <p><strong>Description</strong>{{ reco.opportunite.description }}</p>
-                                                <p><strong>Score</strong>{{ reco.score_global|floatformat:0 }}%</p>
+                                                <div class="modal-meta-grid">
+                                                    <div class="modal-meta-block">
+                                                        <label>Score de correspondance</label>
+                                                        <span>
+                                                            <i class="fa fa-star" style="color:#378ADD; margin-right:5px;"></i>
+                                                            {{ reco.score_global|floatformat:0 }}%
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-desc-block">
+                                                    <label>Description</label>
+                                                    {{ reco.opportunite.description|truncatechars:400 }}
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" data-dismiss="modal">
+                                                    Fermer
+                                                </button>
                                             </div>
                                         </div>
                                     </div>

@@ -14,11 +14,13 @@
     align-items: center;
     gap: 20px;
     flex-wrap: wrap;
+    border-radius: 3px;
   }
   .search-field {
     display: flex;
     flex: 1;
     border: 1.5px solid var(--ink);
+    border-radius: 3px;
   }
   .search-field input {
     flex: 1;
@@ -94,6 +96,7 @@
 
   .col-aside {
     padding: 30px 0 30px 28px;
+    border-radius: 3px;
   }
 
   /* ===== SECTION HEADER ===== */
@@ -275,6 +278,7 @@
     background: var(--surface);
     padding: 14px;
     text-align: center;
+    border-radius: 3px;
   }
   .stat-cell .n {
     font-family: var(--font-display);
@@ -290,11 +294,14 @@
     letter-spacing: 0.5px;
     margin-top: 4px;
   }
-  .stat-cell.highlight .n { color: var(--red); }
+  .stat-cell.highlight .n { 
+    color: var(--red); 
+  }
   .stat-cell.full {
     grid-column: 1 / -1;
     background: var(--ink);
     padding: 16px;
+    border-radius: 3px;
   }
   .stat-cell.full .n {
     font-size: 40px;
@@ -308,6 +315,7 @@
     border: 1px solid var(--border);
     padding: 16px;
     margin-bottom: 28px;
+    border-radius: 3px;
   }
   .alert-widget p {
     font-size: 12px;
@@ -472,6 +480,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
+    border-radius: 3px;
   }
   .contact-full { grid-column: 1 / -1; }
   .contact-section input,
@@ -485,7 +494,7 @@
     background: var(--surface);
     outline: none;
     transition: border-color 0.2s;
-    border-radius: 0;
+    border-radius: 3px;
   }
   .contact-section input:focus,
   .contact-section textarea:focus { border-color: var(--ink); }
@@ -504,8 +513,12 @@
     letter-spacing: 1px;
     cursor: pointer;
     transition: background 0.2s;
+    border-radius: 3px;
   }
-  .contact-section button[type="submit"]:hover { background: var(--red); }
+  .contact-section button[type="submit"]:hover { 
+    background: var(--red); 
+    border-radius: 3px;
+  }
 
   /* ===== RESPONSIVE ===== */
   @media (max-width: 1024px) {
@@ -516,8 +529,13 @@
     .contact-section { padding: 30px 24px; }
   }
   @media (max-width: 768px) {
-    .page-body { grid-template-columns: 1fr; padding: 0 20px; }
-    .col-main { border-right: none; padding-right: 0; }
+    .page-body { 
+      grid-template-columns: 1fr; 
+      padding: 0 20px; 
+    }
+    .col-main { border-right: none; 
+      padding-right: 0; 
+    }
     .col-aside { padding-left: 0; border-top: 2px solid var(--ink); padding-top: 24px; }
     .search-mastbar { padding: 12px 20px; }
     .kpi-strip { display: none; }

@@ -19,39 +19,6 @@
     .btn-manage.secondary:hover { background: var(--ink); color: white; }
     .btn-manage.danger { color: var(--red); border-color: var(--red); }
     .btn-manage.danger:hover { background: var(--red); color: white; }
-    
-    /* Animation pour les cartes filtrées */
-    /* Style des filtres */
-    #filtersPanel select, #filtersPanel input {
-        background: white;
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        padding: 8px 10px;
-        font-size: 13px;
-        width: 100%;
-    }
-    
-    #filtersPanel select:focus, #filtersPanel input:focus {
-        outline: none;
-        border-color: var(--teal);
-        box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.1);
-    }
-    
-    /* Message d'absence de résultat */
-    .no-results-message {
-        animation: fadeIn 0.3s ease;
-    }
-    
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
 </style>
 {% endblock %}
 
@@ -175,243 +142,183 @@
 
 <!-- SECTION CANDIDATS RECOMMANDÉS PAR L'IA -->
 <div class="card-edit" style="margin-bottom:24px">
-    <div class="card-edit-head">
-        <h3>
-        <i class="fa fa-robot" style="color:var(--teal)"></i>
-        Meilleurs profils recommandés par l'IA
-        </h3>
-        <!-- Bouton pour afficher/masquer les filtres -->
-        <button class="btn-fasoia-primary btn-action" onclick="toggleFilters()" style="margin-left:auto">
-            <i class="fa fa-filter"></i> Filtres
-        </button>
-    </div>
+  <div class="card-edit-head">
+    <h3>
+      <i class="fa fa-robot" style="color:var(--teal)"></i>
+      Meilleurs profils recommandés par l'IA
+    </h3>
+  </div>
 
-    <!-- PANEL DE FILTRES (caché par défaut) -->
-    <div id="filtersPanel" style="display:none; padding:16px; background:var(--cream); border-radius:8px; margin-bottom:20px; border:1px solid var(--border)">
-        <div class="form-grid-3" style="margin-bottom:12px">
-            <!-- Filtre par score -->
-            <div class="form-field">
-                <label style="font-size:12px; font-weight:600">
-                    <i class="fa fa-chart-line"></i> Score minimum
-                </label>
-                <select id="filterScore" onchange="applyFilters()">
-                    <option value="0">Tous les scores</option>
-                    <option value="80">80% et plus</option>
-                    <option value="60">60% et plus</option>
-                    <option value="40">40% et plus</option>
-                </select>
-            </div>
+  {% if talents_recommandes %}
+  <div class="expandable-wrapper" id="talentsWrapper">
+    <div class="form-grid-3">
+      {% for dossier in talents_recommandes %}
+      <div class="manage-offer-card">
 
-            <!-- Filtre par offre -->
-            <div class="form-field">
-                <label style="font-size:12px; font-weight:600">
-                    <i class="fa fa-bullseye"></i> Offre ciblée
-                </label>
-                <select id="filterOffre" onchange="applyFilters()">
-                    <option value="all">Toutes les offres</option>
-                    {% for offre in offres_publiees %}
-                        <option value="{{ offre.id }}">{{ offre.titre|truncatechars:40 }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+        <!-- Header carte : score + date -->
+        <div class="offer-status-bar">
 
-            <!-- Filtre par statut de convocation -->
-            <div class="form-field">
-                <label style="font-size:12px; font-weight:600">
-                    <i class="fa fa-calendar-check"></i> Statut convocation
-                </label>
-                <select id="filterConvocation" onchange="applyFilters()">
-                    <option value="all">Tous les statuts</option>
-                    <option value="none">Non convoqués</option>
-                    <option value="envoyee">Convocation envoyée</option>
-                    <option value="confirmee">Confirmée</option>
-                    <option value="annulee">Annulée/refusée</option>
-                </select>
-            </div>
+          <span class="status-badge"
+            style="background:{% if dossier.score_compatibilite >= 80 %}#e6fffa;color:#2c7a7b;border:1px solid #b2f5ea
+                    {% elif dossier.score_compatibilite >= 60 %}#fffbeb;color:#d97706;border:1px solid #fde68a
+                    {% else %}#fff5f5;color:#c53030;border:1px solid #feb2b2{% endif %}">
+            {{ dossier.score_compatibilite|floatformat:0 }}% match
+          </span>
+
+          <span class="ref-id" style="font-size:11px;color:var(--hint)">
+            {{ dossier.date_soumission|date:"d/m/Y"|default:"—" }}
+          </span>
         </div>
 
-        <!-- Filtre par recherche textuelle -->
-        <div class="form-field">
-            <label style="font-size:12px; font-weight:600">
-                <i class="fa fa-search"></i> Rechercher un candidat
-            </label>
-            <input type="text" id="filterSearch" placeholder="Nom, prénom, compétences..." 
-                    onkeyup="applyFilters()" style="width:100%">
-        </div>
+        <!-- Corps : infos candidat -->
+        <div class="offer-body">
+          <h5 style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:6px">
+            {{ dossier.candidat.prenom }} {{ dossier.candidat.nom }}
+          </h5>
 
-        <div style="display:flex; gap:10px; margin-top:12px">
-            <button class="btn-app sm" onclick="resetFilters()" style="background:var(--muted)">
-                <i class="fa fa-undo"></i> Réinitialiser
-            </button>
-            <span id="filterCount" style="font-size:12px; color:var(--muted); margin-left:auto; align-self:center">
-                Affichage de <span id="visibleCount">0</span>/<span id="totalCount">0</span> profils
+          <p class="offer-meta">
+            <i class="fa fa-briefcase"></i>
+            {{ dossier.candidat.anneesExperiences }} ans d'expérience
+          </p>
+          <p class="offer-meta">
+            <i class="fa fa-graduation-cap"></i>
+            {{ dossier.candidat.niveauEtude|default:"Niveau non précisé" }}
+          </p>
+          <p class="offer-meta">
+            <i class="fa fa-bullseye"></i>
+            {{ dossier.offre.titre|truncatechars:35 }}
+          </p>
+
+          <!-- Barre de score -->
+          <div style="margin-top:10px;margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;
+                        font-size:10px;color:var(--muted);margin-bottom:4px">
+              <span>Compatibilité globale</span>
+              <strong style="color:var(--ink)">{{ dossier.score_compatibilite|floatformat:0 }}%</strong>
+            </div>
+            <div class="prog-track">
+              <div class="prog-fill"
+                   style="width:{{ dossier.score_compatibilite|floatformat:0 }}%;
+                          background:{% if dossier.score_compatibilite >= 0.8 %}var(--teal)
+                          {% elif dossier.score_compatibilite >= 0.6 %}var(--amber)
+                          {% else %}var(--red){% endif %}">
+              </div>
+            </div>
+          </div>
+
+          <!-- Scores détaillés -->
+          {% if dossier.score_competences %}
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+            <span style="font-size:10px;color:var(--muted)">
+              🎯 {{ dossier.score_competences|floatformat:0 }}%
             </span>
-        </div>
-    </div>
+            <span style="font-size:10px;color:var(--muted)">
+              💼 {{ dossier.score_experience|floatformat:0 }}%
+            </span>
+            <span style="font-size:10px;color:var(--muted)">
+              🎓 {{ dossier.score_formation|floatformat:0 }}%
+            </span>
+          </div>
+          {% endif %}
 
-    {% if talents_recommandes %}
-    <div class="expandable-wrapper" id="talentsWrapper">
-        <div class="form-grid-3" id="talentsContainer">
-            {% for dossier in talents_recommandes %}
-            <div class="manage-offer-card" 
-
-                 data-score="{{ dossier.score_compatibilite|floatformat:0 }}"
-                 data-offre-id="{{ dossier.offre.id }}"
-                 data-conv-statut="{% with conv=dossier.convocations.last %}{% if conv %}{{ conv.statut }}{% else %}none{% endif %}{% endwith %}"
-                 data-candidat-nom="{{ dossier.candidat.prenom }} {{ dossier.candidat.nom }}"
-                 data-candidat-prenom="{{ dossier.candidat.prenom }}"
-                 data-offre-titre="{{ dossier.offre.titre }}">
-
-                <!-- Header carte : score + date -->
-                <div class="offer-status-bar">
-                    <span class="status-badge"
-                        style="background:{% if dossier.score_compatibilite >= 80 %}#e6fffa;color:#2c7a7b;border:1px solid #b2f5ea
-                                {% elif dossier.score_compatibilite >= 60 %}#fffbeb;color:#d97706;border:1px solid #fde68a
-                                {% else %}#fff5f5;color:#c53030;border:1px solid #feb2b2{% endif %}">
-                        {{ dossier.score_compatibilite|floatformat:0 }}% match
-                    </span>
-                    <span class="ref-id" style="font-size:11px;color:var(--hint)">
-                        {{ dossier.date_soumission|date:"d/m/Y"|default:"—" }}
-                    </span>
-                </div>
-
-                <!-- Corps : infos candidat -->
-                <div class="offer-body">
-                    <h5 style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:6px">
-                        {{ dossier.candidat.prenom }} {{ dossier.candidat.nom }}
-                    </h5>
-
-                    <p class="offer-meta">
-                        <i class="fa fa-briefcase"></i>
-                        {{ dossier.candidat.anneesExperiences }} ans d'expérience
-                    </p>
-                    <p class="offer-meta">
-                        <i class="fa fa-graduation-cap"></i>
-                        {{ dossier.candidat.niveauEtude|default:"Niveau non précisé" }}
-                    </p>
-                    <p class="offer-meta">
-                        <i class="fa fa-bullseye"></i>
-                        {{ dossier.offre.titre|truncatechars:35 }}
-                    </p>
-
-                    <!-- Barre de score -->
-                    <div style="margin-top:10px;margin-bottom:8px">
-                        <div style="display:flex;justify-content:space-between;
-                                    font-size:10px;color:var(--muted);margin-bottom:4px">
-                            <span>Compatibilité globale</span>
-                            <strong style="color:var(--ink)">{{ dossier.score_compatibilite|floatformat:0 }}%</strong>
-                        </div>
-                        <div class="prog-track">
-                            <div class="prog-fill"
-                                style="width:{{ dossier.score_compatibilite|floatformat:0 }}%;
-                                        background:{% if dossier.score_compatibilite >= 80 %}var(--teal)
-                                        {% elif dossier.score_compatibilite >= 60 %}var(--amber)
-                                        {% else %}var(--red){% endif %}">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Scores détaillés -->
-                    {% if dossier.score_competences %}
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-                        <span style="font-size:10px;color:var(--muted)">
-                            🎯 {{ dossier.score_competences|floatformat:0 }}%
-                        </span>
-                        <span style="font-size:10px;color:var(--muted)">
-                            💼 {{ dossier.score_experience|floatformat:0 }}%
-                        </span>
-                        <span style="font-size:10px;color:var(--muted)">
-                            🎓 {{ dossier.score_formation|floatformat:0 }}%
-                        </span>
-                    </div>
-                    {% endif %}
-
-                    <!-- Points forts -->
-                    {% if dossier.points_forts %}
-                    <div style="margin-top:6px">
-                        <div style="font-size:10px;font-weight:700;text-transform:uppercase;
-                                    letter-spacing:0.5px;color:var(--teal);margin-bottom:4px">
-                            ✅ Points forts
-                        </div>
-                        <ul style="margin:0;padding-left:14px;font-size:11px;color:var(--muted)">
-                            {% for point in dossier.points_forts|slice:":2" %}
-                            <li>{{ point }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    {% endif %}
-
-                    <!-- Message du candidat -->
-                    {% if dossier.message_candidat %}
-                    <div style="margin-top:8px;padding:8px;background:var(--cream);
-                                border-left:3px solid var(--teal);font-size:11px;
-                                color:var(--muted);font-style:italic">
-                        "{{ dossier.message_candidat|truncatechars:80 }}"
-                    </div>
-                    {% endif %}
-                </div>
-
-                <!-- Actions -->
-                <div class="offer-footer-actions">
-                    <a href="#" class="btn-fasoia-primary btn-action">
-                        <i class="fa fa-eye"></i> Consulter
-                    </a>
-                    
-                    {% with conv=dossier.convocations.last %}
-                        {% if conv %}
-                            {% if conv.statut == 'confirmee' %}
-                                <button type="button" class="btn-action" disabled 
-                                        style="background:#28a745; color:white; border:none; cursor:not-allowed;">
-                                    <i class="fa fa-check-circle"></i> Convocation acceptée
-                                </button>
-                            {% elif conv.statut == 'annulee' %}
-                                <button type="button" class="btn-action" disabled 
-                                        style="background:#dc3545; color:white; border:none; cursor:not-allowed;">
-                                    <i class="fa fa-times-circle"></i> Convocation refusée
-                                </button>
-                            {% else %}
-                                <button type="button" class="btn-action" disabled 
-                                        style="background:#f59e0b; color:white; border:none; cursor:not-allowed;">
-                                    <i class="fa fa-clock"></i> Convocation en attente...
-                                </button>
-                            {% endif %}
-                        {% else %}
-                            <button type="button"
-                                    id="btn-conv-{{ dossier.id }}"
-                                    class="btn-fasoia-outline btn-action"
-                                    onclick="ouvrirConvocation(
-                                        '{{ dossier.candidat.particulier.prenom }} {{ dossier.candidat.particulier.nom }}',
-                                        '{{ dossier.offre.titre }}',
-                                        '{{ dossier.score_compatibilite|floatformat:0 }}',
-                                        {{ dossier.id }}
-                                    )">
-                                <i class="fa fa-calendar-check"></i> Pré-sélectionner
-                            </button>
-                        {% endif %}
-                    {% endwith %}
-                </div>
+          <!-- Points forts -->
+          {% if dossier.points_forts %}
+          <div style="margin-top:6px">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;
+                        letter-spacing:0.5px;color:var(--teal);margin-bottom:4px">
+              ✅ Points forts
             </div>
-            {% endfor %}
+            <ul style="margin:0;padding-left:14px;font-size:11px;color:var(--muted)">
+              {% for point in dossier.points_forts|slice:":2" %}
+              <li>{{ point }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          <!-- Message du candidat -->
+          {% if dossier.message_candidat %}
+          <div style="margin-top:8px;padding:8px;background:var(--cream);
+                      border-left:3px solid var(--teal);font-size:11px;
+                      color:var(--muted);font-style:italic">
+            "{{ dossier.message_candidat|truncatechars:80 }}"
+          </div>
+          {% endif %}
         </div>
-    </div>
 
-    {% if talents_recommandes|length > 6 %}
-    <div class="view-more-container">
-        <button class="btn-view-more" id="btnToggleTalents" onclick="toggleTalentsMore()">
-            <span class="txt">Voir tous les profils</span>
-            <i class="fa fa-chevron-down"></i>
-        </button>
+        <!-- Actions -->
+        <div class="offer-footer-actions">
+            <a href="#" class="btn-fasoia-primary btn-action">
+                <i class="fa fa-eye"></i> Consulter
+            </a>
+            
+            {% with conv=dossier.convocations.last %}
+                {% if conv %}
+                    {% if conv.statut == 'confirmee' %}
+                        <button type="button" class="btn-action" disabled 
+                                style="background:#28a745; color:white; border:none; cursor:not-allowed;">
+                            <i class="fa fa-check-circle"></i> Convocation cceptée
+                        </button>
+                    {% elif conv.statut == 'annulee' %}
+                        <button type="button" class="btn-action" disabled 
+                                style="background:#dc3545; color:white; border:none; cursor:not-allowed;">
+                            <i class="fa fa-times-circle"></i> Convocation refusée
+                        </button>
+                    {% else %}
+                        <!-- statut 'envoyee' ou autre = en attente -->
+                        <button type="button" class="btn-action" disabled 
+                                style="background:#f59e0b; color:white; border:none; cursor:not-allowed;">
+                            <i class="fa fa-clock"></i> Convocation en attente...
+                        </button>
+                    {% endif %}
+                {% else %}
+                    <!-- Pas de convocation -->
+                    <button type="button"
+                            id="btn-conv-{{ dossier.id }}"
+                            class="btn-fasoia-outline btn-action"
+                            onclick="ouvrirConvocation(
+                                '{{ dossier.candidat.particulier.prenom }} {{ dossier.candidat.particulier.nom }}',
+                                '{{ dossier.offre.titre }}',
+                                '{{ dossier.score_compatibilite|floatformat:0 }}',
+                                {{ dossier.id }}
+                            )">
+                        <i class="fa fa-calendar-check"></i> Pré-sélectionner
+                    </button>
+                {% endif %}
+            {% endwith %}
+        </div>
+      </div>
+      {% endfor %}
     </div>
-    {% endif %}
+  </div>
 
-    {% else %}
-    <div style="padding:40px 20px;text-align:center;color:var(--hint); border:2px dashed var(--border);margin-top:16px">
-        <i class="fa fa-users" style="font-size:32px;margin-bottom:12px;display:block;color:var(--border)"></i>
-        <strong style="font-size:14px;color:var(--muted)">Aucun profil recommandé pour le moment</strong>
-        <p style="font-size:12px;margin-top:8px">Les candidats qui postuleront à vos offres apparaîtront ici, classés par pertinence par l'IA.</p>
-    </div>
-    {% endif %}
+  {% if talents_recommandes|length > 6 %}
+  <div class="view-more-container">
+    <button class="btn-view-more" id="btnToggleTalents"
+            onclick="toggleTalentsMore()">
+      <span class="txt">Voir tous les profils</span>
+      <i class="fa fa-chevron-down"></i>
+    </button>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div style="padding:40px 20px;text-align:center;color:var(--hint);
+              border:2px dashed var(--border);margin-top:16px">
+    <i class="fa fa-users"
+       style="font-size:32px;margin-bottom:12px;display:block;color:var(--border)"></i>
+    <strong style="font-size:14px;color:var(--muted)">
+      Aucun profil recommandé pour le moment
+    </strong>
+    <p style="font-size:12px;margin-top:8px">
+      Les candidats qui postuleront à vos offres apparaîtront ici,
+      classés par pertinence par l'IA.
+    </p>
+  </div>
+  {% endif %}
+
 </div>
+
 
 <!-- SECTION OFFRES PUBLIÉES -->
 <div class="card-edit">
@@ -431,6 +338,7 @@
                     <span class="status-badge {% if offre.est_active %}active{% else %}closed{% endif %}">
                         {% if offre.est_active %}En ligne{% else %}Hors ligne{% endif %}
                     </span>
+                    <span class="ref-id">#{{ offre.id }}</span>
                 </div>
 
                 <div class="offer-body">
@@ -733,138 +641,6 @@
 
 {% block extra_js %}
 <script>
-// Variables globales pour les cartes
-let allCards = [];
-
-// Initialisation au chargement
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("DOM chargé - Recherche des cartes...");
-    allCards = Array.from(document.querySelectorAll('#talentsContainer .manage-offer-card'));
-    console.log("Cartes trouvées :", allCards.length);
-    
-    // Vérifier les data attributes
-    allCards.forEach((card, index) => {
-        console.log(`Carte ${index}:`, {
-            score: card.dataset.score,
-            offreId: card.dataset.offreId,
-            convStatut: card.dataset.convStatut,
-            candidatNom: card.dataset.candidatNom
-        });
-    });
-    
-    updateCounts();
-});
-
-// Afficher/masquer le panneau des filtres
-function toggleFilters() {
-    const panel = document.getElementById('filtersPanel');
-    if (panel.style.display === 'none' || panel.style.display === '') {
-        panel.style.display = 'block';
-        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    } else {
-        panel.style.display = 'none';
-    }
-}
-
-// Appliquer tous les filtres
-function applyFilters() {
-    console.log("Application des filtres...");
-    
-    const scoreMin = parseInt(document.getElementById('filterScore').value);
-    const offreId = document.getElementById('filterOffre').value;
-    const convStatus = document.getElementById('filterConvocation').value;
-    const searchTerm = document.getElementById('filterSearch').value.toLowerCase().trim();
-    
-    console.log("Filtres actuels:", {scoreMin, offreId, convStatus, searchTerm});
-    
-    let visibleCount = 0;
-    
-    allCards.forEach((card, index) => {
-        let show = true;
-        
-        // Filtre par score
-        const score = parseInt(card.dataset.score);
-        if (scoreMin > 0 && score < scoreMin) {
-            show = false;
-            console.log(`Carte ${index} exclue (score: ${score} < ${scoreMin})`);
-        }
-        
-        // Filtre par offre
-        if (show && offreId !== 'all' && card.dataset.offreId !== offreId) {
-            show = false;
-            console.log(`Carte ${index} exclue (offre: ${card.dataset.offreId} !== ${offreId})`);
-        }
-        
-        // Filtre par statut convocation
-        if (show && convStatus !== 'all') {
-            const cardStatus = card.dataset.convStatut || 'none';
-            if (convStatus === 'none' && cardStatus !== 'none') {
-                show = false;
-                console.log(`Carte ${index} exclue (statut: ${cardStatus} !== none)`);
-            } else if (convStatus !== 'none' && cardStatus !== convStatus) {
-                show = false;
-                console.log(`Carte ${index} exclue (statut: ${cardStatus} !== ${convStatus})`);
-            }
-        }
-        
-        // Filtre par recherche textuelle
-        if (show && searchTerm) {
-            const nom = (card.dataset.candidatNom || '').toLowerCase();
-            const prenom = (card.dataset.candidatPrenom || '').toLowerCase();
-            const offre = (card.dataset.offreTitre || '').toLowerCase();
-            
-            if (!nom.includes(searchTerm) && !prenom.includes(searchTerm) && !offre.includes(searchTerm)) {
-                show = false;
-                console.log(`Carte ${index} exclue (recherche: "${searchTerm}" non trouvé)`);
-            }
-        }
-        card.style.display = show ? '' : 'none';
-        if (show) visibleCount++;
-    });
-    
-    // Mettre à jour le compteur
-    document.getElementById('visibleCount').innerText = visibleCount;
-    document.getElementById('totalCount').innerText = allCards.length;
-    
-    console.log(`Affichage: ${visibleCount}/${allCards.length} profils`);
-    
-    // Afficher un message si aucun résultat
-    const container = document.getElementById('talentsContainer');
-    let noResultMsg = document.getElementById('noResultMessage');
-    
-    if (visibleCount === 0) {
-        if (!noResultMsg) {
-            noResultMsg = document.createElement('div');
-            noResultMsg.id = 'noResultMessage';
-            noResultMsg.className = 'no-results-message';
-            noResultMsg.style.cssText = 'grid-column:1/-1; text-align:center; padding:40px; color:var(--muted); border:2px dashed var(--border); margin:20px 0';
-            noResultMsg.innerHTML = `
-                <i class="fa fa-filter" style="font-size:32px; margin-bottom:12px; display:block; color:var(--border)"></i>
-                <strong>Aucun profil ne correspond à vos critères</strong>
-                <p style="font-size:12px; margin-top:8px">Essayez de modifier vos filtres pour voir plus de résultats.</p>
-            `;
-            container.appendChild(noResultMsg);
-        }
-    } else if (noResultMsg) {
-        noResultMsg.remove();
-    }
-}
-
-// Réinitialiser tous les filtres
-function resetFilters() {
-    console.log("Réinitialisation des filtres");
-    document.getElementById('filterScore').value = '0';
-    document.getElementById('filterOffre').value = 'all';
-    document.getElementById('filterConvocation').value = 'all';
-    document.getElementById('filterSearch').value = '';
-    applyFilters();
-}
-
-// Mettre à jour les compteurs
-function updateCounts() {
-    document.getElementById('totalCount').innerText = allCards.length;
-    applyFilters();
-}
 
 function toggleTalentsMore() {
     const wrapper = document.getElementById('talentsWrapper');
@@ -876,9 +652,7 @@ function toggleTalentsMore() {
     txt.innerText = wrapper.classList.contains('expanded')
         ? "Réduire la liste"
         : "Voir tous les profils";
-    
-    setTimeout(applyFilters, 100);
-}
+}    
 
 function toggleViewMore() {
     const wrapper = document.getElementById('offersWrapper');
@@ -892,6 +666,7 @@ function toggleViewMore() {
         btnTxt.innerText = "Réduire la liste";
     } else {
         btnTxt.innerText = "Voir toutes les offres";
+        // Optionnel : remonter doucement au début de la section
         wrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 }
@@ -908,6 +683,8 @@ function toggleEditMode() {
 
 function toggleOffreForm() {
     alert("Fonctionnalité de publication d'offre en cours de développement.\n\nTu peux créer une page dédiée pour publier une offre.");
+    // Plus tard : rediriger vers une page de création d'offre
+    // window.location.href = "{% url 'myAppli:publier_offre_emploi' %}";
 }
 
 // Loader sur soumission du profil
@@ -927,6 +704,7 @@ function ouvrirConvocation(nomComplet, titreOffre, score, dossierId) {
   document.getElementById('conv-score-badge').innerText = score + '% match';
   document.getElementById('conv-dossier-id').value = dossierId;
 
+  // Initiales pour l'avatar
   const initiales = nomComplet.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   document.getElementById('conv-avatar').innerText = initiales;
 

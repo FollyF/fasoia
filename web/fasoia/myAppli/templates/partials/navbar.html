@@ -3,7 +3,7 @@
 <style>
   /* ===== TOP STRIP ===== */
   .topstrip {
-    background: var(--ink);
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -12,7 +12,7 @@
   }
   .topstrip-left {
     font-size: 11px;
-    color: rgba(255,255,255,0.4);
+    color: var(--ink);
     letter-spacing: 0.3px;
   }
   .topstrip-right {
@@ -22,12 +22,12 @@
   }
   .topstrip-right a {
     font-size: 11px;
-    color: rgba(255,255,255,0.5);
+    color: var(--ink);
     text-decoration: none;
     transition: color 0.15s;
     letter-spacing: 0.3px;
   }
-  .topstrip-right a:hover { color: #fff; }
+  .topstrip-right a:hover { color: var(--red); }
   .topstrip-sep {
     width: 1px;
     height: 12px;
@@ -90,6 +90,7 @@
     padding: 6px 14px;
     border: 1px solid var(--border);
     transition: border-color 0.2s, background 0.2s;
+    border-radius: 3px;
   }
   .masthead-user:hover {
     border-color: var(--ink);

@@ -59,6 +59,9 @@
       flex: 1;
     }
 
+    a, a:hover, a:focus, a:active {
+      text-decoration: none;
+    }
     a { color: inherit; text-decoration: none; }
     a:hover { color: var(--red); }
 
@@ -88,7 +91,7 @@
       cursor: pointer;
       display: inline-block;
       transition: background 0.2s, color 0.2s;
-      border-radius: 0;
+      border-radius: 3px;
     }
     .btn-fasoia-primary:hover { background: var(--red); color: #fff; }
 
@@ -105,7 +108,7 @@
       cursor: pointer;
       display: inline-block;
       transition: background 0.2s, color 0.2s;
-      border-radius: 0;
+      border-radius: 3px;
     }
     .btn-fasoia-outline:hover { background: var(--ink); color: #fff; }
 
@@ -118,6 +121,7 @@
       text-transform: uppercase;
       letter-spacing: 0.6px;
       line-height: 1.6;
+      border-radius: 3px;
     }
     .tag-ao   { background: var(--ink);   color: #fff; }
     .tag-ami  { background: var(--teal);  color: #fff; }

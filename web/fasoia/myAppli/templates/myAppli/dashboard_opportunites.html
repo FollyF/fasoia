@@ -6,17 +6,8 @@
 
 {% block app_extra_css %}
 <style>
-  /* ===== EN-TÊTE ===== */
   .dash-header {
-    background: var(--ink);
-    padding: 28px 32px;
-    margin-bottom: 24px;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 20px;
-    flex-wrap: wrap;
-    border-bottom: 3px solid var(--red);
+    padding: 0px 0px 12px 0px;
   }
   .dash-header h1 {
     font-family: var(--font-display);
@@ -170,58 +161,6 @@
   .empty-state p { font-size: 13px; color: var(--muted); margin-bottom: 8px; line-height: 1.6; }
   .empty-state .sub { font-size: 12px; color: var(--hint); margin-bottom: 20px; }
 
-  /* ===== MODALS ===== */
-  .modal-content { border-radius: 0; border: 1px solid var(--border); background: var(--surface); }
-  .modal-header {
-    background: var(--cream);
-    border-bottom: 2px solid var(--ink);
-    padding: 14px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .modal-title {
-    font-family: var(--font-display);
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--ink);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .modal-title i { font-size: 14px; color: var(--muted); }
-  .modal-close {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    width: 28px; height: 28px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; font-size: 14px; transition: all 0.15s;
-  }
-  .modal-close:hover { border-color: var(--ink); color: var(--ink); }
-
-  .modal-body { padding: 24px; }
-  .modal-row {
-    display: flex;
-    gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 13px;
-    align-items: flex-start;
-  }
-  .modal-row:last-child { border-bottom: none; }
-  .modal-key {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--muted);
-    min-width: 130px;
-    flex-shrink: 0;
-    padding-top: 1px;
-  }
-  .modal-val { color: var(--ink); line-height: 1.5; flex: 1; }
-
   /* Compteur compétences */
   .comp-tags { display: flex; flex-wrap: wrap; gap: 4px; }
   .comp-tag {
@@ -243,15 +182,15 @@
     <p>Opportunités personnalisées selon votre profil</p>
   </div>
   <div class="dash-header-counts">
-    {% if offre %}
+    {% if offres %}
     <div class="hcount">
-      <div class="n">{{ offre|length }}</div>
+      <div class="n">{{ offres|length }}</div>
       <div class="l">Appels d'offres</div>
     </div>
     {% endif %}
-    {% if ami %}
+    {% if amis %}
     <div class="hcount">
-      <div class="n">{{ ami|length }}</div>
+      <div class="n">{{ amis|length }}</div>
       <div class="l">Manifestations</div>
     </div>
     {% endif %}
@@ -273,16 +212,16 @@
 
 <!-- ONGLETS -->
 <div class="tabs-nav">
-  {% if offre %}
+  {% if offres %}
   <button class="tab-btn active" onclick="openTab(event, 'offres')">
     <i class="fa fa-gavel"></i> Appels d'offres
-    <span class="tab-count">{{ offre|length }}</span>
+    <span class="tab-count">{{ offres|length }}</span>
   </button>
   {% endif %}
-  {% if ami %}
+  {% if amis %}
   <button class="tab-btn {% if not offre %}active{% endif %}" onclick="openTab(event, 'ami')">
     <i class="fa fa-bullhorn"></i> Manifestations d'intérêt
-    <span class="tab-count">{{ ami|length }}</span>
+    <span class="tab-count">{{ amis|length }}</span>
   </button>
   {% endif %}
   {% if offres_emploi %}
@@ -297,7 +236,7 @@
 <div class="card-edit" style="padding:0;overflow:hidden">
 
   <!-- APPELS D'OFFRES -->
-  {% if offre %}
+  {% if offres %}
   <div id="offres" class="tab-panel active">
     <div class="table-wrap">
       <table class="opp-table">
@@ -310,26 +249,26 @@
           </tr>
         </thead>
         <tbody>
-          {% for i in offre %}
+          {% for offre in offres %}
           <tr>
-            <td><span class="ref-id">OFFRE-{{ i.id }}</span></td>
-            <td><div class="desc-text">{{ i.description|truncatechars:90 }}</div></td>
+            <td><span class="ref-id">OFFRE-{{ offre.id }}</span></td>
+            <td><div class="desc-text">{{ offre.description|truncatechars:90 }}</div></td>
             <td>
-              {% if i.date_limite %}
-                <span class="date-urg">{{ i.date_limite|date:"d/m/Y" }}</span>
+              {% if offre.date_limite %}
+                <span class="date-urg">{{ offre.date_limite|date:"d/m/Y" }}</span>
               {% else %}
                 <span class="date-normal">Non spécifiée</span>
               {% endif %}
             </td>
             <td>
               <div class="action-btns">
-                <button type="button" class="btn-app sm outline"
-                        data-toggle="modal" data-target="#modalOffre{{ i.id }}">
-                  <i class="fa fa-eye"></i> Détails
+                <button type="button" class="btn-fasoia-outline btn-action"
+                        data-toggle="modal" data-target="#modalOffre{{ offre.id }}">
+                        Détails
                 </button>
-                <a href="{% url 'myAppli:nouvelle_soumission' 'Offre_uemoa' i.id %}"
-                   class="btn-app sm">
-                  <i class="fa fa-paper-plane"></i> Postuler
+                <a href="{% url 'myAppli:nouvelle_soumission' 'Offre_uemoa' offre.id %}"
+                   class="btn-fasoia-primary btn-action">
+                  Postuler
                 </a>
               </div>
             </td>
@@ -340,13 +279,13 @@
     </div>
     <div class="result-count">
       <i class="fa fa-list"></i>
-      <span id="offresCount">{{ offre|length }}</span> résultat(s) affiché(s)
+      <span id="offresCount">{{ offres|length }}</span> résultat(s) affiché(s)
     </div>
   </div>
   {% endif %}
 
   <!-- MANIFESTATIONS D'INTÉRÊT -->
-  {% if ami %}
+  {% if amis %}
   <div id="ami" class="tab-panel {% if not offre %}active{% endif %}">
     <div class="table-wrap">
       <table class="opp-table">
@@ -359,26 +298,26 @@
           </tr>
         </thead>
         <tbody>
-          {% for i in ami %}
+          {% for ami in amis %}
           <tr>
-            <td><span class="ref-id">AMI-{{ i.id }}</span></td>
-            <td><div class="desc-text">{{ i.description|truncatechars:90 }}</div></td>
+            <td><span class="ref-id">AMI-{{ ami.id }}</span></td>
+            <td><div class="desc-text">{{ ami.description|truncatechars:90 }}</div></td>
             <td>
-              {% if i.date_limite %}
-                <span class="date-urg">{{ i.date_limite|date:"d/m/Y" }}</span>
+              {% if ami.date_limite %}
+                <span class="date-urg">{{ ami.date_limite|date:"d/m/Y" }}</span>
               {% else %}
                 <span class="date-normal">Non spécifiée</span>
               {% endif %}
             </td>
             <td>
               <div class="action-btns">
-                <button type="button" class="btn-app sm outline"
-                        data-toggle="modal" data-target="#modalAmi{{ i.id }}">
-                  <i class="fa fa-eye"></i> Détails
+                <button type="button" class="btn-fasoia-outline btn-action"
+                        data-toggle="modal" data-target="#modalAmi{{ ami.id }}">
+                        Détails
                 </button>
-                <a href="{% url 'myAppli:nouvelle_soumission' 'Ami_uemoa' i.id %}"
-                   class="btn-app sm">
-                  <i class="fa fa-paper-plane"></i> Postuler
+                <a href="{% url 'myAppli:nouvelle_soumission' 'Ami_uemoa' ami.id %}"
+                   class="btn-fasoia-primary btn-action">
+                   Postuler
                 </a>
               </div>
             </td>
@@ -389,7 +328,7 @@
     </div>
     <div class="result-count">
       <i class="fa fa-list"></i>
-      <span id="amiCount">{{ ami|length }}</span> résultat(s) affiché(s)
+      <span id="amiCount">{{ amis|length }}</span> résultat(s) affiché(s)
     </div>
   </div>
   {% endif %}
@@ -429,12 +368,13 @@
             </td>
             <td>
               <div class="action-btns">
-                <button type="button" class="btn-app sm outline"
+                <button type="button" class="btn-fasoia-outline btn-action"
                         data-toggle="modal" data-target="#modalEmploi{{ emploi.id }}">
-                  <i class="fa fa-eye"></i> Détails
+                        Détails
                 </button>
-                <a href="{% url 'myAppli:soumettre_candidature' emploi.id %}" class="btn-app sm">
-                  <i class="fa fa-paper-plane"></i> Postuler
+                <a href="{% url 'myAppli:soumettre_candidature' emploi.id %}" 
+                  class="btn-fasoia-primary btn-action">
+                  Postuler
                 </a>
               </div>
             </td>
@@ -451,7 +391,7 @@
   {% endif %}
 
   <!-- ÉTAT VIDE -->
-  {% if not offre and not ami and not offres_emploi %}
+  {% if not offres and not amis and not offres_emploi %}
   <div class="empty-state">
     <i class="fa fa-folder-open"></i>
     <p>Aucune opportunité ne correspond à votre profil pour le moment.</p>
@@ -465,45 +405,43 @@
 </div>
 
 <!-- ===== MODALS APPELS D'OFFRES ===== -->
-{% for i in offre %}
-<div class="modal fade" id="modalOffre{{ i.id }}" tabindex="-1" role="dialog">
+{% for offre in offres %}
+<div class="modal fade" id="modalOffre{{ offre.id }}" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <div class="modal-title"><i class="fa fa-gavel"></i> Appel d'offres</div>
-        <button type="button" class="modal-close" data-dismiss="modal"><i class="fa fa-times"></i></button>
+        <div>
+          <p class="modal-subtitle">Appel d'offres</p>
+          <h5 class="modal-title">Référence OFFRE-{{ offre.id }}</h5>
+        </div>
       </div>
       <div class="modal-body">
-        <div class="modal-row">
-          <div class="modal-key">Référence</div>
-          <div class="modal-val"><span class="ref-id">OFFRE-{{ i.id }}</span></div>
-        </div>
-        <div class="modal-row">
-          <div class="modal-key">Description</div>
-          <div class="modal-val">{{ i.description }}</div>
-        </div>
-        <div class="modal-row">
-          <div class="modal-key">Date limite</div>
-          <div class="modal-val"><span class="date-urg">{{ i.date_limite|date:"d/m/Y H:i" }}</span></div>
-        </div>
-        <div class="modal-row">
-          <div class="modal-key">Publication</div>
-          <div class="modal-val">{{ i.date_scraping|date:"d/m/Y" }}</div>
-        </div>
-        <div class="modal-row">
-          <div class="modal-key">Document</div>
-          <div class="modal-val">
-            {% if i.fichier_local %}
-              <a href="{{ i.fichier_local.url }}" class="btn-app sm" download>
-                <i class="fa fa-download"></i> Télécharger le PDF
-              </a>
-            {% else %}
-              <a href="{{ i.download_url }}" target="_blank" class="btn-app sm outline">
-                <i class="fa fa-arrow-up-right-from-square"></i> Voir sur le site original
-              </a>
-            {% endif %}
+        <div class="modal-meta-grid">
+          <div class="modal-meta-block">
+            <label>Date limite</label>
+            <span><i class="fa fa-calendar" style="color:#378ADD; margin-right:5px;"></i>{{ offre.date_limite|date:"d/m/Y H:i" }}</span>
+          </div>
+          <div class="modal-meta-block">
+            <label>Publication</label>
+            <span><i class="fa fa-clock-o" style="color:#378ADD; margin-right:5px;"></i>{{ offre.date_scraping|date:"d/m/Y" }}</span>
           </div>
         </div>
+        <div class="modal-desc-block">
+          <label>Description</label>
+          {{ offre.description|truncatechars:400 }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-dismiss="modal">Fermer</button>
+        {% if offre.fichier_local %}
+          <a href="{{ offre.fichier_local.url }}" class="btn-fasoia-primary btn-sm" download>
+            <i class="fa fa-download"></i> Télécharger le PDF
+          </a>
+        {% else %}
+          <a href="{{ offre.download_url }}" target="_blank" class="btn-fasoia-primary btn-sm">
+            <i class="fa fa-arrow-up-right-from-square"></i> Voir sur le site original
+          </a>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -511,45 +449,43 @@
 {% endfor %}
 
 <!-- ===== MODALS AMI ===== -->
-{% for i in ami %}
-<div class="modal fade" id="modalAmi{{ i.id }}" tabindex="-1" role="dialog">
+{% for ami in amis %}
+<div class="modal fade" id="modalAmi{{ ami.id }}" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <div class="modal-title"><i class="fa fa-bullhorn"></i> Manifestation d'intérêt</div>
-        <button type="button" class="modal-close" data-dismiss="modal"><i class="fa fa-times"></i></button>
+        <div>
+          <p class="modal-subtitle">Manifestation d'intérêt</p>
+          <h5 class="modal-title">Référence AMI-{{ ami.id }}</h5>
+        </div>
       </div>
       <div class="modal-body">
-        <div class="modal-row">
-          <div class="modal-key">Référence</div>
-          <div class="modal-val"><span class="ref-id">AMI-{{ i.id }}</span></div>
-        </div>
-        <div class="modal-row">
-          <div class="modal-key">Description</div>
-          <div class="modal-val">{{ i.description }}</div>
-        </div>
-        <div class="modal-row">
-          <div class="modal-key">Date limite</div>
-          <div class="modal-val"><span class="date-urg">{{ i.date_limite|date:"d/m/Y H:i" }}</span></div>
-        </div>
-        <div class="modal-row">
-          <div class="modal-key">Publication</div>
-          <div class="modal-val">{{ i.date_scraping|date:"d/m/Y" }}</div>
-        </div>
-        <div class="modal-row">
-          <div class="modal-key">Document</div>
-          <div class="modal-val">
-            {% if i.fichier_local %}
-              <a href="{{ i.fichier_local.url }}" class="btn-app sm" download>
-                <i class="fa fa-download"></i> Télécharger le PDF
-              </a>
-            {% else %}
-              <a href="{{ i.download_url }}" target="_blank" class="btn-app sm outline">
-                <i class="fa fa-arrow-up-right-from-square"></i> Voir sur le site original
-              </a>
-            {% endif %}
+        <div class="modal-meta-grid">
+          <div class="modal-meta-block">
+            <label>Date limite</label>
+            <span><i class="fa fa-calendar" style="color:#378ADD; margin-right:5px;"></i>{{ ami.date_limite|date:"d/m/Y H:i" }}</span>
+          </div>
+          <div class="modal-meta-block">
+            <label>Publication</label>
+            <span><i class="fa fa-clock-o" style="color:#378ADD; margin-right:5px;"></i>{{ ami.date_scraping|date:"d/m/Y" }}</span>
           </div>
         </div>
+        <div class="modal-desc-block">
+          <label>Description</label>
+          {{ ami.description|truncatechars:400 }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-dismiss="modal">Fermer</button>
+        {% if ami.fichier_local %}
+          <a href="{{ ami.fichier_local.url }}" class="btn-fasoia-primary btn-sm" download>
+            <i class="fa fa-download"></i> Télécharger le PDF
+          </a>
+        {% else %}
+          <a href="{{ ami.download_url }}" target="_blank" class="btn-fasoia-primary btn-sm">
+            <i class="fa fa-arrow-up-right-from-square"></i> Voir sur le site original
+          </a>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -558,59 +494,57 @@
 
 <!-- ===== MODALS EMPLOI ===== -->
 {% for emploi in offres_emploi %}
-<div class="modal fade" id="modalEmploi{{ emploi.id }}" tabindex="-1" role="dialog">
+<div class="modal fade" id="modalEmploi{{ emploi.id }}" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <div class="modal-title"><i class="fa fa-briefcase"></i> Offre d'emploi</div>
-        <button type="button" class="modal-close" data-dismiss="modal"><i class="fa fa-times"></i></button>
+        <div>
+          <p class="modal-subtitle">Offre d'emploi</p>
+          <h5 class="modal-title">{{ emploi.titre }}</h5>
+        </div>
       </div>
       <div class="modal-body">
-        <div class="modal-row">
-          <div class="modal-key">Poste</div>
-          <div class="modal-val" style="font-weight:700">{{ emploi.titre }}</div>
-        </div>
-        <div class="modal-row">
-          <div class="modal-key">Entreprise</div>
-          <div class="modal-val">
-            {% if emploi.recruteur %}{{ emploi.recruteur.organisation }}
-            {% else %}{{ emploi.entreprise_nom|default:"Non spécifié" }}{% endif %}
+        <div class="modal-meta-grid">
+          <div class="modal-meta-block">
+            <label>Entreprise</label>
+            <span><i class="fa fa-building" style="color:#378ADD; margin-right:5px;"></i>
+              {% if emploi.recruteur %}{{ emploi.recruteur.organisation }}
+              {% else %}{{ emploi.entreprise_nom|default:"Non spécifié" }}{% endif %}
+            </span>
+          </div>
+          <div class="modal-meta-block">
+            <label>Localisation</label>
+            <span><i class="fa fa-map-marker" style="color:#378ADD; margin-right:5px;"></i>{{ emploi.ville|default:emploi.localisation }}{% if emploi.pays %}, {{ emploi.pays }}{% endif %}</span>
+          </div>
+          <div class="modal-meta-block">
+            <label>Type de contrat</label>
+            <span><i class="fa fa-file-text-o" style="color:#378ADD; margin-right:5px;"></i>{{ emploi.get_type_contrat_display }}</span>
+          </div>
+          <div class="modal-meta-block">
+            <label>Date limite</label>
+            <span><i class="fa fa-calendar" style="color:#378ADD; margin-right:5px;"></i>
+              {% if emploi.date_limite %}{{ emploi.date_limite|date:"d/m/Y" }}
+              {% else %}Non spécifiée{% endif %}
+            </span>
           </div>
         </div>
-        <div class="modal-row">
-          <div class="modal-key">Description</div>
-          <div class="modal-val">{{ emploi.description|truncatechars:300 }}</div>
-        </div>
-        <div class="modal-row">
-          <div class="modal-key">Localisation</div>
-          <div class="modal-val">{{ emploi.ville|default:emploi.localisation }}{% if emploi.pays %}, {{ emploi.pays }}{% endif %}</div>
-        </div>
-        <div class="modal-row">
-          <div class="modal-key">Type de contrat</div>
-          <div class="modal-val"><span class="tag tag-job">{{ emploi.get_type_contrat_display }}</span></div>
-        </div>
-        <div class="modal-row">
-          <div class="modal-key">Date limite</div>
-          <div class="modal-val">
-            {% if emploi.date_limite %}
-              <span class="date-urg">{{ emploi.date_limite|date:"d/m/Y" }}</span>
-            {% else %}
-              <span class="date-normal">Non spécifiée</span>
-            {% endif %}
-          </div>
+        <div class="modal-desc-block">
+          <label>Description</label>
+          {{ emploi.description|truncatechars:400 }}
         </div>
         {% if emploi.competences_requises %}
-        <div class="modal-row">
-          <div class="modal-key">Compétences</div>
-          <div class="modal-val">
-            <div class="comp-tags">
-              {% for comp in emploi.competences_requises %}
-              <span class="comp-tag">{{ comp }}</span>
-              {% endfor %}
-            </div>
+        <div class="modal-desc-block">
+          <label>Compétences</label>
+          <div class="comp-tags">
+            {% for comp in emploi.competences_requises %}
+            <span class="comp-tag">{{ comp }}</span>
+            {% endfor %}
           </div>
         </div>
         {% endif %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-dismiss="modal">Fermer</button>
       </div>
     </div>
   </div>

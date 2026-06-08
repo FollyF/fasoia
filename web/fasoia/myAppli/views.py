@@ -126,8 +126,8 @@ def dashboard_opportunites(request):
     total_opportunites = offres_uemoa.count() + amis_uemoa.count() + offres_emploi.count()
     
     context = {
-        'offre': offres_uemoa,
-        'ami': amis_uemoa,
+        'offres': offres_uemoa,
+        'amis': amis_uemoa,
         'offres_emploi': offres_emploi,
         'total_opportunites': total_opportunites,
     }
@@ -3008,7 +3008,7 @@ def repondre_question(request, session_id, question_id):
     try:
         from analyse_ia.ia_client import IAClient
         ia = IAClient()
-        evaluation = ia.evaluer_reponse(question, reponse, session.poste_vise)
+        evaluation = ia._evaluer_reponse_groq(question, reponse, session.poste_vise)
         score = evaluation['score']
         feedback = evaluation['feedback']
         points_forts = evaluation['points_forts']

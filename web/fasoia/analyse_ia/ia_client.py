@@ -16,8 +16,6 @@ class IAClient:
     def __init__(self):
         self.groq = Groq(api_key=settings.GROQ_API_KEY)
         self.groq_model = settings.GROQ_MODEL
-        self.ollama_url = settings.OLLAMA_URL
-        self.ollama_model = settings.OLLAMA_MODEL
 
     # ==========================================
     # GROQ — Génération rapide
@@ -110,67 +108,7 @@ class IAClient:
         print("🧠 GROQ → feedback global")
 
         return response.choices[0].message.content.strip()
-
-    # ==========================================
-    # OLLAMA — Évaluation locale (données privées)
-    # ==========================================
-
-    def evaluer_reponse(self, question, reponse, poste_vise):
-        """
-        Évalue la réponse du candidat via Ollama (local = privé)
-        """
-        prompt = f"""
-        Tu es un recruteur expert. Évalue cette réponse d'entretien.
-
-        Poste visé: {poste_vise}
-        Type de question: {question.get_type_question_display()}
-        Question: {question.question}
-        Réponse du candidat: {reponse}
-
-        Réponds UNIQUEMENT avec un JSON valide :
-        {{
-            "score": 7.5,
-            "feedback": "Explication courte",
-            "points_forts": ["Point 1", "Point 2"],
-            "points_amelioration": ["Amélioration 1", "Amélioration 2"]
-        }}
-        """
-
-        try:
-            response = requests.post(
-                f"{self.ollama_url}/api/generate",
-                json={
-                    'model': self.ollama_model,
-                    'prompt': prompt,
-                    'stream': False,
-                    'format' : 'json'
-                },
-                timeout=120
-            )
-
-            texte = response.json()['response'].strip()
-
-            print("🏠 OLLAMA → évaluation réponse")
-
-            if '```json' in texte:
-                texte = texte.split('```json')[1].split('```')[0]
-            elif '```' in texte:
-                texte = texte.split('```')[1].split('```')[0]
-
-            data = self.clean_json(texte)
-
-            return {
-                'score': float(data.get('score', 5.0)),
-                'feedback': data.get('feedback', ''),
-                'points_forts': data.get('points_forts', []),
-                'points_amelioration': data.get('points_amelioration', [])
-            }
-
-        except Exception as e:
-            print(f"Erreur Ollama évaluation: {e}")
-            # Fallback Groq si Ollama échoue
-            return self._evaluer_reponse_groq(question, reponse, poste_vise)
-
+    
     def _evaluer_reponse_groq(self, question, reponse, poste_vise):
         """
         Fallback — évalue via Groq si Ollama échoue

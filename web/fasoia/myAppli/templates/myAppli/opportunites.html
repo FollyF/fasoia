@@ -37,6 +37,7 @@
         border: 2px solid var(--border);
         background: var(--surface);
         transition: all 0.3s;
+        border-radius: 3px;
     }
 
     .search-input:focus {
@@ -66,6 +67,7 @@
         color: var(--muted);
         cursor: pointer;
         transition: all 0.25s;
+        border-radius: 3px;
     }
 
     .tab-btn:hover { 
@@ -108,6 +110,7 @@
         width: 100%;
         border-collapse: collapse;
         font-size: 14px;
+        border-radius: 3px;
     }
 
     .opportunites-table th {
@@ -166,68 +169,81 @@
         color: var(--muted);
     }
 
-    /* MODALS CENTRÉS */
-    .modal {
-        text-align: center;
-        padding: 0 !important;
-    }
-
-    .modal:before {
-        content: '';
-        display: inline-block;
-        height: 100%;
-        vertical-align: middle;
-        margin-right: -4px;
-    }
-
-    .modal-dialog {
-        display: inline-block;
-        text-align: left;
-        vertical-align: middle;
-        width: 90%;
-        max-width: 600px;
-        margin: 20px auto;
-    }
-
-    .modal-content {
-        border-radius: 0;
-        border: 1px solid var(--ink);
-        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    }
-
+    /* MODAL MODERNE */
     .modal-header {
-        background: var(--amber);
-        color: white;
-        padding: 15px 20px;
+        background: var(--red);
+        padding: 16px 20px;
         border: none;
     }
-
+    .modal-header .modal-subtitle {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #85B7EB;
+        margin-bottom: 3px;
+    }
     .modal-title {
-        font-family: var(--font-display);
-        font-size: 22px;
-        font-weight: 700;
+        font-size: 17px;
+        font-weight: 500;
+        color: #fff;
         margin: 0;
     }
-
+    .modal-content {
+        border-radius: 12px;
+        border: 0.5px solid rgba(0,0,0,0.15);
+        overflow: hidden;
+    }
     .modal-body {
-        padding: 30px;
-        line-height: 1.6;
-        color: var(--ink-mid);
+        padding: 20px 24px 24px;
     }
-
-    .modal-body p {
-        margin-bottom: 18px;
-        border-bottom: 1px solid var(--bg);
-        padding-bottom: 10px;
+    .modal-meta-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 12px;
     }
-
-    .modal-body strong {
-        display: block;
-        font-size: 10px;
+    .modal-meta-block {
+        background: var(--bs-light);
+        border-radius: 8px;
+        padding: 10px 14px;
+    }
+    .modal-meta-block label {
+        font-size: 11px;
         text-transform: uppercase;
         letter-spacing: 1.2px;
-        color: var(--muted);
+        color: #888;
+        display: block;
         margin-bottom: 4px;
+        font-weight: 500;
+    }
+    .modal-meta-block span {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--ink);
+    }
+    .modal-desc-block {
+        background: var(--bs-light);
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin-bottom: 16px;
+        font-size: 14px;
+        line-height: 1.65;
+        color: var(--ink-mid);
+    }
+    .modal-desc-block label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        color: #888;
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 500;
+    }
+    .modal-footer {
+        border: none;
+        padding: 0 24px 20px;
+        display: flex;
+        justify-content: space-between;
     }
 
     /* Adaptation mobile pour modals */
@@ -280,17 +296,17 @@
                         </tr>
                     </thead>
                     <tbody>
-                    {% for i in offres %}
+                    {% for offre in offres %}
                         <tr>
-                            <td><span class="ref-code">AO-{{ i.reference|default:forloop.counter }}</span></td>
-                            <td>{{ i.description|truncatechars:400 }}</td>
-                            <td>{{ i.date_limite|date:"d/m/Y" }}</td>
+                            <td><span class="ref-code">AO-{{ offre.reference|default:forloop.counter }}</span></td>
+                            <td>{{ offre.description|truncatechars:400 }}</td>
+                            <td>{{ offre.date_limite|date:"d/m/Y" }}</td>
                             <td class="actions-col">
                                 <button type="button" class="btn-fasoia-outline btn-action"
-                                        data-toggle="modal" data-target="#modalOffre{{ i.id }}">
+                                        data-toggle="modal" data-target="#modalOffre{{ offre.id }}">
                                     Détails
                                 </button>
-                                <a href="{% url 'myAppli:nouvelle_soumission' 'Offre_uemoa' i.id %}" 
+                                <a href="{% url 'myAppli:nouvelle_soumission' 'Offre_uemoa' offre.id %}" 
                                    class="btn-fasoia-primary btn-action">
                                     Postuler
                                 </a>
@@ -298,29 +314,53 @@
                         </tr>
 
                         <!-- Modal -->
-                        <div class="modal fade" id="modalOffre{{ i.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                        <div class="modal fade" id="modalOffre{{ offre.id }}" tabindex="-1" role="dialog" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered" role="document">
                                 <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Détails de l'appel d'offres</h5>
-                                        <button type="button" class="close" data-dismiss="modal" style="color:white;">&times;</button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <p><strong>Référence :</strong> AO-{{ i.reference|default:forloop.counter }}</p>
-                                        <p><strong>Description :</strong> {{ i.description }}</p>
-                                        <p><strong>Date limite :</strong> {{ i.date_limite|date:"d/m/Y H:i" }}</p>
-                                        <p><strong>Date de publication :</strong> {{ i.date_scraping|date:"d/m/Y" }}</p>
-                                        {% if i.fichier_local %}
-                                        <p><strong>Document :</strong><br>
-                                            <a href="{{ i.fichier_local.url }}" class="btn-fasoia-primary" download>
-                                                <i class="fa fa-download"></i> Télécharger le PDF
-                                            </a>
-                                        </p>
-                                        {% endif %}
+
+                                <div class="modal-header">
+                                    <div>
+                                    <p class="modal-subtitle">Appel d'offres</p>
+                                    <h5 class="modal-title">Référence AO-{{ offre.reference|default:forloop.counter }}</h5>
                                     </div>
                                 </div>
+
+                                <div class="modal-body">
+                                    <div class="modal-meta-grid">
+                                    <div class="modal-meta-block">
+                                        <label>Date limite</label>
+                                        <span><i class="fa fa-calendar" style="color:#378ADD; margin-right:5px;"></i>
+                                        {{ offre.date_limite|date:"d/m/Y H:i" }}
+                                        </span>
+                                    </div>
+                                    <div class="modal-meta-block">
+                                        <label>Publication</label>
+                                        <span><i class="fa fa-clock-o" style="color:#378ADD; margin-right:5px;"></i>
+                                        {{ offre.date_scraping|date:"d/m/Y" }}
+                                        </span>
+                                    </div>
+                                    </div>
+
+                                    <div class="modal-desc-block">
+                                    <label>Description</label>
+                                    {{ offre.description|truncatechars:400 }}
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-dismiss="modal">
+                                    Fermer
+                                    </button>
+                                    {% if offre.fichier_local %}
+                                    <a href="{{ offre.fichier_local.url }}" class="btn-fasoia-primary btn-sm" download>
+                                    <i class="fa fa-download"></i> Télécharger le PDF
+                                    </a>
+                                    {% endif %}
+                                </div>
+
+                                </div>
                             </div>
-                        </div>
+                            </div>
                     {% empty %}
                         <tr><td colspan="4" class="no-result">Aucun appel d'offres disponible pour le moment</td></tr>
                     {% endfor %}
@@ -343,17 +383,17 @@
                         </tr>
                     </thead>
                     <tbody>
-                    {% for i in amis %}
+                    {% for ami in amis %}
                         <tr>
                             <td><span class="ref-code">AMI-{{ forloop.counter }}</span></td>
-                            <td>{{ i.description|truncatechars:400 }}</td>
-                            <td>{{ i.date_limite|date:"d/m/Y" }}</td>
+                            <td>{{ ami.description|truncatechars:400 }}</td>
+                            <td>{{ ami.date_limite|date:"d/m/Y" }}</td>
                             <td class="actions-col">
                                 <button type="button" class="btn-fasoia-outline btn-action"
-                                        data-toggle="modal" data-target="#modalAmi{{ i.id }}">
+                                        data-toggle="modal" data-target="#modalAmi{{ ami.id }}">
                                     Détails
                                 </button>
-                                <a href="{% url 'myAppli:nouvelle_soumission' 'Ami_uemoa' i.id %}" 
+                                <a href="{% url 'myAppli:nouvelle_soumission' 'Ami_uemoa' ami.id %}" 
                                    class="btn-fasoia-primary btn-action">
                                     Postuler
                                 </a>
@@ -361,29 +401,56 @@
                         </tr>
 
                         <!-- Modal -->
-                        <div class="modal fade" id="modalAmi{{ i.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                        <div class="modal fade" id="modalAmi{{ ami.id }}" tabindex="-1" role="dialog" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered" role="document">
                                 <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Détails de l'avis de manifestation</h5>
-                                        <button type="button" class="close" data-dismiss="modal" style="color:white;">&times;</button>
+
+                                <div class="modal-header">
+                                    <div>
+                                    <p class="modal-subtitle">Avis de manifestation d'intérêt</p>
+                                    <h5 class="modal-title">Référence AMI-{{ forloop.counter }}</h5>
                                     </div>
-                                    <div class="modal-body">
-                                        <p><strong>Référence :</strong> AMI-{{ forloop.counter }}</p>
-                                        <p><strong>Description :</strong> {{ i.description }}</p>
-                                        <p><strong>Date limite :</strong> {{ i.date_limite|date:"d/m/Y H:i" }}</p>
-                                        <p><strong>Date de publication :</strong> {{ i.date_scraping|date:"d/m/Y" }}</p>
-                                        {% if i.fichier_local %}
-                                        <p><strong>Document :</strong><br>
-                                            <a href="{{ i.fichier_local.url }}" class="btn-fasoia-primary" download>
-                                                <i class="fa fa-download"></i> Télécharger le PDF
-                                            </a>
-                                        </p>
-                                        {% endif %}
+                                    <button type="button" class="close" data-dismiss="modal"
+                                    style="color:white; background:rgba(255,255,255,.12); border:none;
+                                            border-radius:6px; width:28px; height:28px;">&times;</button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <div class="modal-meta-grid">
+                                    <div class="modal-meta-block">
+                                        <label>Date limite</label>
+                                        <span><i class="fa fa-calendar" style="color:#378ADD; margin-right:5px;"></i>
+                                        {{ ami.date_limite|date:"d/m/Y H:i" }}
+                                        </span>
+                                    </div>
+                                    <div class="modal-meta-block">
+                                        <label>Publication</label>
+                                        <span><i class="fa fa-clock-o" style="color:#378ADD; margin-right:5px;"></i>
+                                        {{ ami.date_scraping|date:"d/m/Y" }}
+                                        </span>
+                                    </div>
+                                    </div>
+
+                                    <div class="modal-desc-block">
+                                    <label>Description</label>
+                                    {{ ami.description|truncatechars:400 }}
                                     </div>
                                 </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-dismiss="modal">
+                                    Fermer
+                                    </button>
+                                    {% if ami.fichier_local %}
+                                    <a href="{{ ami.fichier_local.url }}" class="btn-fasoia-primary btn-sm" download>
+                                    <i class="fa fa-download"></i> Télécharger le PDF
+                                    </a>
+                                    {% endif %}
+                                </div>
+
+                                </div>
                             </div>
-                        </div>
+                            </div>
                     {% empty %}
                         <tr><td colspan="4" class="no-result">Aucun avis de manifestation disponible</td></tr>
                     {% endfor %}
@@ -428,20 +495,57 @@
                         <div class="modal fade" id="modalEmploi{{ emploi.id }}" tabindex="-1" role="dialog" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered" role="document">
                                 <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Détails de l'offre d'emploi</h5>
-                                        <button type="button" class="close" data-dismiss="modal" style="color:white;">&times;</button>
+
+                                <div class="modal-header">
+                                    <div>
+                                    <p class="modal-subtitle">Offre d'emploi</p>
+                                    <h5 class="modal-title">{{ emploi.titre }}</h5>
                                     </div>
-                                    <div class="modal-body">
-                                        <p><strong>Titre :</strong> {{ emploi.titre }}</p>
-                                        <p><strong>Entreprise :</strong> {{ emploi.recruteur.organisation|default:emploi.entreprise_nom|default:"Non spécifié" }}</p>
-                                        <p><strong>Description :</strong> {{ emploi.description|truncatechars:200 }}</p>
-                                        <p><strong>Localisation :</strong> {{ emploi.ville|default:emploi.localisation }}</p>
-                                        <p><strong>Date limite :</strong> {{ emploi.date_limite|date:"d/m/Y"|default:"Non spécifiée" }}</p>
+                                    <button type="button" class="close" data-dismiss="modal"
+                                    style="color:white; background:rgba(255,255,255,.12); border:none;
+                                            border-radius:6px; width:28px; height:28px;">&times;</button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <div class="modal-meta-grid">
+                                    <div class="modal-meta-block">
+                                        <label>Entreprise</label>
+                                        <span><i class="fa fa-building" style="color:#378ADD; margin-right:5px;"></i>
+                                        {{ emploi.recruteur.organisation|default:emploi.entreprise_nom|default:"Non spécifié" }}
+                                        </span>
+                                    </div>
+                                    <div class="modal-meta-block">
+                                        <label>Localisation</label>
+                                        <span><i class="fa fa-map-marker" style="color:#378ADD; margin-right:5px;"></i>
+                                        {{ emploi.ville|default:emploi.localisation|default:"Non spécifiée" }}
+                                        </span>
+                                    </div>
+                                    </div>
+
+                                    <div class="modal-meta-grid" style="margin-top: -4px;">
+                                    <div class="modal-meta-block">
+                                        <label>Date limite</label>
+                                        <span><i class="fa fa-calendar" style="color:#378ADD; margin-right:5px;"></i>
+                                        {{ emploi.date_limite|date:"d/m/Y"|default:"Non spécifiée" }}
+                                        </span>
+                                    </div>
+                                    </div>
+
+                                    <div class="modal-desc-block" style="margin-top: 12px;">
+                                    <label>Description</label>
+                                    {{ emploi.description|truncatechars:400 }}
                                     </div>
                                 </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-dismiss="modal">
+                                    Fermer
+                                    </button>
+                                </div>
+
+                                </div>
                             </div>
-                        </div>
+                            </div>
                     {% empty %}
                         <tr><td colspan="5" class="no-result">Aucune offre d'emploi disponible pour le moment</td></tr>
                     {% endfor %}
