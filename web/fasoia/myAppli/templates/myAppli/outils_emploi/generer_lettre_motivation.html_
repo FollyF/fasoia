@@ -1,0 +1,882 @@
+{% extends "base_app.html" %}
+{% load static %}
+
+{% block title %}Générateur de lettre de motivation - FasoIA{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #1ed760;
+        --secondary-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-primary: #ffffff;
+        --text-secondary: #b3b3b3;
+    }
+    
+    body {
+        background-color: var(--secondary-color);
+        color: var(--text-primary);
+    }
+    
+    .generator-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 30px 20px;
+    }
+    
+    .page-header {
+        background: linear-gradient(135deg, #1ed760 0%, #0f8f3f 100%);
+        border-radius: 15px;
+        padding: 40px;
+        margin-bottom: 30px;
+        text-align: center;
+        color: white;
+    }
+    
+    .page-header h1 {
+        font-size: 36px;
+        margin-bottom: 10px;
+    }
+    
+    /* Formulaire */
+    .form-card {
+        background: var(--card-bg);
+        border: 1px solid #333;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .form-section {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #333;
+    }
+    
+    .form-section h3 {
+        color: var(--primary-color);
+        margin-bottom: 20px;
+    }
+    
+    .form-section h3 i {
+        margin-right: 10px;
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: white;
+        font-weight: 500;
+    }
+    
+    .form-group label i {
+        color: var(--primary-color);
+        margin-right: 8px;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        background-color: #2a2a2a;
+        border: 1px solid #333;
+        border-radius: 5px;
+        padding: 12px;
+        color: white;
+        transition: all 0.3s ease;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        border-color: var(--primary-color);
+        outline: none;
+    }
+    
+    /* Styles de lettre */
+    .styles-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .style-card {
+        background: #2a2a2a;
+        border: 2px solid #333;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .style-card:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-5px);
+    }
+    
+    .style-card.selected {
+        border-color: var(--primary-color);
+        background: rgba(30, 215, 96, 0.1);
+    }
+    
+    .style-card i {
+        font-size: 2rem;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+    }
+    
+    .style-card h4 {
+        margin-bottom: 5px;
+    }
+    
+    .style-card p {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+    
+    .preview-btn {
+        margin-top: 10px;
+        font-size: 0.8rem;
+        color: var(--primary-color);
+        cursor: pointer;
+        background: rgba(30, 215, 96, 0.1);
+        padding: 5px 10px;
+        border-radius: 5px;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+    
+    .preview-btn:hover {
+        background: var(--primary-color);
+        color: black;
+    }
+    
+    /* Boutons */
+    .btn-generate {
+        background-color: var(--primary-color);
+        color: black;
+        border: none;
+        border-radius: 25px;
+        padding: 15px 40px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-generate:hover {
+        background-color: #15b050;
+        transform: scale(1.02);
+    }
+    
+    .btn-template {
+        background: transparent;
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+        border-radius: 25px;
+        padding: 10px 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-template:hover {
+        background: var(--primary-color);
+        color: black;
+    }
+    
+    /* Modal d'aperçu */
+    .modal-content {
+        background: var(--card-bg);
+        color: white;
+        border: 1px solid #333;
+    }
+    
+    .modal-header {
+        border-bottom: 1px solid #333;
+        padding: 15px 20px;
+    }
+    
+    .modal-header .close {
+        color: white;
+        font-size: 28px;
+        opacity: 0.8;
+        background: none;
+        border: none;
+        float: right;
+    }
+    
+    .modal-header .close:hover {
+        color: var(--primary-color);
+        opacity: 1;
+    }
+    
+    .modal-title {
+        color: var(--primary-color);
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+    
+    .preview-iframe {
+        width: 100%;
+        height: 500px;
+        border: none;
+        background: white;
+        border-radius: 5px;
+    }
+    
+    /* Loader */
+    .loading {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .loading-content {
+        text-align: center;
+        color: white;
+        max-width: 400px;
+        padding: 30px;
+        background: var(--card-bg);
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    
+    .spinner {
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid var(--primary-color);
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 768px) {
+        .styles-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="generator-container">
+    <div class="page-header">
+        <h1><i class="fa fa-file-text-o"></i> Générateur de lettre de motivation</h1>
+        <p>Créez une lettre de motivation personnalisée en quelques minutes</p>
+    </div>
+    
+    <div class="form-card">
+        <form method="POST" action="{% url 'myAppli:generer_lettre_pdf' %}" id="lettreForm" target="_blank">
+            {% csrf_token %}
+            
+            <!-- Choix du style -->
+            <div class="form-section">
+                <h3><i class="fa fa-paint-brush"></i> Choisissez un style</h3>
+                <div class="styles-grid">
+                    <div class="style-card selected" data-style="classique" onclick="selectStyle(this, 'classique')">
+                        <i class="fa fa-book"></i>
+                        <h4>Classique</h4>
+                        <p>Traditionnel et élégant</p>
+                        <div class="preview-btn" onclick="showPreview('classique'); event.stopPropagation();">
+                            <i class="fa fa-eye"></i> Aperçu
+                        </div>
+                    </div>
+                    <div class="style-card" data-style="moderne" onclick="selectStyle(this, 'moderne')">
+                        <i class="fa fa-desktop"></i>
+                        <h4>Moderne</h4>
+                        <p>Design épuré et contemporain</p>
+                        <div class="preview-btn" onclick="showPreview('moderne'); event.stopPropagation();">
+                            <i class="fa fa-eye"></i> Aperçu
+                        </div>
+                    </div>
+                    <div class="style-card" data-style="professionnel" onclick="selectStyle(this, 'professionnel')">
+                        <i class="fa fa-briefcase"></i>
+                        <h4>Professionnel</h4>
+                        <p>Adapté aux grandes entreprises</p>
+                        <div class="preview-btn" onclick="showPreview('professionnel'); event.stopPropagation();">
+                            <i class="fa fa-eye"></i> Aperçu
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" name="style" id="selectedStyle" value="classique">
+            </div>
+            
+            <!-- Vos informations -->
+            <div class="form-section">
+                <h3><i class="fa fa-user"></i> Vos informations</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label><i class="fa fa-user"></i> Prénom *</label>
+                        <input type="text" name="prenom" value="{{ user_data.prenom }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa fa-user"></i> Nom *</label>
+                        <input type="text" name="nom" value="{{ user_data.nom }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa fa-envelope"></i> Email *</label>
+                        <input type="email" name="email" value="{{ user_data.email }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa fa-phone"></i> Téléphone</label>
+                        <input type="tel" name="telephone" value="{{ user_data.telephone }}">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa fa-map-marker"></i> Adresse</label>
+                        <input type="text" name="adresse" value="{{ user_data.adresse }}">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa fa-city"></i> Ville</label>
+                        <input type="text" name="ville" value="{{ user_data.ville }}">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Informations sur l'offre -->
+            <div class="form-section">
+                <h3><i class="fa fa-briefcase"></i> Informations sur l'offre</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label><i class="fa fa-building"></i> Nom de l'entreprise *</label>
+                        <input type="text" name="entreprise_nom" placeholder="Ex: Orange Burkina" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa fa-tag"></i> Intitulé du poste *</label>
+                        <input type="text" name="poste" placeholder="Ex: Développeur Python" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa fa-hashtag"></i> Référence de l'offre</label>
+                        <input type="text" name="offre_reference" placeholder="Optionnel">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa fa-calendar"></i> Disponibilité</label>
+                        <input type="text" name="disponibilite" placeholder="Ex: Immédiate, 1 semaine...">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Personnalisation -->
+            <div class="form-section">
+                <h3><i class="fa fa-edit"></i> Personnalisez votre lettre</h3>
+                
+                <div class="form-group">
+                    <label><i class="fa fa-quote-left"></i> Présentation personnelle</label>
+                    <textarea name="presentation" rows="3" placeholder="Décrivez votre parcours et ce qui vous caractérise..."></textarea>
+                    <small class="text-secondary">Laissez vide pour utiliser le texte par défaut</small>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fa fa-code"></i> Compétences clés</label>
+                    <textarea name="competences" rows="3" placeholder="Listez vos principales compétences en lien avec le poste...">{{ user_data.competences }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fa fa-heart"></i> Motivations</label>
+                    <textarea name="motivations" rows="3" placeholder="Pourquoi souhaitez-vous rejoindre cette entreprise ?..."></textarea>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="d-flex justify-content-between align-items-center mt-4" style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+                <button type="button" class="btn-template" onclick="window.location.href='{% url 'myAppli:telecharger_modele_lettre' %}'">
+                    <i class="fa fa-download"></i> Télécharger un modèle Word
+                </button>
+                <button type="submit" class="btn-generate" style="width: auto; padding: 15px 40px;" id="generateBtn">
+                    <i class="fa fa-file-pdf-o"></i> Générer ma lettre (PDF)
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal d'aperçu -->
+<div class="modal fade" id="previewModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Aperçu du style de lettre</h4>
+            </div>
+            <div class="modal-body">
+                <iframe id="previewIframe" class="preview-iframe"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loader -->
+<div id="loadingOverlay" class="loading">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <h3>Génération de votre lettre...</h3>
+        <p style="color: var(--text-secondary);">Cela ne prendra que quelques secondes</p>
+    </div>
+</div>
+
+<script>
+function selectStyle(element, style) {
+    document.querySelectorAll('.style-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    element.classList.add('selected');
+    document.getElementById('selectedStyle').value = style;
+}
+
+function selectFormat(format) {
+    document.querySelectorAll('.format-btn').forEach(btn => {
+        if(btn.dataset.format === format) {
+            btn.classList.add('selected');
+        } else {
+            btn.classList.remove('selected');
+        }
+    });
+    document.getElementById('formatInput').value = format;
+}
+
+// Fonction pour afficher l'aperçu d'un style de lettre
+function showPreview(style) {
+    console.log("📄 Aperçu du style de lettre:", style);
+    
+    // Afficher le modal
+    $('#previewModal').modal('show');
+    const iframe = document.getElementById('previewIframe');
+    
+    // Afficher un message de chargement
+    iframe.srcdoc = `
+        <html>
+        <body style="background: white; padding: 20px; text-align: center; font-family: Arial;">
+            <div style="margin-top: 100px;">
+                <div style="border: 3px solid #1ed760; width: 50px; height: 50px; border-radius: 50%; border-top-color: transparent; margin: 0 auto 20px; animation: spin 1s linear infinite;"></div>
+                <p>Chargement de l'aperçu du style <strong>${style}</strong>...</p>
+            </div>
+            <style>
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            </style>
+        </body>
+        </html>
+    `;
+    
+    // Appeler l'URL d'aperçu
+    fetch(`/lettre/apercu/style/${style}/`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP ${response.status}`);
+            }
+            return response.text();
+        })
+        .then(html => {
+            console.log("✅ Aperçu chargé avec succès");
+            iframe.srcdoc = html;
+        })
+        .catch(error => {
+            console.error("❌ Erreur lors du chargement de l'aperçu:", error);
+            
+            // Afficher un aperçu par défaut en cas d'erreur
+            iframe.srcdoc = getDefaultPreview(style);
+        });
+}
+
+// Fonction pour générer un aperçu par défaut
+function getDefaultPreview(style) {
+    const styles = {
+        classique: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body {
+                        font-family: 'Times New Roman', serif;
+                        padding: 40px;
+                        max-width: 800px;
+                        margin: 0 auto;
+                        background: white;
+                        line-height: 1.6;
+                    }
+                    .letter {
+                        border: 1px solid #ddd;
+                        padding: 40px;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                    }
+                    .header {
+                        text-align: right;
+                        margin-bottom: 30px;
+                    }
+                    .subject {
+                        font-weight: bold;
+                        margin: 20px 0;
+                    }
+                    .content {
+                        margin: 30px 0;
+                    }
+                    .signature {
+                        margin-top: 50px;
+                    }
+                    .preview-notice {
+                        background: #fff3cd;
+                        border: 1px solid #ffc107;
+                        border-radius: 5px;
+                        padding: 10px;
+                        margin-top: 20px;
+                        text-align: center;
+                        font-size: 12px;
+                        color: #856404;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="letter">
+                    <div class="header">
+                        <p><strong>Juste KABORE</strong><br>
+                        123 rue de l'Exemple<br>
+                        75000 Bobo<br>
+                        Tel: 01 23 45 67 <br>
+                        Email: juste.kabore@email.com</p>
+                        <p>Bobo, le ${new Date().toLocaleDateString('fr-FR')}</p>
+                    </div>
+                    
+                    <div class="subject">
+                        Objet: Candidature pour le poste de Développeur Web
+                    </div>
+                    
+                    <div class="content">
+                        <p>Madame, Monsieur,</p>
+                        
+                        <p>Actuellement à la recherche d'un nouveau défi professionnel, je me permets de vous adresser ma candidature pour le poste de Développeur Web au sein de votre entreprise.</p>
+                        
+                        <p>Titulaire d'un Master en Informatique, je dispose de 5 ans d'expérience dans le développement web. Passionné par les nouvelles technologies, j'ai eu l'opportunité de travailler sur des projets variés allant de la conception de sites vitrines à des applications web complexes.</p>
+                        
+                        <p>Mes compétences techniques incluent Python, Django, JavaScript et React. Je suis également reconnu pour mon sens de l'organisation, ma rigueur et ma capacité à travailler en équipe.</p>
+                        
+                        <p>Je serais ravi de pouvoir échanger avec vous lors d'un entretien pour vous exposer plus en détail ma motivation et mes compétences.</p>
+                        
+                        <p>Dans l'attente de votre retour, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.</p>
+                    </div>
+                    
+                    <div class="signature">
+                        <p>Juste KABORE</p>
+                    </div>
+                    
+                    <div class="preview-notice">
+                        ⚡ Aperçu du style "Classique" - Ceci est un exemple, vos données seront utilisées lors de la génération
+                    </div>
+                </div>
+            </body>
+            </html>
+        `,
+        moderne: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body {
+                        font-family: 'Arial', sans-serif;
+                        padding: 40px;
+                        max-width: 800px;
+                        margin: 0 auto;
+                        background: #f5f5f5;
+                    }
+                    .letter {
+                        background: white;
+                        border-radius: 10px;
+                        box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+                        overflow: hidden;
+                    }
+                    .header {
+                        background: linear-gradient(135deg, #1ed760, #15b050);
+                        color: white;
+                        padding: 30px;
+                        text-align: center;
+                    }
+                    .header h2 {
+                        margin: 0;
+                        font-size: 24px;
+                    }
+                    .header p {
+                        margin: 5px 0 0;
+                        opacity: 0.9;
+                    }
+                    .content {
+                        padding: 30px;
+                    }
+                    .subject {
+                        background: #f0f0f0;
+                        padding: 10px;
+                        border-left: 4px solid #1ed760;
+                        margin-bottom: 20px;
+                        font-weight: bold;
+                    }
+                    .signature {
+                        margin-top: 40px;
+                        padding-top: 20px;
+                        border-top: 2px solid #1ed760;
+                    }
+                    .preview-notice {
+                        background: #fff3cd;
+                        border: 1px solid #ffc107;
+                        border-radius: 5px;
+                        padding: 10px;
+                        margin: 20px;
+                        text-align: center;
+                        font-size: 12px;
+                        color: #856404;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="letter">
+                    <div class="header">
+                        <h2>Juste KABORE</h2>
+                        <p>Développeur Web | 06 12 34 56 78 | Juste.kabore@email.com</p>
+                    </div>
+                    
+                    <div class="content">
+                        <div class="subject">
+                            Candidature - Poste de Développeur Web
+                        </div>
+                        
+                        <p>Bonjour,</p>
+                        
+                        <p>Passionné par le développement web, je vous soumets ma candidature pour le poste de Développeur Web. Avec 5 ans d'expérience et une expertise en Python, Django et React, je suis convaincu de pouvoir contribuer efficacement à vos projets.</p>
+                        
+                        <p>Mon parcours m'a permis de développer une solide expérience dans la création d'applications web performantes et innovantes. Je suis particulièrement attaché aux bonnes pratiques de développement et à la qualité du code produit.</p>
+                        
+                        <p>Je serais ravi de vous rencontrer pour discuter de ma candidature et des valeurs que je pourrais apporter à votre équipe.</p>
+                        
+                        <div class="signature">
+                            <p>Cordialement,<br>
+                            <strong>Juste KABORE</strong></p>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-notice">
+                        ⚡ Aperçu du style "Moderne" - Ceci est un exemple, vos données seront utilisées lors de la génération
+                    </div>
+                </div>
+            </body>
+            </html>
+        `,
+        professionnel: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body {
+                        font-family: 'Calibri', sans-serif;
+                        padding: 40px;
+                        max-width: 800px;
+                        margin: 0 auto;
+                        background: white;
+                    }
+                    .letter {
+                        border: 1px solid #333;
+                        padding: 40px;
+                    }
+                    .header {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-bottom: 40px;
+                        padding-bottom: 20px;
+                        border-bottom: 2px solid #333;
+                    }
+                    .sender-info {
+                        text-align: left;
+                    }
+                    .date {
+                        text-align: right;
+                    }
+                    .recipient {
+                        margin: 20px 0;
+                    }
+                    .subject {
+                        font-weight: bold;
+                        margin: 20px 0;
+                        text-transform: uppercase;
+                    }
+                    .content {
+                        margin: 30px 0;
+                        text-align: justify;
+                    }
+                    .signature {
+                        margin-top: 50px;
+                    }
+                    .preview-notice {
+                        background: #fff3cd;
+                        border: 1px solid #ffc107;
+                        border-radius: 5px;
+                        padding: 10px;
+                        margin-top: 20px;
+                        text-align: center;
+                        font-size: 12px;
+                        color: #856404;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="letter">
+                    <div class="header">
+                        <div class="sender-info">
+                            <strong>Juste KABORE</strong><br>
+                            123 rue de l'Exemple<br>
+                            75000 Bobo<br>
+                            Tel: 01 23 45 67 89<br>
+                            Email: Juste.kabore@email.com
+                        </div>
+                        <div class="date">
+                            ${new Date().toLocaleDateString('fr-FR')}
+                        </div>
+                    </div>
+                    
+                    <div class="recipient">
+                        <strong>Service RH</strong><br>
+                        Entreprise ABC<br>
+                        456 avenue des Entreprises<br>
+                        75001 Bobo
+                    </div>
+                    
+                    <div class="subject">
+                        Objet: Candidature pour le poste de Développeur Web
+                    </div>
+                    
+                    <div class="content">
+                        <p>Madame, Monsieur,</p>
+                        
+                        <p>Par la présente, j'ai l'honneur de vous soumettre ma candidature pour le poste de Développeur Web au sein de votre entreprise.</p>
+                        
+                        <p>Fort de 5 années d'expérience dans le développement web, je maîtrise parfaitement les technologies suivantes : Python, Django, JavaScript et React. Mon parcours professionnel m'a permis de développer une expertise dans la conception et le déploiement d'applications web robustes et évolutives.</p>
+                        
+                        <p>Je suis convaincu que mon profil correspond aux exigences de ce poste et que je saurai m'intégrer parfaitement au sein de votre équipe. Rigoureux, organisé et passionné par mon métier, je mets un point d'honneur à fournir un travail de qualité dans les délais impartis.</p>
+                        
+                        <p>Je me tiens à votre disposition pour un entretien à votre convenance, afin de vous exposer plus en détail ma motivation et mes compétences.</p>
+                        
+                        <p>Dans l'attente de votre réponse, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.</p>
+                    </div>
+                    
+                    <div class="signature">
+                        <p>Juste KABORE</p>
+                        <p><em>Pièce jointe: Curriculum Vitae</em></p>
+                    </div>
+                    
+                    <div class="preview-notice">
+                        ⚡ Aperçu du style "Professionnel" - Ceci est un exemple, vos données seront utilisées lors de la génération
+                    </div>
+                </div>
+            </body>
+            </html>
+        `
+    };
+    
+    return styles[style] || styles.classique;
+}
+
+// Gestion du formulaire
+document.getElementById('lettreForm').addEventListener('submit', function(e) {
+    const prenom = document.querySelector('input[name="prenom"]').value;
+    const nom = document.querySelector('input[name="nom"]').value;
+    const entreprise = document.querySelector('input[name="entreprise_nom"]').value;
+    const poste = document.querySelector('input[name="poste"]').value;
+    
+    if (!prenom || !nom) {
+        e.preventDefault();
+        alert('Veuillez remplir votre prénom et votre nom.');
+        return false;
+    }
+    
+    if (!entreprise || !poste) {
+        e.preventDefault();
+        alert('Veuillez remplir le nom de l\'entreprise et l\'intitulé du poste.');
+        return false;
+    }
+    
+    // Afficher le loader
+    const loader = document.getElementById('loadingOverlay');
+    loader.style.display = 'flex';
+    
+    // Désactiver le bouton
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Génération en cours...';
+    
+    // Cacher le loader après 5 secondes (le temps du téléchargement)
+    setTimeout(function() {
+        loader.style.display = 'none';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-file-pdf-o"></i> Générer ma lettre (PDF)';
+    }, 5000);
+});
+
+// Remplir automatiquement les champs si l'utilisateur est connecté
+document.addEventListener('DOMContentLoaded', function() {
+    // Pré-remplir l'offre si elle est passée en paramètre
+    const urlParams = new URLSearchParams(window.location.search);
+    const offreId = urlParams.get('offre_id');
+    
+    if (offreId) {
+        fetch(`/api/offre/${offreId}/details/`)
+            .then(response => response.json())
+            .then(data => {
+                document.querySelector('[name="entreprise_nom"]').value = data.entreprise;
+                document.querySelector('[name="poste"]').value = data.titre;
+                document.querySelector('[name="offre_reference"]').value = data.reference;
+            })
+            .catch(error => console.error('Erreur:', error));
+    }
+});
+
+// Si la page se recharge (cas où il y a une erreur), cacher le loader
+window.addEventListener('load', function() {
+    const loader = document.getElementById('loadingOverlay');
+    if (loader) {
+        loader.style.display = 'none';
+    }
+    const btn = document.getElementById('generateBtn');
+    if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-file-pdf-o"></i> Générer ma lettre (PDF)';
+    }
+});
+</script>
+
+<!-- Inclure Bootstrap JS et jQuery si nécessaire -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+{% endblock %}

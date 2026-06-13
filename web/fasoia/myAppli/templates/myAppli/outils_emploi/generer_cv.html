@@ -6,23 +6,7 @@
 
 {% block app_extra_css %}
 <style>
-  /* ===== EN-TÊTE ===== */
-  .dash-header {
-    background: var(--ink);
-    padding: 24px 28px;
-    margin-bottom: 20px;
-    border-bottom: 3px solid var(--red);
-  }
-  .dash-header h1 {
-    font-family: var(--font-display);
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--red);
-    line-height: 1.1;
-    margin-bottom: 4px;
-  }
-  .dash-header p { font-size: 13px; color: rgba(255,255,255,0.45); margin: 0; }
-
+  
   /* ===== BANNIÈRES ===== */
   .info-banner {
     padding: 12px 16px;
@@ -36,6 +20,7 @@
     font-size: 12px;
     color: #14532D;
     line-height: 1.5;
+    border-radius: 3px;
   }
   .info-banner i { flex-shrink: 0; color: var(--teal); margin-top: 2px; }
   .info-banner a { color: var(--teal); font-weight: 700; text-decoration: underline; }
@@ -55,6 +40,11 @@
   .edit-banner i { flex-shrink: 0; color: var(--amber); }
 
   /* ===== SECTIONS ===== */
+  form-field input,
+    .form-field select,
+    .form-field textarea {
+      border-radius: 3px;
+    }
   .form-section-block {
     margin-bottom: 24px;
     padding-bottom: 24px;
@@ -100,6 +90,7 @@
     transition: all 0.15s;
     background: var(--surface);
     position: relative;
+    border-radius: 3px;
   }
   .style-option:hover { border-color: var(--ink); }
   .style-option.selected {
@@ -172,6 +163,7 @@
     color: var(--muted);
     display: flex; align-items: center; justify-content: center;
     gap: 8px;
+    border-radius: 3px;
   }
   .format-btn:hover { border-color: var(--ink); color: var(--ink); }
   .format-btn.selected { border-color: var(--ink); border-width: 2px; color: var(--ink); background: var(--cream); }
@@ -296,7 +288,8 @@
     .form-field input,
     .form-field select,
     .form-field textarea {
-      font-size: 16px; /* évite le zoom iOS */
+      font-size: 16px; 
+      border-radius: 3px;
     }
   }
 </style>
