@@ -497,10 +497,15 @@
 
 <!-- SECTION SOUMISSION -->
 <div class="submit-section">
-  <button class="btn-submit" id="btn-soumettre" disabled>
-    <i class="fa fa-paper-plane"></i> Soumettre mon dossier
-  </button>
-  <div class="submit-note">Tous les documents doivent être prêts pour soumettre</div>
+  <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+    <button class="btn-submit" id="btn-tout-telecharger" disabled>
+      <i class="fa fa-download"></i> Tout télécharger
+    </button>
+    <button class="btn-submit" id="btn-soumettre" disabled>
+      <i class="fa fa-paper-plane"></i> Soumettre mon dossier
+    </button>
+  </div>
+  <div class="submit-note">Tous les documents doivent être prêts pour soumettre ou télécharger</div>
 </div>
 
 <!-- ===== MODAL APERÇU ===== -->
@@ -727,9 +732,13 @@ function mettreAJourAffichage() {
     const pourcentage = (compteur / 6) * 100;
     document.getElementById('progress-bar').style.width = pourcentage + '%';
     
-    // Bouton soumission
+    // Bouton soumission et téléchargement
     const btnSoumettre = document.getElementById('btn-soumettre');
-    btnSoumettre.disabled = compteur !== 6;
+    const btnToutTelecharger = document.getElementById('btn-tout-telecharger');
+    const tousPrets = compteur === 6;
+
+    btnSoumettre.disabled = !tousPrets;
+    btnToutTelecharger.disabled = !tousPrets;
 }
 
 // Générer un document
@@ -1235,11 +1244,20 @@ function telechargerDocument(format) {
     window.open(url, '_blank');
 }
 
-// Soumission
+// Soumission du dossier
 async function soumettreDossier() {
-    if (!confirm('Voulez-vous vraiment soumettre ce dossier ? Cette action est définitive.')) return;
+    const compteur = document.getElementById('compteur-docs').innerText;
+    if (compteur !== '6') {
+        showToast('Tous les documents doivent être prêts', 'warning');
+        return;
+    }
+    
+    // Demander l'email et confirmation dans une seule modale moderne
+    const result = await demanderEmailEtConfirmation();
+    if (!result) return;
     
     showLoading(true);
+    
     try {
         const response = await fetch('/api/dossier/soumettre/', {
             method: 'POST',
@@ -1249,23 +1267,212 @@ async function soumettreDossier() {
             },
             body: JSON.stringify({
                 opportunite_type: opportuniteType,
-                opportunite_id: opportuniteId
+                opportunite_id: opportuniteId,
+                email_destinataire: result.email
             })
         });
         
         const data = await response.json();
+        
+        if (!response.ok) throw new Error(data.error || `Erreur ${response.status}`);
+        
         if (data.success) {
-            showToast('Dossier soumis avec succès !', 'success');
-            setTimeout(() => window.location.reload(), 1500);
+            showToast('✅ Dossier soumis avec succès !', 'success');
+            document.getElementById('btn-soumettre').disabled = true;
+
+            setTimeout(() => {
+                window.location.href = '/mes_soumissions/';
+            }, 1500);
         } else {
             showToast(data.error || 'Erreur lors de la soumission', 'error');
+            showLoading(false);
         }
     } catch (error) {
-        console.error('Erreur soumission:', error);
-        showToast('Erreur de connexion', 'error');
+        showToast(error.message, 'error');
     } finally {
         showLoading(false);
     }
+}
+
+// Modale moderne pour email + confirmation
+function demanderEmailEtConfirmation() {
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'modal-custom active';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-custom-content" style="max-width: 480px;">
+                <div class="modal-custom-header" style="border-bottom-color: var(--red);">
+                    <h4>📤 Soumission du dossier</h4>
+                    <button class="modal-custom-close" onclick="this.closest('.modal-custom').remove(); window.__resolveSoumission(null)">&times;</button>
+                </div>
+                <div class="modal-custom-body">
+                    <div style="background: #fff5f5; border-left: 3px solid var(--red); padding: 16px; margin-bottom: 24px; border-radius: 3px;">
+                        <div style="font-weight: 700; color: var(--red); margin-bottom: 8px;">⚠️ Action irréversible</div>
+                        <p style="font-size: 13px; color: var(--ink-mid); margin: 0;">
+                            Une fois soumis, vous ne pourrez plus modifier aucun document.
+                            Assurez-vous que tous les documents sont corrects.
+                        </p>
+                    </div>
+                    
+                    <div class="form-row">
+                        <label>📧 Email du destinataire</label>
+                        <input type="email" id="email_destinataire" class="form-row-input" 
+                               placeholder="exemple@domaine.com" autocomplete="off"
+                               style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 14px;">
+                        <div class="field-note" style="margin-top: 6px;">L'email de confirmation sera envoyé à cette adresse</div>
+                    </div>
+                </div>
+                <div class="modal-custom-footer" style="justify-content: space-between;">
+                    <button class="btn btn-modal-close" onclick="this.closest('.modal-custom').remove(); window.__resolveSoumission(null)">Annuler</button>
+                    <button class="btn btn-modal-save" id="btn-confirmer-soumission" style="background: var(--red);">Confirmer la soumission</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Focus sur l'input email
+        const emailInput = document.getElementById('email_destinataire');
+        emailInput.focus();
+        
+        // Gestion du bouton de confirmation
+        const confirmBtn = document.getElementById('btn-confirmer-soumission');
+        confirmBtn.addEventListener('click', () => {
+            const email = emailInput.value.trim();
+            if (!email) {
+                emailInput.style.borderColor = 'var(--red)';
+                showToast('Veuillez saisir un email', 'warning');
+                return;
+            }
+            if (!email.includes('@') || !email.includes('.')) {
+                emailInput.style.borderColor = 'var(--red)';
+                showToast('Email invalide', 'warning');
+                return;
+            }
+            modal.remove();
+            window.__resolveSoumission({ email: email });
+        });
+        
+        // Validation par la touche Entrée
+        emailInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                confirmBtn.click();
+            }
+        });
+        
+        // Reset bordure quand l'utilisateur tape
+        emailInput.addEventListener('input', () => {
+            emailInput.style.borderColor = 'var(--border)';
+        });
+        
+        window.__resolveSoumission = (result) => {
+            delete window.__resolveSoumission;
+            resolve(result);
+        };
+    });
+}
+
+// Fonction pour demander l'email destinataire
+function demanderEmailDestinataire() {
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'modal-custom active';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-custom-content" style="max-width: 450px;">
+                <div class="modal-custom-header">
+                    <h4>📧 Email de soumission</h4>
+                    <button class="modal-custom-close" onclick="this.closest('.modal-custom').remove(); window.__resolveEmail(null)">&times;</button>
+                </div>
+                <div class="modal-custom-body">
+                    <p style="margin-bottom: 16px; font-size: 13px;">Veuillez saisir l'email du destinataire :</p>
+                    <input type="email" id="emailDestinataire" class="form-row-input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px;" placeholder="exemple@domaine.com">
+                </div>
+                <div class="modal-custom-footer">
+                    <button class="btn btn-modal-close" onclick="this.closest('.modal-custom').remove(); window.__resolveEmail(null)">Annuler</button>
+                    <button class="btn btn-modal-save" onclick="const email = document.getElementById('emailDestinataire').value.trim(); this.closest('.modal-custom').remove(); window.__resolveEmail(email || null)">Envoyer</button>
+                </div>
+            </div>
+        `;
+        
+        window.__resolveEmail = (email) => {
+            delete window.__resolveEmail;
+            resolve(email);
+        };
+        
+        document.body.appendChild(modal);
+    });
+}
+async function toutTelecharger() {
+    const compteur = document.getElementById('compteur-docs').innerText;
+    if (compteur !== '6') {
+        showToast('Tous les documents doivent être prêts pour télécharger', 'warning');
+        return;
+    }
+    
+    // Créer une modal de choix du format
+    const format = await demanderFormatDocument();
+    if (!format) return; // L'utilisateur a annulé
+    
+    const url = `/api/dossier/telecharger_complet/?opportunite_type=${opportuniteType}&opportunite_id=${opportuniteId}&format=${format}`;
+    
+    showLoading(true);
+    showToast('Préparation du fichier ZIP...', 'info');
+    
+    try {
+        // Option 1: ouverture directe
+        window.open(url, '_blank');
+        
+        // Option 2: fetch pour gérer les erreurs
+        // const response = await fetch(url);
+        // if (!response.ok) throw new Error('Erreur serveur');
+        // const blob = await response.blob();
+        // const link = document.createElement('a');
+        // link.href = URL.createObjectURL(blob);
+        // link.download = `dossier_complet_${opportuniteType}_${opportuniteId}.zip`;
+        // link.click();
+        // URL.revokeObjectURL(link.href);
+        
+        showToast('Téléchargement démarré !', 'success');
+    } catch (error) {
+        console.error('Erreur:', error);
+        showToast('Erreur lors du téléchargement', 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+function demanderFormatDocument() {
+    return new Promise((resolve) => {
+        // Créer une petite modal de choix
+        const modal = document.createElement('div');
+        modal.className = 'modal-custom active';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-custom-content" style="max-width: 400px;">
+                <div class="modal-custom-header">
+                    <h4>📦 Format de téléchargement</h4>
+                    <button class="modal-custom-close" onclick="this.closest('.modal-custom').remove()">&times;</button>
+                </div>
+                <div class="modal-custom-body" style="text-align: center;">
+                    <p style="margin-bottom: 20px;">Choisissez le format pour tous les documents :</p>
+                    <div style="display: flex; gap: 16px; justify-content: center;">
+                        <button class="btn btn-modal-pdf" style="padding: 10px 24px;" onclick="resolveFormat('pdf')">📄 PDF</button>
+                        <button class="btn btn-modal-docx" style="padding: 10px 24px;" onclick="resolveFormat('docx')">📝 DOCX</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        window.resolveFormat = (format) => {
+            modal.remove();
+            delete window.resolveFormat;
+            resolve(format);
+        };
+        
+        document.body.appendChild(modal);
+    });
 }
 
 // Toast notification
@@ -1326,6 +1533,7 @@ document.querySelectorAll('.btn-doc-importer').forEach(btn => {
     btn.addEventListener('click', () => importerDocument(btn.dataset.type));
 });
 
+document.getElementById('btn-tout-telecharger')?.addEventListener('click', toutTelecharger);
 document.getElementById('btn-save-edit')?.addEventListener('click', sauvegarderModification);
 document.getElementById('btn-soumettre')?.addEventListener('click', soumettreDossier);
 

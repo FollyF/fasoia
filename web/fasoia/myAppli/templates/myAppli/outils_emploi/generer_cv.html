@@ -6,6 +6,21 @@
 
 {% block app_extra_css %}
 <style>
+  html, body {
+    font-size: 20px;
+  }
+  .dash-header {
+    padding: 0px 0px 12px 0px;
+  }
+  .dash-header h1 {
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--red);
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+  .dash-header p { font-size: 13px; color: var(--ink); margin: 0; }
   
   /* ===== BANNIÈRES ===== */
   .info-banner {
@@ -299,8 +314,30 @@
 
 <!-- EN-TÊTE -->
 <div class="dash-header">
-  <h1>Générateur de CV</h1>
-  <p>Créez un CV professionnel en quelques minutes</p>
+  <div>
+    <h1>Générer des CVs</h1>
+    <p>Cvs répondant aux exigences professionnelles</p>
+  </div>
+  <div class="dash-header-counts">
+    {% if offres %}
+    <div class="hcount">
+      <div class="n">{{ offres|length }}</div>
+      <div class="l">Appels d'offres</div>
+    </div>
+    {% endif %}
+    {% if amis %}
+    <div class="hcount">
+      <div class="n">{{ amis|length }}</div>
+      <div class="l">Manifestations</div>
+    </div>
+    {% endif %}
+    {% if offres_emploi %}
+    <div class="hcount">
+      <div class="n">{{ offres_emploi|length }}</div>
+      <div class="l">Emplois</div>
+    </div>
+    {% endif %}
+  </div>
 </div>
 
 <!-- BANNIÈRE INFO -->

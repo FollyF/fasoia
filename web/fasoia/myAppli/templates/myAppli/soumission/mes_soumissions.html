@@ -1,209 +1,439 @@
 {% extends "base_app.html" %}
+{% load static %}
 
-{% block extra_css %}
+{% block title %}Mes soumissions — FASOIA{% endblock %}
+{% block breadcrumb %}Mes soumissions{% endblock %}
+
+{% block app_extra_css %}
 <style>
-/* Reset et base responsive */
-* {
-    box-sizing: border-box;
-}
+  /* ── HERO ─────────────────────────────────────────────── */
+  .soum-hero {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--teal);
+    padding: 24px 28px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    border-radius: 3px;
+  }
+  .soum-hero-left { flex: 1; min-width: 200px; }
+  .soum-eyebrow {
+    font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 2px;
+    color: var(--blue); margin-bottom: 6px;
+  }
+  .soum-hero h1 {
+    font-family: var(--font-display);
+    font-size: 26px; font-weight: 700;
+    color: var(--ink); line-height: 1.1;
+  }
+  .soum-hero-right { flex-shrink: 0; }
 
-/* Conteneur principal qui force le contenu à rester dans l'écran */
-.container {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: auto;
-    padding: 20px;
-    margin: 0;
-    box-sizing: border-box;
-}
+  /* ── STATS ────────────────────────────────────────────── */
+  .soum-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+    overflow: hidden;
+    border-radius: 3px;
+  }
+  .soum-stat {
+    background: var(--surface);
+    padding: 14px 16px;
+    text-align: center;
+  }
+  .soum-stat .n {
+    font-family: var(--font-display);
+    font-size: 28px; font-weight: 700;
+    color: var(--ink); line-height: 1;
+  }
+  .soum-stat .n.blue   { color: var(--blue); }
+  .soum-stat .n.teal   { color: var(--teal); }
+  .soum-stat .n.amber  { color: var(--amber); }
+  .soum-stat .l {
+    font-size: 9px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.7px; margin-top: 4px;
+  }
 
-/* Force le tableau à être scrollable horizontalement sur mobile */
-.desktop-table {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    width: 100%;
-}
+  /* ── TABLEAU DESKTOP ──────────────────────────────────── */
+  .soum-table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+    overflow: hidden;
+    border-radius: 3px;
+  }
+  .soum-table {
+    width: 100%; border-collapse: collapse;
+    font-size: 13px; min-width: 600px;
+  }
+  .soum-table th {
+    font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--muted); padding: 11px 14px;
+    border-bottom: 2px solid var(--ink);
+    text-align: left; background: var(--cream);
+    white-space: nowrap;
+  }
+  .soum-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--ink); vertical-align: middle;
+  }
+  .soum-table tr:last-child td { border-bottom: none; }
+  .soum-table tr:hover td { background: var(--cream); }
+  .soum-table .ref {
+    font-family: monospace; font-size: 12px;
+    color: var(--red); font-weight: 600;
+  }
+  .soum-table .date {
+    font-size: 12px; color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .soum-table .dash { color: var(--hint); }
 
-.desktop-table table {
-    min-width: 650px;
-    width: 100%;
-}
+  /* ── BADGES STATUT ────────────────────────────────────── */
+  .s-badge {
+    font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 3px 9px; display: inline-block;
+    border-radius: 2px;
+  }
+  .s-badge.soumis   { background: #edf7f7; color: var(--teal);  border: 1px solid #9ae6e6; }
+  .s-badge.complet  { background: #eff4fd; color: var(--blue);  border: 1px solid #bfdbfe; }
+  .s-badge.en-cours { background: #fef9ec; color: var(--amber); border: 1px solid #fde68a; }
 
-/* Supprime la max-width sur mobile */
-@media (max-width: 768px) {
-    .container {
-        padding: 10px;
-        max-width: 100%;
-        overflow-x: auto;
-    }
-    
-    .desktop-table {
-        display: none;
-    }
-    
-    .mobile-cards {
-        display: block !important;
-    }
-}
+  /* ── TYPE TAG ─────────────────────────────────────────── */
+  .type-pill {
+    font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 3px 8px; border-radius: 2px;
+    background: var(--cream); color: var(--muted);
+    border: 1px solid var(--border);
+  }
 
-@media (min-width: 769px) {
-    .desktop-table {
-        display: block;
-    }
-    .mobile-cards {
-        display: none !important;
-    }
-}
+  /* ── CARTES MOBILE ────────────────────────────────────── */
+  .soum-cards { display: none; }
+  .soum-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border);
+    padding: 16px 18px;
+    margin-bottom: 8px;
+    border-radius: 3px;
+  }
+  .soum-card.soumis  { border-left-color: var(--teal); }
+  .soum-card.complet { border-left-color: var(--blue); }
+  .soum-card.en-cours { border-left-color: var(--amber); }
+  .soum-card-head {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 10px;
+    margin-bottom: 10px;
+  }
+  .soum-card-ref {
+    font-family: monospace; font-size: 13px;
+    font-weight: 700; color: var(--red);
+  }
+  .soum-card-type {
+    font-size: 11px; color: var(--muted); margin-top: 3px;
+  }
+  .soum-card-dates {
+    font-size: 11px; color: var(--muted);
+    line-height: 1.7; margin-bottom: 12px;
+  }
+  .soum-card-foot {
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── ÉTAT VIDE ────────────────────────────────────────── */
+  .empty-state {
+    text-align: center;
+    padding: 56px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    margin-bottom: 20px;
+  }
+  .empty-state i {
+    font-size: 36px;
+    color: var(--border);
+    display: block;
+    margin-bottom: 14px;
+  }
+  .empty-state h3 {
+    font-family: var(--font-display);
+    font-size: 20px; font-weight: 700;
+    color: var(--ink); margin-bottom: 6px;
+  }
+  .empty-state p { font-size: 13px; color: var(--muted); }
+
+  /* ── MODAL DOWNLOAD ───────────────────────────────────── */
+  .m-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(28,25,23,0.65);
+    z-index: 2000; align-items: center;
+    justify-content: center; padding: 16px;
+  }
+  .m-overlay.open { display: flex; }
+  .m-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow: hidden; width: 100%;
+    max-width: 400px;
+    border-radius: 3px;
+  }
+  .m-head {
+    padding: 14px 20px;
+    background: var(--ink); color: #fff;
+    display: flex; align-items: center;
+    justify-content: space-between;
+  }
+  .m-head h4 {
+    font-family: var(--font-display);
+    font-size: 18px; font-weight: 700; margin: 0; color: #fff;
+  }
+  .m-head .m-sub {
+    font-size: 9px; text-transform: uppercase;
+    letter-spacing: 1.5px; color: rgba(255,255,255,0.45); margin-bottom: 2px;
+  }
+  .m-close {
+    background: none; border: none;
+    color: rgba(255,255,255,0.6); font-size: 20px;
+    cursor: pointer; padding: 0 4px; line-height: 1;
+  }
+  .m-close:hover { color: #fff; }
+  .m-body { padding: 20px 24px; background: var(--surface); }
+  .m-foot {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: flex-end;
+    gap: 8px; background: var(--surface);
+  }
+  .mfield { margin-bottom: 0; }
+  .mfield label {
+    display: block; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--muted); margin-bottom: 6px;
+  }
+  .mfield select {
+    width: 100%; border: 1px solid var(--border);
+    padding: 9px 11px; font-size: 13px;
+    font-family: var(--font-body); color: var(--ink);
+    background: var(--surface); outline: none;
+    transition: border-color 0.2s; border-radius: 0;
+    -webkit-appearance: none;
+  }
+  .mfield select:focus { border-color: var(--ink); }
+
+  /* ── RESPONSIVE ───────────────────────────────────────── */
+  @media (max-width: 700px) {
+    .soum-table-wrap { display: none; }
+    .soum-cards      { display: block; }
+    .soum-hero       { flex-direction: column; }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container" style="padding: 20px; max-width: 1200px; margin: 0 auto;">
-    <h1 style="font-size: 22px; margin-bottom: 20px;">📋 Mes dossiers de soumission</h1>
-    
-    {% if dossiers %}
-        <!-- Version desktop: tableau -->
-        <div class="desktop-table" style="overflow-x: auto;">
-            <table style="width:100%; border-collapse: collapse; min-width: 600px;">
-                <thead>
-                    <tr style="background:#f0f0f0; border-bottom: 2px solid #ddd;">
-                        <th style="padding: 12px 10px; text-align: left;">Référence</th>
-                        <th style="padding: 12px 10px; text-align: left;">Type</th>
-                        <th style="padding: 12px 10px; text-align: left;">Date création</th>
-                        <th style="padding: 12px 10px; text-align: left;">Date soumission</th>
-                        <th style="padding: 12px 10px; text-align: left;">Statut</th>
-                        <th style="padding: 12px 10px; text-align: center;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for dossier in dossiers %}
-                    <tr style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 12px 10px;">{{ dossier.reference }}</td>
-                        <td style="padding: 12px 10px;">{{ dossier.opportunite_type }}</td>
-                        <td style="padding: 12px 10px;">{{ dossier.date_creation|date:"d/m/Y H:i" }}</td>
-                        <td style="padding: 12px 10px;">
-                            {% if dossier.date_soumission_effective %}
-                                {{ dossier.date_soumission_effective|date:"d/m/Y H:i" }}
-                            {% else %}
-                                —
-                            {% endif %}
-                        </td>
-                        <td style="padding: 12px 10px;">
-                            {% if dossier.statut == 'SOUMIS' %}
-                                <span style="background: #d4edda; color: #155724; padding: 4px 10px; border-radius: 20px; font-size: 12px;">✅ Soumis</span>
-                            {% elif dossier.statut == 'COMPLET' %}
-                                <span style="background: #d1ecf1; color: #0c5460; padding: 4px 10px; border-radius: 20px; font-size: 12px;">📄 Complet</span>
-                            {% else %}
-                                <span style="background: #fff3cd; color: #856404; padding: 4px 10px; border-radius: 20px; font-size: 12px;">📝 En préparation</span>
-                            {% endif %}
-                        </td>
-                        <td style="padding: 12px 10px; text-align: center;">
-                            {% if dossier.statut == 'SOUMIS' %}
-                                <button onclick="telechargerDossier({{ dossier.id }})" style="background: #3498db; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 13px;">
-                                    📥 Télécharger
-                                </button>
-                            {% else %}
-                                <a href="{% url 'myAppli:nouvelle_soumission' dossier.opportunite_type dossier.opportunite_id %}" style="background: #1ed760; color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; display: inline-block; font-size: 13px;">
-                                    ✏️ Continuer
-                                </a>
-                            {% endif %}
-                        </td>
-                     </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
 
-        <!-- Version mobile: cartes -->
-        <div class="mobile-cards" style="display: none;">
-            {% for dossier in dossiers %}
-            <div style="background: white; border: 1px solid #e0e0e0; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-                    <div>
-                        <strong style="font-size: 14px;">{{ dossier.reference }}</strong>
-                        <div style="font-size: 12px; color: #666; margin-top: 4px;">{{ dossier.opportunite_type }}</div>
-                    </div>
-                    <div>
-                        {% if dossier.statut == 'SOUMIS' %}
-                            <span style="background: #d4edda; color: #155724; padding: 2px 8px; border-radius: 20px; font-size: 11px;">✅ Soumis</span>
-                        {% elif dossier.statut == 'COMPLET' %}
-                            <span style="background: #d1ecf1; color: #0c5460; padding: 2px 8px; border-radius: 20px; font-size: 11px;">📄 Complet</span>
-                        {% else %}
-                            <span style="background: #fff3cd; color: #856404; padding: 2px 8px; border-radius: 20px; font-size: 11px;">📝 En préparation</span>
-                        {% endif %}
-                    </div>
-                </div>
-                <div style="font-size: 12px; color: #555; margin-bottom: 8px;">
-                    <div>Créé le : {{ dossier.date_creation|date:"d/m/Y H:i" }}</div>
-                    {% if dossier.date_soumission_effective %}
-                        <div>Soumis le : {{ dossier.date_soumission_effective|date:"d/m/Y H:i" }}</div>
-                    {% endif %}
-                </div>
-                <div style="margin-top: 12px;">
-                    {% if dossier.statut == 'SOUMIS' %}
-                        <button onclick="telechargerDossier({{ dossier.id }})" style="background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 14px;">
-                            📥 Télécharger le dossier
-                        </button>
-                    {% else %}
-                        <a href="{% url 'myAppli:nouvelle_soumission' dossier.opportunite_type dossier.opportunite_id %}" style="background: #1ed760; color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; display: block; text-align: center; font-size: 14px;">
-                            ✏️ Continuer la soumission
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <p style="text-align: center; color: #666; padding: 40px;">Aucun dossier trouvé.</p>
-    {% endif %}
-    
-    <div style="margin-top: 30px; text-align: center;">
-        <a href="{% url 'myAppli:dashboard_opportunites' %}" style="color: #1ed760; text-decoration: none;">← Retour aux opportunités</a>
-    </div>
+<!-- HERO -->
+<div class="soum-hero">
+  <div class="soum-hero-left">
+    <h1>Mes soumissions</h1>
+  </div>
+  <div class="soum-hero-right">
+    <a href="{% url 'myAppli:dashboard_opportunites' %}" class="btn-app outline sm">
+      <i class="fa fa-arrow-left"></i> Opportunités
+    </a>
+  </div>
 </div>
 
-<!-- Modal de choix du format -->
-<div id="downloadDossierModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: white; padding: 20px; border-radius: 8px; max-width: 400px; width: 90%; margin: 16px;">
-        <h3 style="margin: 0 0 15px 0; font-size: 18px;">📥 Télécharger le dossier</h3>
-        <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px; font-size: 14px;">Format :</label>
-            <select id="dossier_format" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-                <option value="pdf">PDF</option>
-                <option value="docx">DOCX</option>
-            </select>
-        </div>
-        <div style="display: flex; gap: 10px; justify-content: flex-end;">
-            <button onclick="closeDownloadDossierModal()" style="padding: 8px 16px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer;">Annuler</button>
-            <button id="btn-confirmer-dossier-download" style="padding: 8px 16px; background: #1ed760; color: white; border: none; border-radius: 4px; cursor: pointer;">Télécharger</button>
-        </div>
-    </div>
+{% if dossiers %}
+
+<!-- STATS -->
+<div class="soum-stats">
+  <div class="soum-stat">
+    <div class="n">{{ dossiers|length }}</div>
+    <div class="l">Total</div>
+  </div>
+  <div class="soum-stat">
+    <div class="n teal">{{ nb_soumis }}</div>
+    <div class="l">Soumis</div>
+  </div>
+  <div class="soum-stat">
+    <div class="n amber">{{ nb_en_cours }}</div>
+    <div class="l">En cours</div>
+  </div>
 </div>
+
+<!-- TABLEAU DESKTOP -->
+<div class="soum-table-wrap">
+  <div style="overflow-x:auto">
+    <table class="soum-table">
+      <thead>
+        <tr>
+          <th>Référence</th>
+          <th>Type</th>
+          <th>Créé le</th>
+          <th>Soumis le</th>
+          <th>Statut</th>
+          <th style="text-align:center">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for dossier in dossiers %}
+        <tr>
+          <td><span class="ref">{{ dossier.reference }}</span></td>
+          <td><span class="type-pill">{{ dossier.opportunite_type }}</span></td>
+          <td><span class="date">{{ dossier.date_creation|date:"d/m/Y H:i" }}</span></td>
+          <td>
+            {% if dossier.date_soumission_effective %}
+              <span class="date">{{ dossier.date_soumission_effective|date:"d/m/Y H:i" }}</span>
+            {% else %}
+              <span class="dash">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if dossier.statut == 'SOUMIS' %}
+              <span class="s-badge soumis">Soumis</span>
+            {% elif dossier.statut == 'COMPLET' %}
+              <span class="s-badge complet">Complet</span>
+            {% else %}
+              <span class="s-badge en-cours">En cours</span>
+            {% endif %}
+          </td>
+          <td style="text-align:center">
+            {% if dossier.statut == 'SOUMIS' %}
+              <button onclick="ouvrirDownload({{ dossier.id }})" class="btn-app sm">
+                <i class="fa fa-download"></i> Télécharger
+              </button>
+            {% else %}
+              <a href="{% url 'myAppli:nouvelle_soumission' dossier.opportunite_type dossier.opportunite_id %}" class="btn-app sm">
+                <i class="fa fa-pen"></i> Continuer
+              </a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- CARTES MOBILE -->
+<div class="soum-cards">
+  {% for dossier in dossiers %}
+  <div class="soum-card {% if dossier.statut == 'SOUMIS' %}soumis{% elif dossier.statut == 'COMPLET' %}complet{% else %}en-cours{% endif %}">
+    <div class="soum-card-head">
+      <div>
+        <div class="soum-card-ref">{{ dossier.reference }}</div>
+        <div class="soum-card-type">{{ dossier.opportunite_type }}</div>
+      </div>
+      {% if dossier.statut == 'SOUMIS' %}
+        <span class="s-badge soumis">Soumis</span>
+      {% elif dossier.statut == 'COMPLET' %}
+        <span class="s-badge complet">Complet</span>
+      {% else %}
+        <span class="s-badge en-cours">En cours</span>
+      {% endif %}
+    </div>
+    <div class="soum-card-dates">
+      <span>Créé le {{ dossier.date_creation|date:"d/m/Y à H:i" }}</span>
+      {% if dossier.date_soumission_effective %}
+        <br><span>Soumis le {{ dossier.date_soumission_effective|date:"d/m/Y à H:i" }}</span>
+      {% endif %}
+    </div>
+    <div class="soum-card-foot">
+      {% if dossier.statut == 'SOUMIS' %}
+        <button onclick="ouvrirDownload({{ dossier.id }})" class="btn-app sm" style="width:100%;justify-content:center">
+          <i class="fa fa-download"></i> Télécharger le dossier
+        </button>
+      {% else %}
+        <a href="{% url 'myAppli:nouvelle_soumission' dossier.opportunite_type dossier.opportunite_id %}" class="btn-app sm" style="width:100%;justify-content:center;text-align:center">
+          <i class="fa fa-pen"></i> Continuer la soumission
+        </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+
+<!-- ÉTAT VIDE -->
+<div class="empty-state">
+  <i class="fa fa-folder-open"></i>
+  <h3>Aucun dossier pour le moment</h3>
+  <p>Parcourez les opportunités et constituez votre premier dossier de candidature.</p>
+  <a href="{% url 'myAppli:dashboard_opportunites' %}" class="btn-app" style="margin-top:20px;display:inline-flex">
+    <i class="fa fa-briefcase"></i> Voir les opportunités
+  </a>
+</div>
+
+{% endif %}
+
+<!-- MODAL TÉLÉCHARGEMENT -->
+<div id="m-download" class="m-overlay">
+  <div class="m-box">
+    <div class="m-head">
+      <div>
+        <div class="m-sub">Export</div>
+        <h4>Télécharger le dossier</h4>
+      </div>
+      <button class="m-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="m-body">
+      <div class="mfield">
+        <label>Format</label>
+        <select id="dossier_format">
+          <option value="pdf">PDF</option>
+          <option value="docx">DOCX</option>
+        </select>
+      </div>
+    </div>
+    <div class="m-foot">
+      <button class="btn-app outline sm" onclick="closeModal()">Annuler</button>
+      <button class="btn-app sm" id="btn-confirmer-download">
+        <i class="fa fa-download"></i> Télécharger
+      </button>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-let currentDossierId = null;
+  let currentId = null;
 
-function telechargerDossier(dossierId) {
-    currentDossierId = dossierId;
-    document.getElementById('downloadDossierModal').style.display = 'flex';
-}
+  function ouvrirDownload(id) {
+    currentId = id;
+    document.getElementById('m-download').classList.add('open');
+  }
 
-function closeDownloadDossierModal() {
-    document.getElementById('downloadDossierModal').style.display = 'none';
-    currentDossierId = null;
-}
+  function closeModal() {
+    document.getElementById('m-download').classList.remove('open');
+    currentId = null;
+  }
 
-function telechargerDossierComplet() {
-    const format = document.getElementById('dossier_format').value;
-    if (!currentDossierId) return;
-    
-    const url = `/api/dossier/telecharger_complet/${currentDossierId}/?format=${format}`;
-    window.open(url, '_blank');
-    closeDownloadDossierModal();
-}
+  document.getElementById('m-download').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
 
-document.getElementById('btn-confirmer-dossier-download').addEventListener('click', telechargerDossierComplet);
+  document.getElementById('btn-confirmer-download').addEventListener('click', function() {
+    if (!currentId) return;
+    const fmt = document.getElementById('dossier_format').value;
+    window.open(`/api/dossier/telecharger_complet/${currentId}/?format=${fmt}`, '_blank');
+    closeModal();
+  });
 </script>
 {% endblock %}

@@ -1352,7 +1352,11 @@ def mes_soumissions(request):
         entreprise=entreprise
     ).order_by('-date_creation')
     
-    return render(request, 'myAppli/soumission/mes_soumissions.html', {'dossiers': dossiers})
+    return render(request, 'myAppli/soumission/mes_soumissions.html', {
+        'dossiers': dossiers,
+        'nb_soumis': dossiers.filter(statut='SOUMIS').count(),
+        'nb_en_cours': dossiers.exclude(statut='SOUMIS').count(),
+    })
 
 def get_entete_image_html(request, entreprise):
     """Retourne le HTML de l'image d'en-tête avec URL absolue"""
@@ -2410,8 +2414,8 @@ def api_dossier_etat(request):
 @login_required
 def api_dossier_telecharger_complet(request, dossier_id=None):
     """
-    GET /api/dossier/telecharger-complet/?opportunite_type=...&opportunite_id=...
-    GET /api/dossier/telecharger-complet/<dossier_id>/
+    GET /api/dossier/telecharger_complet/?opportunite_type=...&opportunite_id=...
+    GET /api/dossier/telecharger_complet/<dossier_id>/
     """
     if request.method != 'GET':
         return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
