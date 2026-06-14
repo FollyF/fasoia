@@ -385,7 +385,6 @@ def dashboard_entreprise(request):
         if not details_champs[champ]:
             champs_manquants_liste.append(libelles_champs.get(champ, champ))
     
-    # ===== CODE POUR LES RECOMMANDATIONS (CORRIGÉ) =====
     recommandations = []
     opportunites_correspondantes = 0
     recommandations_count = 0
@@ -393,7 +392,7 @@ def dashboard_entreprise(request):
     if profil_complet:
         try:
             from analyse_ia.models import Recommandation
-            from myAppli.models import OffreEmploi, Offre_uemoa, Ami_uemoa  # À ajouter
+            from myAppli.models import OffreEmploi, Offre_uemoa, Ami_uemoa  
             
             # Récupérer toutes les recommandations
             toutes_recos = Recommandation.objects.filter(
@@ -404,31 +403,46 @@ def dashboard_entreprise(request):
             recommandations_valides = []
             for reco in toutes_recos:
                 offre_existe = False
+                opportunite_obj = None
                 
-                # Vérifier si l'offre existe selon son type
-                if reco.opportunite_type == 'OffreEmploi':
-                    offre_existe = OffreEmploi.objects.filter(id=reco.opportunite_id).exists()
-                elif reco.opportunite_type == 'Offre_uemoa':
-                    offre_existe = Offre_uemoa.objects.filter(id=reco.opportunite_id).exists()
+                if reco.opportunite_type == 'Offre_uemoa':
+                    if hasattr(Offre_uemoa, 'all_objects'):
+                        opportunite_obj = Offre_uemoa.all_objects.filter(id=reco.opportunite_id).first()
+                    else:
+                        opportunite_obj = Offre_uemoa.objects.filter(id=reco.opportunite_id).first()
+                    offre_existe = opportunite_obj is not None
+                    
                 elif reco.opportunite_type == 'Ami_uemoa':
-                    offre_existe = Ami_uemoa.objects.filter(id=reco.opportunite_id).exists()
+                    if hasattr(Ami_uemoa, 'all_objects'):
+                        opportunite_obj = Ami_uemoa.all_objects.filter(id=reco.opportunite_id).first()
+                    else:
+                        opportunite_obj = Ami_uemoa.objects.filter(id=reco.opportunite_id).first()
+                    offre_existe = opportunite_obj is not None
                 
-                # Si l'offre existe, on garde la recommandation
                 if offre_existe:
-                    reco.score_global = round(reco.score_global * 100, 1)
-                    recommandations_valides.append(reco)
+                    recommandations_valides.append({
+                        'id': reco.id,
+                        'opportunite_type': reco.opportunite_type,
+                        'opportunite_id': reco.opportunite_id,
+                        'score_global': round(reco.score_global * 100, 1),
+                        'opportunite': opportunite_obj,
+                        'analyse': reco.analyse,
+                        'date_recommandation': reco.date_recommandation,
+                    })
             
-            # Prendre les 10 premières
-            recommandations = recommandations_valides[:10]
+            recommandations = recommandations_valides
             recommandations_count = len(recommandations)
             opportunites_correspondantes = recommandations_count
+
+            print(f"DASHBOARD: {len(recommandations)} recommandations trouvées")
+            print(f"DASHBOARD: profil_complet = {profil_complet}")
             
         except Exception as e:
             print(f"Erreur lors du chargement des recommandations: {e}")
             recommandations = []
             recommandations_count = 0
             opportunites_correspondantes = 0
-    
+
     return render(request, 'myAppli/dashboard_entreprise.html', {
         'entreprise': entreprise,
         'user': request.user,
@@ -1275,7 +1289,11 @@ def nouvelle_soumission(request, opportunite_type, opportunite_id):
     # ============================================
     # 2. Récupérer l'opportunité (AMI)
     # ============================================
-    opportunite = get_object_or_404(Ami_uemoa, id=opportunite_id)
+    try:
+        opportunite = Ami_uemoa.all_objects.get(id=opportunite_id)
+    except Ami_uemoa.DoesNotExist:
+        messages.error(request, "Cette opportunité n'existe pas.")
+        return redirect('myAppli:dashboard_entreprise')
     type_nom = "Appel à manifestation d'intérêt"
     
     # ============================================

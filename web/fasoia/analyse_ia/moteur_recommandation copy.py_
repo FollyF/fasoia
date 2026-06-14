@@ -127,14 +127,14 @@ class MoteurRecommandationSemantique:
                 if analyse.content_type == offre_ct:
                     opp_type = "Offre_uemoa"
                     try:
-                        obj = Offre_uemoa.all_objects.get(id=analyse.object_id)
+                        obj = Offre_uemoa.objects.get(id=analyse.object_id)
                         description = obj.description[:100] if obj.description else ""
                     except:
                         continue
                 else:
                     opp_type = "Ami_uemoa"
                     try:
-                        obj = Ami_uemoa.all_objects.get(id=analyse.object_id)
+                        obj = Ami_uemoa.objects.get(id=analyse.object_id)
                         description = obj.description[:100] if obj.description else ""
                     except:
                         continue

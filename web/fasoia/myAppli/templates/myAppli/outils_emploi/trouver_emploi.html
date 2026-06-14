@@ -11,8 +11,9 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-left: 4px solid var(--red);
-    padding: 32px 32px 28px;
-    margin-bottom: 24px;
+    padding: 10px;
+    margin-top: 28px;
+    margin-bottom: 28px;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -20,14 +21,9 @@
     flex-wrap: wrap;
     border-radius: 3px;
   }
-  .emploi-hero-left { flex: 1; min-width: 240px; }
-  .emploi-eyebrow {
-    font-size: 9px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: var(--red);
-    margin-bottom: 10px;
+  .emploi-hero-left { 
+    flex: 1; 
+    min-width: 240px; 
   }
   .emploi-hero-left h1 {
     font-family: var(--font-display);
@@ -38,9 +34,8 @@
     margin-bottom: 10px;
   }
   .emploi-hero-left p {
-    font-size: 13px;
+    font-size: 14px;
     color: var(--muted);
-    max-width: 380px;
     line-height: 1.65;
   }
   .emploi-hero-right {
@@ -92,7 +87,10 @@
     color: var(--ink);
     background: var(--surface);
   }
-  .search-strip input::placeholder { color: var(--hint); }
+  .search-strip input::placeholder { 
+    color: var(--hint); 
+    font-size: 16px;
+  }
   .search-strip button {
     background: var(--ink);
     color: #fff;
@@ -212,7 +210,7 @@
     color: var(--ink);
   }
   .tool-card p {
-    font-size: 12px;
+    font-size: 16px;
     color: var(--muted);
     line-height: 1.5;
     margin: 0;
@@ -265,9 +263,13 @@
     color: var(--muted);
     border-radius: 3px;
   }
-  .offre-body { flex: 1; min-width: 0; }
+  .offre-body { 
+    flex: 1; 
+    min-width: 0; 
+    font-size: 14px;
+  }
   .offre-title {
-    font-size: 13px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--ink);
     white-space: nowrap;
@@ -278,7 +280,7 @@
   .offre-meta {
     display: flex;
     gap: 14px;
-    font-size: 11px;
+    font-size: 14px;
     color: var(--muted);
     flex-wrap: wrap;
     align-items: center;
@@ -301,7 +303,6 @@
   }
   .tips-row h3 {
     font-family: var(--font-display);
-    font-size: 16px;
     font-weight: 700;
     color: var(--ink);
     margin-bottom: 14px;
@@ -314,7 +315,7 @@
     background: var(--cream);
     border: 1px solid var(--border);
     padding: 6px 14px;
-    font-size: 12px;
+    font-size: 14px;
     color: var(--ink-mid);
     border-radius: 2px;
   }
@@ -346,13 +347,12 @@
   <!-- HERO -->
   <div class="emploi-hero">
     <div class="emploi-hero-left">
-      <div class="emploi-eyebrow">Espace emploi</div>
-      <h1>Trouvez votre<br>prochain poste</h1>
+      <h1>Trouvez votre prochain poste</h1>
       <p>Préparez vos dossiers, postulez en confiance et suivez vos candidatures depuis un seul espace.</p>
     </div>
     <div class="emploi-hero-right">
       <div class="hero-counter"><span id="js-counter">0</span></div>
-      <div class="hero-counter-lbl">offres actives</div>
+      <div class="hero-counter-lbl">offres activées</div>
     </div>
   </div>
 

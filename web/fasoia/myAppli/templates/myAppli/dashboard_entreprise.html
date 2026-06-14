@@ -35,14 +35,36 @@
 </div>
 
 {% if profil_complet %}
-<div class="success-banner">
-    <i class="fa fa-circle-check"></i>
-    <div>
-        <strong>Profil entreprise complété à 100%</strong>
-        <p>Vous recevez maintenant des recommandations personnalisées.</p>
+    {% if recommandations_count == 0 %}
+    <!-- Profil complet mais recommandations pas encore prêtes -->
+    <div class="success-banner" id="banner-attente" style="border-left-color:var(--amber)">
+        <i class="fa-solid fa-hourglass-half" style="color:var(--amber)"></i>
+        <div>
+            <strong>Profil complété — recommandations en cours de génération</strong>
+            <p>Notre moteur IA analyse les opportunités. Actualisation dans <span id="js-countdown">10</span>s…</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0">
+            <button class="btn-app sm outline" onclick="toggleEditMode()">
+                <i class="fa-solid fa-pen"></i> Modifier
+            </button>
+            <button class="btn-app sm outline" id="btn-reload" onclick="location.reload()">
+                <i class="fa-solid fa-rotate-right"></i> Actualiser
+            </button>
+        </div>
     </div>
-    <button class="btn-app sm outline" onclick="toggleEditMode()"><i class="fa fa-pen"></i> Modifier</button>
-</div>
+    {% else %}
+    <!-- Profil complet et recommandations disponibles -->
+    <div class="success-banner">
+        <i class="fa-solid fa-circle-check"></i>
+        <div>
+            <strong>Profil entreprise complété à 100%</strong>
+            <p>Vous recevez maintenant des recommandations personnalisées.</p>
+        </div>
+        <button class="btn-app sm outline" onclick="toggleEditMode()">
+            <i class="fa-solid fa-pen"></i> Modifier
+        </button>
+    </div>
+    {% endif %}
 {% endif %}
 
 <div class="card-edit" id="profile-form-section" {% if profil_complet %}style="display:none"{% endif %}>
@@ -218,34 +240,110 @@
                                    Postuler
                                 </a>
                                 <div class="modal fade" id="modalReco{{ reco.opportunite.id }}" tabindex="-1" role="dialog" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered" role="document">
+                                    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                                         <div class="modal-content">
-                                            <div class="modal-header">
-                                                <div>
-                                                    <p class="modal-subtitle">Recommandation</p>
-                                                    <h5 class="modal-title">Référence AO-{{ reco.opportunite.id }}</h5>
-                                                </div>
+
+                                        <div class="modal-header">
+                                            <div>
+                                            <p class="modal-subtitle">
+                                                {% if reco.opportunite_type == 'Offre_uemoa' %}Appel d'offres{% else %}AMI{% endif %}
+                                            </p>
+                                            <h5 class="modal-title">
+                                                {% if reco.opportunite.reference %}
+                                                {{ reco.opportunite.reference }}
+                                                {% else %}
+                                                {% if reco.opportunite_type == 'Offre_uemoa' %}AO{% else %}AMI{% endif %}-{{ reco.opportunite.id }}
+                                                {% endif %}
+                                            </h5>
                                             </div>
-                                            <div class="modal-body">
-                                                <div class="modal-meta-grid">
-                                                    <div class="modal-meta-block">
-                                                        <label>Score de correspondance</label>
-                                                        <span>
-                                                            <i class="fa fa-star" style="color:#378ADD; margin-right:5px;"></i>
-                                                            {{ reco.score_global|floatformat:0 }}%
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-desc-block">
-                                                    <label>Description</label>
-                                                    {{ reco.opportunite.description|truncatechars:400 }}
-                                                </div>
+                                        </div>
+
+                                        <div class="modal-body">
+
+                                            <!-- Score + Date limite -->
+                                            <div class="modal-meta-grid">
+                                            <div class="modal-meta-block">
+                                                <label>Score de correspondance</label>
+                                                <span>
+                                                <i class="fa-solid fa-star" style="color:var(--amber);margin-right:5px"></i>
+                                                {{ reco.score_global|floatformat:0 }}%
+                                                </span>
                                             </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-outline-secondary btn-sm" data-dismiss="modal">
-                                                    Fermer
-                                                </button>
+                                            <div class="modal-meta-block">
+                                                <label>Date limite</label>
+                                                <span style="color:var(--red);font-weight:600">
+                                                <i class="fa-solid fa-clock" style="margin-right:5px"></i>
+                                                {{ reco.opportunite.date_limite|date:"d/m/Y"|default:"Non précisée" }}
+                                                </span>
                                             </div>
+                                            <div class="modal-meta-block">
+                                                <label>Autorité contractante</label>
+                                                <span>{{ reco.opportunite.autorite_contractante|default:"—" }}</span>
+                                            </div>
+                                            <div class="modal-meta-block">
+                                                <label>Délai d'exécution</label>
+                                                <span>{{ reco.opportunite.delai_execution|default:"—" }}</span>
+                                            </div>
+                                            <div class="modal-meta-block">
+                                                <label>Montant prévisionnel</label>
+                                                <span>
+                                                <i class="fa-solid fa-coins" style="color:var(--teal);margin-right:5px"></i>
+                                                {{ reco.opportunite.montant_previsionnel|default:"Non précisé" }}
+                                                </span>
+                                            </div>
+                                            <div class="modal-meta-block">
+                                                <label>Montant dossier</label>
+                                                <span>{{ reco.opportunite.montant_dossier|default:"—" }}</span>
+                                            </div>
+                                            <div class="modal-meta-block">
+                                                <label>Garantie de soumission</label>
+                                                <span>{{ reco.opportunite.garantie_soumission|default:"—" }}</span>
+                                            </div>
+                                            <div class="modal-meta-block">
+                                                <label>Contact</label>
+                                                <span>
+                                                {% if reco.opportunite.telephone %}
+                                                    <i class="fa-solid fa-phone" style="margin-right:4px"></i>{{ reco.opportunite.telephone }}
+                                                {% endif %}
+                                                {% if reco.opportunite.email %}
+                                                    <br><i class="fa-solid fa-envelope" style="margin-right:4px"></i>{{ reco.opportunite.email }}
+                                                {% endif %}
+                                                {% if not reco.opportunite.telephone and not reco.opportunite.email %}—{% endif %}
+                                                </span>
+                                            </div>
+                                            </div>
+
+                                            <!-- Lieu de dépôt -->
+                                            {% if reco.opportunite.lieu_depot %}
+                                            <div class="modal-meta-block" style="margin-bottom:12px">
+                                            <label><i class="fa-solid fa-map-pin" style="margin-right:5px"></i>Lieu de dépôt</label>
+                                            <span>{{ reco.opportunite.lieu_depot }}</span>
+                                            </div>
+                                            {% endif %}
+
+                                            <!-- Description -->
+                                            <div class="modal-desc-block">
+                                            <label>Description</label>
+                                            {{ reco.opportunite.description|truncatechars:1000 }}
+                                            </div>
+
+                                        </div>
+
+                                        <div class="modal-footer">
+                                            {% if reco.opportunite.download_url %}
+                                            <a href="{{ reco.opportunite.download_url }}" target="_blank" class="btn-app sm outline">
+                                            <i class="fa-solid fa-download"></i> Télécharger le dossier
+                                            </a>
+                                            {% endif %}
+                                            <a href="{% url 'myAppli:nouvelle_soumission' reco.opportunite_type reco.opportunite.id %}"
+                                            class="btn-app sm">
+                                            <i class="fa-solid fa-paper-plane"></i> Postuler
+                                            </a>
+                                            <button type="button" class="btn-app sm outline" data-dismiss="modal">
+                                            Fermer
+                                            </button>
+                                        </div>
+
                                         </div>
                                     </div>
                                 </div>
@@ -266,6 +364,26 @@
 
 {% block extra_js %}
 <script>
+
+// Compte à rebours recommandations
+{% if profil_complet and recommandations_count == 0 %}
+(function () {
+    var countdown = 30;
+    var el = document.getElementById('js-countdown');
+
+    var timer = setInterval(function () {
+        countdown--;
+        if (el) el.textContent = countdown;
+        if (countdown <= 0) {
+            clearInterval(timer);
+            location.reload();
+        }
+    }, 1000);
+
+    var btnNow = document.querySelector('#banner-attente button');
+    if (btnNow) btnNow.addEventListener('click', function () { clearInterval(timer); });
+})();
+{% endif %}
 
 // ═══════════════════════════════════════════════════════
 // ONGLETS
@@ -347,6 +465,8 @@ function estVide(field) {
     return !field.value || field.value.toString().trim() === '';
 }
 
+
+
 document.addEventListener('DOMContentLoaded', function() {
 
     var form = document.getElementById('profile-form');
@@ -403,7 +523,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
 
-        // Tout OK → spinner
+        // Tout OK 
         var btn = document.getElementById('submit-btn');
         btn.disabled = true;
         btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Enregistrement en cours...';
