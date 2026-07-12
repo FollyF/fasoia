@@ -1056,6 +1056,10 @@ def completer_profil_entreprise(request):
         entreprise.localisation = request.POST.get('localisation', '')
         entreprise.competencesCles = request.POST.get('competencesCles', '')
         
+        # Numéro de téléphone (NOUVEAU CHAMP)
+        telephone = request.POST.get('telephone', '')
+        entreprise.telephone = telephone if telephone else ''
+
         # Gestion des nombres - NE PAS METTRE DE CHAÎNE VIDE
         taille = request.POST.get('taille')
         entreprise.taille = int(taille) if taille and taille.strip() else 0
@@ -1204,6 +1208,53 @@ def completer_profil_entreprise(request):
         messages.error(request, f"Erreur lors de la sauvegarde : {str(e)}")
     
     return redirect('myAppli:dashboard_entreprise')
+
+@login_required
+@require_http_methods(["POST"])
+def api_entreprise_upload_entete(request):
+    """
+    Upload de l'image d'en-tête de l'entreprise
+    """
+    try:
+        # Récupérer l'entreprise de l'utilisateur connecté
+        if hasattr(request.user, 'entreprise'):
+            entreprise = request.user.entreprise
+        else:
+            return JsonResponse({'error': 'Vous n\'êtes pas une entreprise'}, status=403)
+        
+        # Vérifier si un fichier a été envoyé
+        if 'entete_image' not in request.FILES:
+            return JsonResponse({'error': 'Aucun fichier fourni'}, status=400)
+        
+        fichier = request.FILES['entete_image']
+        
+        # Vérifier le type de fichier
+        valid_types = ['image/jpeg', 'image/png', 'image/webp']
+        if fichier.content_type not in valid_types:
+            return JsonResponse({'error': 'Format non supporté. Utilisez JPG, PNG ou WEBP'}, status=400)
+        
+        # Vérifier la taille (max 2 Mo)
+        if fichier.size > 2 * 1024 * 1024:
+            return JsonResponse({'error': 'Fichier trop volumineux (max 2 Mo)'}, status=400)
+        
+        # Supprimer l'ancienne image si elle existe
+        if entreprise.entete_image:
+            entreprise.entete_image.delete(save=False)
+        
+        # Sauvegarder la nouvelle image
+        entreprise.entete_image = fichier
+        entreprise.save()
+        
+        # Retourner l'URL de l'image
+        return JsonResponse({
+            'success': True,
+            'message': 'Image d\'en-tête mise à jour',
+            'url': entreprise.entete_image.url if entreprise.entete_image else None
+        })
+        
+    except Exception as e:
+        print(f"Erreur upload entête: {e}")
+        return JsonResponse({'error': str(e)}, status=500)
 
 def detail_offre(request, pk):
     """
@@ -1802,7 +1853,7 @@ def api_document_generer(request):
     
     # Récupérer l'opportunité
     try:
-        opportunite = Ami_uemoa.objects.get(id=opportunite_id)
+        opportunite = Ami_uemoa.all_objects.get(id=opportunite_id)
         print(f"✅ Opportunité trouvée: AMI #{opportunite_id}")
     except Ami_uemoa.DoesNotExist:
         print(f"❌ AMI #{opportunite_id} non trouvé")

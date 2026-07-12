@@ -6,6 +6,61 @@
 
 {% block app_extra_css %}
 <style>
+  .btn-upload-header {
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    color: var(--ink);
+}
+
+.btn-upload-header:hover {
+    border-color: var(--teal);
+    background: var(--cream);
+}
+
+.upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 30px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--cream);
+}
+
+.upload-area:hover {
+    border-color: var(--teal);
+    background: var(--surface);
+}
+
+.upload-icon {
+    font-size: 40px;
+    color: var(--muted);
+    margin-bottom: 12px;
+}
+
+.upload-area p {
+    margin: 5px 0;
+    font-size: 13px;
+    color: var(--ink);
+}
+
+.upload-hint {
+    font-size: 11px !important;
+    color: var(--hint) !important;
+}
+
   /* ===== CARTE DOCUMENT ===== */
   .documents-grid {
   display: grid;
@@ -393,9 +448,14 @@
   </div>
   <div class="dash-header-right">
     <div class="dash-completion-num">
-      <span id="compteur-num">0</span>/6
+        <span id="compteur-num">0</span>/6
     </div>
     <div class="dash-completion-lbl">DOCUMENTS PRÊTS</div>
+    
+    <!-- Bouton image d'en-tête -->
+    <button class="btn-upload-header" onclick="ouvrirModalUploadEntete()">
+        <i class="fa-regular fa-image"></i> Entête
+    </button>
   </div>
 </div>
 
@@ -417,78 +477,126 @@
   
   <!-- 1. ENVELOPPE -->
   <div class="document-card" data-doc="enveloppe">
-    <h3>Message enveloppe</h3>
+    <h3><i class="fa-regular fa-envelope"></i> Message enveloppe</h3>
     <div class="document-desc">Message à coller sur l'enveloppe de soumission</div>
     <div class="btn-group-doc">
-      <button class="btn-doc btn-doc-generer" data-type="enveloppe">Générer</button>
-      <button class="btn-doc btn-doc-importer" data-type="enveloppe">Importer</button>
-      <button class="btn-doc btn-doc-modifier" data-type="enveloppe" disabled>Modifier</button>
-      <button class="btn-doc btn-doc-preview" data-type="enveloppe" disabled>Aperçu</button>
+      <button class="btn-doc btn-doc-generer" data-type="enveloppe">
+        <i class="fa-regular fa-file-lines"></i>Générer
+      </button>
+      <button class="btn-doc btn-doc-importer" data-type="enveloppe">
+        <i class="fa-solid fa-upload"></i> Importer
+      </button>
+      <button class="btn-doc btn-doc-modifier" data-type="enveloppe" disabled>
+        <i class="fa-solid fa-pen"></i> Modifier
+      </button>
+      <button class="btn-doc btn-doc-preview" data-type="enveloppe" disabled>
+        <i class="fa-regular fa-eye"></i> Aperçu
+      </button>
     </div>
     <div class="status-badge missing" data-status="enveloppe">❌ Non généré</div>
   </div>
 
   <!-- 2. LETTRE -->
   <div class="document-card" data-doc="lettre">
-    <h3>Lettre de manifestation</h3>
+    <h3><i class="fa-regular fa-file-lines"></i> Lettre de manifestation</h3>
     <div class="document-desc">Lettre d'intention et motivation</div>
     <div class="btn-group-doc">
-      <button class="btn-doc btn-doc-generer" data-type="lettre">Générer</button>
-      <button class="btn-doc btn-doc-importer" data-type="lettre">Importer</button>
-      <button class="btn-doc btn-doc-modifier" data-type="lettre" disabled>Modifier</button>
-      <button class="btn-doc btn-doc-preview" data-type="lettre" disabled>Aperçu</button>
+      <button class="btn-doc btn-doc-generer" data-type="lettre">
+        <i class="fa-regular fa-file-lines"></i>Générer
+      </button>
+      <button class="btn-doc btn-doc-importer" data-type="lettre">
+        <i class="fa-solid fa-upload"></i> Importer
+      </button>
+      <button class="btn-doc btn-doc-modifier" data-type="lettre" disabled>
+        <i class="fa-solid fa-pen"></i> Modifier
+      </button>
+      <button class="btn-doc btn-doc-preview" data-type="lettre" disabled>
+        <i class="fa-regular fa-eye"></i> Aperçu
+      </button>
     </div>
     <div class="status-badge missing" data-status="lettre">❌ Non généré</div>
   </div>
 
   <!-- 3. PRÉSENTATION ENTREPRISE -->
   <div class="document-card" data-doc="presentation">
-    <h3>Présentation entreprise</h3>
+    <h3><i class="fa-solid fa-building"></i> Présentation entreprise</h3>
     <div class="document-desc">Historique, activités, certifications</div>
     <div class="btn-group-doc">
-      <button class="btn-doc btn-doc-generer" data-type="presentation">Générer</button>
-      <button class="btn-doc btn-doc-importer" data-type="presentation">Importer</button>
-      <button class="btn-doc btn-doc-modifier" data-type="presentation" disabled>Modifier</button>
-      <button class="btn-doc btn-doc-preview" data-type="presentation" disabled>Aperçu</button>
+      <button class="btn-doc btn-doc-generer" data-type="presentation">
+        <i class="fa-regular fa-file-lines"></i>Générer
+      </button>
+      <button class="btn-doc btn-doc-importer" data-type="presentation">
+        <i class="fa-solid fa-upload"></i> Importer
+      </button>
+      <button class="btn-doc btn-doc-modifier" data-type="presentation" disabled>
+        <i class="fa-solid fa-pen"></i> Modifier
+      </button>
+      <button class="btn-doc btn-doc-preview" data-type="presentation" disabled>
+        <i class="fa-regular fa-eye"></i> Aperçu
+      </button>
     </div>
     <div class="status-badge missing" data-status="presentation">❌ Non généré</div>
   </div>
 
   <!-- 4. FICHE RENSEIGNEMENT -->
   <div class="document-card" data-doc="fiche">
-    <h3>Fiche renseignement</h3>
+    <h3><i class="fa-regular fa-rectangle-list"></i> Fiche renseignement</h3>
     <div class="document-desc">IFU, RCCM, contacts, adresse</div>
     <div class="btn-group-doc">
-      <button class="btn-doc btn-doc-generer" data-type="fiche">Générer</button>
-      <button class="btn-doc btn-doc-importer" data-type="fiche">Importer</button>
-      <button class="btn-doc btn-doc-modifier" data-type="fiche" disabled>Modifier</button>
-      <button class="btn-doc btn-doc-preview" data-type="fiche" disabled>Aperçu</button>
+      <button class="btn-doc btn-doc-generer" data-type="fiche">
+        <i class="fa-regular fa-file-lines"></i>Générer
+      </button>
+      <button class="btn-doc btn-doc-importer" data-type="fiche">
+        <i class="fa-solid fa-upload"></i> Importer
+      </button>
+      <button class="btn-doc btn-doc-modifier" data-type="fiche" disabled>
+        <i class="fa-solid fa-pen"></i> Modifier
+      </button>
+      <button class="btn-doc btn-doc-preview" data-type="fiche" disabled>
+        <i class="fa-regular fa-eye"></i> Aperçu
+      </button>
     </div>
     <div class="status-badge missing" data-status="fiche">❌ Non généré</div>
   </div>
 
   <!-- 5. LISTE MATÉRIEL -->
   <div class="document-card" data-doc="materiel">
-    <h3>Liste matériel</h3>
+    <h3><i class="fa-solid fa-screwdriver-wrench"></i> Liste matériel</h3>
     <div class="document-desc">Équipements, quantités, état</div>
     <div class="btn-group-doc">
-      <button class="btn-doc btn-doc-generer" data-type="materiel">Générer</button>
-      <button class="btn-doc btn-doc-importer" data-type="materiel">Importer</button>
-      <button class="btn-doc btn-doc-modifier" data-type="materiel" data-gestion="true">Modifier</button>
-      <button class="btn-doc btn-doc-preview" data-type="materiel" disabled>Aperçu</button>
+      <button class="btn-doc btn-doc-generer" data-type="materiel">
+        <i class="fa-regular fa-file-lines"></i>Générer
+      </button>
+      <button class="btn-doc btn-doc-importer" data-type="materiel">
+        <i class="fa-solid fa-upload"></i> Importer
+      </button>
+      <button class="btn-doc btn-doc-modifier" data-type="materiel" data-gestion="true">
+        <i class="fa-solid fa-pen"></i> Modifier
+      </button>
+      <button class="btn-doc btn-doc-preview" data-type="materiel" disabled>
+        <i class="fa-regular fa-eye"></i> Aperçu
+      </button>
     </div>
     <div class="status-badge missing" data-status="materiel">❌ Non généré</div>
   </div>
 
   <!-- 6. PERSONNEL CADRE -->
   <div class="document-card" data-doc="personnel">
-    <h3>Personnel cadre</h3>
+    <h3><i class="fa-solid fa-users"></i> Personnel cadre</h3>
     <div class="document-desc">Postes, noms, qualifications</div>
     <div class="btn-group-doc">
-      <button class="btn-doc btn-doc-generer" data-type="personnel">Générer</button>
-      <button class="btn-doc btn-doc-importer" data-type="personnel">Importer</button>
-      <button class="btn-doc btn-doc-modifier" data-type="personnel" data-gestion="true">Modifier</button>
-      <button class="btn-doc btn-doc-preview" data-type="personnel" disabled>Aperçu</button>
+      <button class="btn-doc btn-doc-generer" data-type="personnel">
+        <i class="fa-regular fa-file-lines"></i>Générer
+      </button>
+      <button class="btn-doc btn-doc-importer" data-type="personnel">
+        <i class="fa-solid fa-upload"></i> Importer
+      </button>
+      <button class="btn-doc btn-doc-modifier" data-type="personnel" data-gestion="true">
+        <i class="fa-solid fa-pen"></i> Modifier
+      </button>
+      <button class="btn-doc btn-doc-preview" data-type="personnel" disabled>
+        <i class="fa-regular fa-eye"></i> Aperçu
+      </button>
     </div>
     <div class="status-badge missing" data-status="personnel">❌ Non généré</div>
   </div>
@@ -653,10 +761,116 @@
   </div>
 </div>
 
+<!-- ===== MODAL UPLOAD EN-TÊTE ===== -->
+<div id="uploadEnteteModal" class="modal-custom">
+    <div class="modal-custom-content" style="max-width: 500px;">
+        <div class="modal-custom-header">
+            <h4>🏢 Image d'en-tête</h4>
+            <button class="modal-custom-close" onclick="closeUploadEnteteModal()">&times;</button>
+        </div>
+        <div class="modal-custom-body">
+            <form id="formUploadEntete" method="POST" action="/api/entreprise/upload-entete/" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-row">
+                    <label>Image d'en-tête</label>
+                    <div class="upload-area" onclick="document.getElementById('entete_file').click()">
+                        <div class="upload-icon"><i class="fa-regular fa-image"></i></div>
+                        <p>Cliquez pour sélectionner une image</p>
+                        <p class="upload-hint">JPG, PNG ou WEBP • Max 2 Mo</p>
+                        <input type="file" id="entete_file" name="entete_image" accept="image/jpeg,image/png,image/webp" style="display:none">
+                    </div>
+                </div>
+                <div id="uploadPreview" style="display: none; margin-top: 16px;">
+                    <label>Aperçu</label>
+                    <img id="uploadPreviewImg" src="" alt="Aperçu" style="width: 100%; border: 1px solid var(--border); border-radius: 3px;">
+                </div>
+            </form>
+        </div>
+        <div class="modal-custom-footer">
+            <button class="btn btn-modal-close" onclick="closeUploadEnteteModal()">Annuler</button>
+            <button class="btn btn-modal-save" id="btn-upload-entete" style="background: var(--teal);">Enregistrer</button>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
+
+// Gestion upload entête
+function ouvrirModalUploadEntete() {
+    document.getElementById('uploadEnteteModal').classList.add('active');
+}
+
+function closeUploadEnteteModal() {
+    document.getElementById('uploadEnteteModal').classList.remove('active');
+    document.getElementById('formUploadEntete').reset();
+    document.getElementById('uploadPreview').style.display = 'none';
+}
+
+// Preview image avant upload
+document.getElementById('entete_file')?.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            document.getElementById('uploadPreviewImg').src = event.target.result;
+            document.getElementById('uploadPreview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Upload de l'image
+document.getElementById('btn-upload-entete')?.addEventListener('click', async function() {
+    const fileInput = document.getElementById('entete_file');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showToast('Veuillez sélectionner une image', 'warning');
+        return;
+    }
+    
+    // Vérifier taille (max 2 Mo)
+    if (file.size > 2 * 1024 * 1024) {
+        showToast('Image trop lourde (max 2 Mo)', 'warning');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('entete_image', file);
+    formData.append('entreprise_id', {{ entreprise.id|default:'' }});
+    
+    showLoading(true);
+    
+    try {
+        const response = await fetch('/api/entreprise/upload-entete/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('✅ Image d\'en-tête mise à jour', 'success');
+            closeUploadEnteteModal();
+            // Optionnel: recharger la page ou mettre à jour l'aperçu
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(data.error || 'Erreur lors de l\'upload', 'error');
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        showToast('Erreur de connexion', 'error');
+    } finally {
+        showLoading(false);
+    }
+});  
+
 // Configuration
 const opportuniteType = "{{ opportunite_type }}";
 const opportuniteId = {{ opportunite.id }};

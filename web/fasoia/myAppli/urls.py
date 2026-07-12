@@ -48,6 +48,7 @@ urlpatterns = [
     path('completer/profil/entreprise/', views.completer_profil_entreprise, name='completer_profil_entreprise'),
     path('completer/profil/candidat/', views.completer_profil_candidat, name='completer_profil_candidat'),
     path('completer/profil/recruteur/', views.completer_profil_recruteur, name='completer_profil_recruteur'),
+    path('api/entreprise/upload-entete/', views.api_entreprise_upload_entete, name='api_entreprise_upload_entete'),
     
     # Détails opportunités
     path('offre/<int:pk>/', views.detail_offre, name='detail_offre'),
@@ -58,6 +59,10 @@ urlpatterns = [
     path('soumission/<str:opportunite_type>/<int:opportunite_id>/', 
          views.nouvelle_soumission, name='nouvelle_soumission'),
     
+    path('api/dossier/soumettre/', 
+         views.api_dossier_soumettre, name='api_dossier_soumettre'),
+    
+
     path('api/dossier/etat/', 
          views.api_dossier_etat, name='api_dossier_etat'),
     
@@ -67,9 +72,6 @@ urlpatterns = [
     path('api/dossier/telecharger_complet/<int:dossier_id>/', 
          views.api_dossier_telecharger_complet, name='api_dossier_telecharger_par_id'),
 
-    path('api/dossier/soumettre/', 
-         views.api_dossier_soumettre, name='api_dossier_soumettre'),
-    
     path('api/document/apercu/', 
          views.api_document_apercu, name='api_document_apercu'),
     

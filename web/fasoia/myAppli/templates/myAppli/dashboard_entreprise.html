@@ -109,6 +109,11 @@
                     <label>Site web</label>
                     <input type="url" name="site_web" value="{{ entreprise.site_web }}" placeholder="https://www.example.com">
                 </div>
+                <div class="form-field">
+                    <label class="required-star">Numéro de téléphone</label>
+                    <input type="tel" name="telephone" value="{{ entreprise.telephone|default:'' }}"
+                           placeholder="Ex: +226 01 01 01 01" data-required data-tab="informations">
+                </div>
             </div>
         </div>
 
