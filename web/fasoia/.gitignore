@@ -4,3 +4,8 @@ db.sqlite3
 vnv/
 venv/
 .env
+*.log
+staticfiles/
+fasoia_backup.dump
+*.dump__pycache__/
+*.pyc
